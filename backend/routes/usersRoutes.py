@@ -1,11 +1,12 @@
-from flask import Flask, request, jsonify
+from flask import Blueprint, Flask, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required,get_jwt_identity
 
 from db import close_db, get_db
+bp=Blueprint("usersRoutes", __name__, url_prefix="/users")
 
 # Login route
-@app.route("/users/login", methods=["POST"])
+@bp.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
     db = get_db()
@@ -23,14 +24,14 @@ def login():
 
 
 # Logout route
-@app.route("/users/logout", methods=["POST"])
+@bp.route("/logout", methods=["POST"])
 def logout():
     # You might want to implement token invalidation or blacklist here
     return jsonify({"message": "Successfully logged out"}), 200
 
 
 # Get current user route
-@app.route("/users/me")
+@bp.route("/me")
 @jwt_required()
 def get_me():
     token_data = get_jwt()
@@ -59,7 +60,7 @@ def get_me():
 
 
 # Get all users route
-@app.route("/users", methods=["GET"])
+@bp.route("/", methods=["GET"])
 def get_users():
     db = get_db()
     cursor = db.cursor()
@@ -80,7 +81,7 @@ def get_users():
 
 
 # Create new user route
-@app.route("/users/register", methods=["POST"])
+@bp.route("/register", methods=["POST"])
 def create_new_user():
     data = request.get_json()
     username = data.get("username")
@@ -115,7 +116,7 @@ def create_new_user():
 
 
 # Get user by ID route
-@app.route("/users/<int:user_id>", methods=["GET"])
+@bp.route("/<int:user_id>", methods=["GET"])
 def get_user_by_id(user_id):
     db = get_db()
     cursor = db.cursor()
@@ -141,7 +142,7 @@ def get_user_by_id(user_id):
 
 
 # Delete user by ID route
-@app.route("/users/<int:user_id>", methods=["DELETE"])
+@bp.route("/<int:user_id>", methods=["DELETE"])
 def delete_user_by_id(user_id):
     db = get_db()
     cursor = db.cursor()
@@ -157,7 +158,7 @@ def delete_user_by_id(user_id):
 
 
 # Update user by ID route
-@app.route("/users/<int:user_id>", methods=["PATCH"])
+@bp.route("/<int:user_id>", methods=["PATCH"])
 def update_user_by_id(user_id):
     data = request.get_json()
     db = get_db()
@@ -184,7 +185,7 @@ def update_user_by_id(user_id):
 
 
 # Reset password route
-@app.route("/users/reset-password/<int:user_id>", methods=["PATCH"])
+@bp.route("/reset-password/<int:user_id>", methods=["PATCH"])
 def reset_password(user_id):
     data = request.get_json()
     new_password = data.get("new_password")

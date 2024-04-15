@@ -1,11 +1,12 @@
-from flask import Flask, request, jsonify
+from flask import Blueprint, Flask, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required,get_jwt_identity
 
 from db import close_db, get_db
+bp=Blueprint("purchase_historyRoutes", __name__, url_prefix="/purchase-history")
 
 # Get all purchase history route
-@app.route("/purchase-history", methods=["GET"])
+@bp.route("/", methods=["GET"])
 def get_purchase_history():
     db = get_db()
     cursor = db.cursor()
@@ -16,13 +17,13 @@ def get_purchase_history():
     purchase_history_list = []
     for purchase in purchase_history:
         purchase_dict = dict(purchase)
-        purchase_history_list.append(purchase_dict)
+        purchase_history_list.bpend(purchase_dict)
 
     return jsonify(purchase_history=purchase_history_list), 200
 
 
 # Get purchase history by ID route
-@app.route("/purchase-history/<int:purchase_id>", methods=["GET"])
+@bp.route("/<int:purchase_id>", methods=["GET"])
 def get_purchase_history_by_id(purchase_id):
     db = get_db()
     cursor = db.cursor()
@@ -35,7 +36,7 @@ def get_purchase_history_by_id(purchase_id):
     return jsonify(purchase_dict), 200
 
 # Create new purchase history route
-@app.route("/purchase-history", methods=["POST"])
+@bp.route("/", methods=["POST"])
 def create_purchase_history():
     data = request.get_json()
     db = get_db()
@@ -60,7 +61,7 @@ def create_purchase_history():
     return jsonify({"message": "Purchase history created successfully"}), 201
 
 # Delete purchase history by ID route
-@app.route("/purchase-history/<int:purchase_id>", methods=["DELETE"])
+@bp.route("/<int:purchase_id>", methods=["DELETE"])
 def delete_purchase_history_by_id(purchase_id):
     db = get_db()
     cursor = db.cursor()

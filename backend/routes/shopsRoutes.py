@@ -1,11 +1,12 @@
-from flask import Flask, request, jsonify
+from flask import Blueprint, Flask, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required,get_jwt_identity
 
 from db import close_db, get_db
+bp=Blueprint("shopsRoutes", __name__, url_prefix="/shops")
 
 # Get all shops route
-@app.route("/shops", methods=["GET"])
+@bp.route("/", methods=["GET"])
 def get_shops():
     db = get_db()
     cursor = db.cursor()
@@ -25,7 +26,7 @@ def get_shops():
 
 
 # Get shop by ID route
-@app.route("/shops/<int:shop_id>", methods=["GET"])
+@bp.route("//<int:shop_id>", methods=["GET"])
 def get_shop_by_id(shop_id):
     db = get_db()
     cursor = db.cursor()
@@ -52,7 +53,7 @@ def get_shop_by_id(shop_id):
 
 
 # Create new shop route
-@app.route("/shops", methods=["POST"])
+@bp.route("/", methods=["POST"])
 def create_new_shop():
     data = request.get_json()
     name = data.get("name")
@@ -84,7 +85,7 @@ def create_new_shop():
 
 
 # Update shop by ID route
-@app.route("/shops/<int:shop_id>", methods=["PATCH"])
+@bp.route("/<int:shop_id>", methods=["PATCH"])
 def update_shop_by_id(shop_id):
     data = request.get_json()
     db = get_db()
@@ -111,7 +112,7 @@ def update_shop_by_id(shop_id):
 
 
 # Delete shop by ID route
-@app.route("/shops/<int:shop_id>", methods=["DELETE"])
+@bp.route("/<int:shop_id>", methods=["DELETE"])
 def delete_shop_by_id(shop_id):
     db = get_db()
     cursor = db.cursor()

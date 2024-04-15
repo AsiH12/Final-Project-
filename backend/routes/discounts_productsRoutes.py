@@ -1,11 +1,12 @@
-from flask import Flask, request, jsonify
+from flask import Blueprint, Flask, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required,get_jwt_identity
 
 from db import close_db, get_db
+bp=Blueprint("discounts_productsRoutes", __name__, url_prefix="/discounts/products")
 
 # Get all discounts for products route
-@app.route("/discounts/products", methods=["GET"])
+@bp.route("/", methods=["GET"])
 def get_discounts_products():
     db = get_db()
     cursor = db.cursor()
@@ -22,7 +23,7 @@ def get_discounts_products():
     return jsonify(discounts=discounts_list), 200
 
 # Get discount for product by ID route
-@app.route("/discounts/products/<int:discount_id>", methods=["GET"])
+@bp.route("/<int:discount_id>", methods=["GET"])
 def get_discount_product_by_id(discount_id):
     db = get_db()
     cursor = db.cursor()
@@ -43,7 +44,7 @@ def get_discount_product_by_id(discount_id):
         }), 200
 
 # Create new discount for product route
-@app.route("/discounts/products", methods=["POST"])
+@bp.route("/", methods=["POST"])
 def create_discount_product():
     data = request.get_json()
     product_id = data.get("product_id")
@@ -75,7 +76,7 @@ def create_discount_product():
     return jsonify({"message": "Discount for product created successfully"}), 201
 
 # Update discount for product by ID route
-@app.route("/discounts/products/<int:discount_id>", methods=["PATCH"])
+@bp.route("/<int:discount_id>", methods=["PATCH"])
 def update_discount_product_by_id(discount_id):
     data = request.get_json()
     db = get_db()
@@ -95,7 +96,7 @@ def update_discount_product_by_id(discount_id):
         return jsonify({"message": "Discount for product updated successfully"}), 200
 
 # Delete discount for product by ID route
-@app.route("/discounts/products/<int:discount_id>", methods=["DELETE"])
+@bp.route("/<int:discount_id>", methods=["DELETE"])
 def delete_discount_product_by_id(discount_id):
     db = get_db()
     cursor = db.cursor()

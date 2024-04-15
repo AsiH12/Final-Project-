@@ -1,10 +1,12 @@
-from flask import Flask, request, jsonify
+from flask import Blueprint, Flask, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required,get_jwt_identity
 
-from db import close_db, get_db
 
-@app.route("/products", methods=["GET"])
+from db import close_db, get_db
+bp=Blueprint("productsRoutes", __name__, url_prefix="/products")
+
+@bp.route("/", methods=["GET"])
 def get_products():
     db = get_db()
     cursor = db.cursor()
@@ -29,7 +31,7 @@ def get_products():
 
 
 # Get product by ID route
-@app.route("/products/<int:product_id>", methods=["GET"])
+@bp.route("/<int:product_id>", methods=["GET"])
 def get_product_by_id(product_id):
     db = get_db()
     cursor = db.cursor()
@@ -59,7 +61,7 @@ def get_product_by_id(product_id):
 
 
 # Create new product route
-@app.route("/products", methods=["POST"])
+@bp.route("/", methods=["POST"])
 def create_new_product():
     data = request.get_json()
     name = data.get("name")
@@ -94,7 +96,7 @@ def create_new_product():
 
 
 # Update product by ID route
-@app.route("/products/<int:product_id>", methods=["PATCH"])
+@bp.route("/<int:product_id>", methods=["PATCH"])
 def update_product_by_id(product_id):
     data = request.get_json()
     db = get_db()
@@ -124,7 +126,7 @@ def update_product_by_id(product_id):
 
 
 # Delete product by ID route
-@app.route("/products/<int:product_id>", methods=["DELETE"])
+@bp.route("/<int:product_id>", methods=["DELETE"])
 def delete_product_by_id(product_id):
     db = get_db()
     cursor = db.cursor()

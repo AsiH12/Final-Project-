@@ -1,11 +1,12 @@
-from flask import Flask, request, jsonify
+from flask import Blueprint, Flask, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required,get_jwt_identity
 
 from db import close_db, get_db
+bp=Blueprint("addressesRoutes", __name__, url_prefix="/addresses")
 
 # Get all addresses route
-@app.route("/addresses", methods=["GET"])
+@bp.route("/", methods=["GET"])
 def get_addresses():
     db = get_db()
     cursor = db.cursor()
@@ -21,7 +22,7 @@ def get_addresses():
     return jsonify(addresses=address_list), 200
 
 # Get address by ID route
-@app.route("/addresses/<int:address_id>", methods=["GET"])
+@bp.route("/<int:address_id>", methods=["GET"])
 def get_address_by_id(address_id):
     db = get_db()
     cursor = db.cursor()
@@ -41,7 +42,7 @@ def get_address_by_id(address_id):
         }), 200
 
 # Create new address route
-@app.route("/addresses", methods=["POST"])
+@bp.route("/", methods=["POST"])
 def create_new_address():
     data = request.get_json()
     address = data.get("address")
@@ -72,7 +73,7 @@ def create_new_address():
     return jsonify({"message": "Address created successfully"}), 201
 
 # Update address by ID route
-@app.route("/addresses/<int:address_id>", methods=["PATCH"])
+@bp.route("/<int:address_id>", methods=["PATCH"])
 def update_address_by_id(address_id):
     data = request.get_json()
     db = get_db()
@@ -92,7 +93,7 @@ def update_address_by_id(address_id):
         return jsonify({"message": "Address updated successfully"}), 200
 
 # Delete address by ID route
-@app.route("/addresses/<int:address_id>", methods=["DELETE"])
+@bp.route("/<int:address_id>", methods=["DELETE"])
 def delete_address_by_id(address_id):
     db = get_db()
     cursor = db.cursor()

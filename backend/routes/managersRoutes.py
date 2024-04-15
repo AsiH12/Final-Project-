@@ -1,11 +1,12 @@
-from flask import Flask, request, jsonify
+from flask import Blueprint, Flask, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required,get_jwt_identity
 
 from db import close_db, get_db
+bp=Blueprint("managersRoutes", __name__, url_prefix="/managers")
 
 
-@app.route("/managers", methods=["GET"])
+@bp.route("/", methods=["GET"])
 def get_managers():
     db = get_db()
     cursor = db.cursor()
@@ -23,7 +24,7 @@ def get_managers():
 
 
 # Get manager by ID route
-@app.route("/managers/<int:manager_id>", methods=["GET"])
+@bp.route("/<int:manager_id>", methods=["GET"])
 def get_manager_by_id(manager_id):
     db = get_db()
     cursor = db.cursor()
@@ -47,7 +48,7 @@ def get_manager_by_id(manager_id):
 
 
 # Create new manager route
-@app.route("/managers", methods=["POST"])
+@bp.route("/", methods=["POST"])
 def create_new_manager():
     data = request.get_json()
     manager_id = data.get("manager_id")
@@ -79,7 +80,7 @@ def create_new_manager():
 
 
 # Update manager by ID route
-@app.route("/managers/<int:manager_id>", methods=["PATCH"])
+@bp.route("/<int:manager_id>", methods=["PATCH"])
 def update_manager_by_id(manager_id):
     data = request.get_json()
     db = get_db()
@@ -100,7 +101,7 @@ def update_manager_by_id(manager_id):
 
 
 # Delete manager by ID route
-@app.route("/managers/<int:manager_id>", methods=["DELETE"])
+@bp.route("/<int:manager_id>", methods=["DELETE"])
 def delete_manager_by_id(manager_id):
     db = get_db()
     cursor = db.cursor()

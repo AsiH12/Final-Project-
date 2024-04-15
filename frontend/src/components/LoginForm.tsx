@@ -1,5 +1,5 @@
 import { useRef } from "react";
-
+import "./LoginForm.css"
 interface LoginFormProps {
   setUserToken: (userId: string | null) => void;
 }
@@ -28,8 +28,8 @@ export function LoginForm({ setUserToken }: LoginFormProps) {
   return (
     <div>
       <h2>Login</h2>
-      <input type="text" name="username" placeholder="Username" ref={usernameRef} />
-      <input type="password" name="password" placeholder="Password" ref={passwordRef} />
+      <input type="text" className="username" placeholder="Username" ref={usernameRef} />
+      <input type="password" className="password" placeholder="Password" ref={passwordRef} />
       <button onClick={handleLogin}>Login</button>
     </div>
   );

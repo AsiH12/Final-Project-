@@ -1,11 +1,12 @@
-from flask import Flask, request, jsonify
+from flask import Blueprint, Flask, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required,get_jwt_identity
 
 from db import close_db, get_db
+bp=Blueprint("discount_shopsRoutes", __name__, url_prefix="/discount")
 
 # Get all discounts for shops route
-@app.route("/discounts/shops", methods=["GET"])
+@bp.route("/shops", methods=["GET"])
 def get_all_discounts_shops():
     db = get_db()
     cursor = db.cursor()
@@ -22,7 +23,7 @@ def get_all_discounts_shops():
     return jsonify(discounts=discounts_list), 200
 
 # Get a discount for shop by ID route
-@app.route("/discounts/shops/<int:discount_id>", methods=["GET"])
+@bp.route("/shops/<int:discount_id>", methods=["GET"])
 def get_discount_shop_by_id(discount_id):
     db = get_db()
     cursor = db.cursor()
@@ -40,7 +41,7 @@ def get_discount_shop_by_id(discount_id):
     }), 200
 
 # Create a new discount for shop route
-@app.route("/discounts/shops", methods=["POST"])
+@bp.route("/shops", methods=["POST"])
 @jwt_required()
 def create_discount_shop():
     current_user_id = get_current_user_id()
@@ -63,7 +64,7 @@ def create_discount_shop():
     return jsonify({"error": "Request must be JSON"}), 400
 
 # Update a discount for shop by ID route
-@app.route("/discounts/shops/<int:discount_id>", methods=["PATCH"])
+@bp.route("/shops/<int:discount_id>", methods=["PATCH"])
 @jwt_required()
 def update_discount_shop(discount_id):
     current_user_id = get_current_user_id()
@@ -91,7 +92,7 @@ def update_discount_shop(discount_id):
     return jsonify({"error": "Request must be JSON"}), 400
 
 # Delete a discount for shop by ID route
-@app.route("/discounts/shops/<int:discount_id>", methods=["DELETE"])
+@bp.route("/shops/<int:discount_id>", methods=["DELETE"])
 @jwt_required()
 def delete_discount_shop(discount_id):
     current_user_id = get_current_user_id()

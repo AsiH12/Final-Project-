@@ -84,6 +84,7 @@ def get_users():
 @bp.route("/register", methods=["POST"])
 def create_new_user():
     data = request.get_json()
+    print(data)
     username = data.get("username")
     password = data.get("password")
     role = data.get("role")

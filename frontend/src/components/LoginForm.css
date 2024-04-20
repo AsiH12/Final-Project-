@@ -1,3 +1,64 @@
-.username{
-    background: red;
+/* LoginForm.css */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10vh;
+  height: 90vh;
+  width: 100vw;
+}
+
+.login-form {
+  background-color: #39cccc;
+  border-radius: 44px;
+  box-shadow: 10px 8px 4px 0px #00000040;
+  width: 500px;
+  height: 700px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* .input-container {
+    margin-bottom: 20px;
+  } */
+
+.button-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px; /* Adjust the spacing between the button and text */
+}
+
+.login-button {
+  font-family: "Roboto", sans-serif;
+  font-size: 40px;
+  font-weight: 500;
+  line-height: 28px;
+  color: #ffffff;
+  background-color: #0077b6;
+  border: none;
+  padding: 30px 30px;
+  border-radius: 100px; /* Half of the button's height */
+  cursor: pointer;
+  width: 220px;
+  transition: background-color 0.3s ease;
+}
+/*   
+  .login-button:hover {
+    background-color: #005A8D;
+  }
+  
+  .login-button:active {
+    background-color: #003F63;
+  } */
+
+.signup-text {
+  color: #ffffff;
+  font-size: 20px;
+  margin-top: 10px; /* Adjust the spacing between the button and text */
 }

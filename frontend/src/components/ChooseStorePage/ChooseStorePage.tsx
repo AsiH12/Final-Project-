@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box } from '@mui/material';
+import { Box, Card, CardContent, Typography } from '@mui/material';
 import './ChooseStorePage.css';
 
 interface ChooseStorePageProps {
@@ -7,8 +7,13 @@ interface ChooseStorePageProps {
 }
 
 export function ChooseStorePage({ onStoreSelect }: ChooseStorePageProps) {
-  // Sample store names, you can replace these with your actual data
-  const stores = ['Store 1', 'Store 2', 'Store 3', 'Store 4', 'Store 5'];
+  // Sample store data, you can replace this with your actual data
+  const stores = [
+    { name: 'Store 1', ownedBy: 'John Doe', managedBy: 'Jane Smith' },
+    { name: 'Store 2', ownedBy: 'Alice Johnson', managedBy: 'Bob Brown' },
+    { name: 'Store 3', ownedBy: 'Charlie Davis', managedBy: 'David Wilson' },
+    { name: 'Store 4', ownedBy: 'Eve Taylor', managedBy: 'Frank Miller' },
+  ];
 
   const handleStoreSelect = (storeName: string) => {
     onStoreSelect(storeName);
@@ -22,30 +27,44 @@ export function ChooseStorePage({ onStoreSelect }: ChooseStorePageProps) {
       <h2 className="choose-store-header" style={{ color: '#39cccc' }}>
         Choose Store:
       </h2>
-      {/* Added headline */}
       <Box
         className="store-list"
         sx={{
-          backgroundColor: '#39cccc',
-          borderRadius: '44px',
-          boxShadow: '10px 8px 4px 0px #00000040',
-          width: '600px',
-          padding: '20px',
           display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          color: 'white', // Set text color to white
+          gap: '20px',
+          justifyContent: 'center',
         }}
       >
         {stores.map((store, index) => (
-          <div
-            key={index}
-            className="store-item"
-            onClick={() => handleStoreSelect(store)}
-            style={{ color: 'white', cursor: 'pointer' }} // Set text color to white and cursor to pointer
+          <Card
+            key={`store-${index}`}
+            className="store-card"
+            onClick={() => handleStoreSelect(store.name)}
+            sx={{
+              minWidth: 1800,
+              height: 200,
+              display: 'flex',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: '#f0f0f0',
+              },
+            }}
           >
-            {store}
-          </div>
+            <CardContent sx={{ flexGrow: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography variant="h5" component="div">
+                {store.name}
+              </Typography>
+              <Box>
+                <Typography variant="body2" component="p">
+                  <strong>Owned by:</strong> {store.ownedBy}
+                </Typography>
+                <Typography variant="body2" component="p">
+                  <strong>Managed by:</strong> {store.managedBy}
+                </Typography>
+              </Box>
+            </CardContent>
+          </Card>
         ))}
       </Box>
     </div>

@@ -1,13 +1,9 @@
 import React from "react";
-import RootLayOut from "../components/rootlayout/RootLayOut";
 
 export default function Managers_Page() {
-    return (
-        <div>
-            <Managers_Page></Managers_Page>
-            <RootLayOut></RootLayOut>
-        </div>
-    )
+  return (
+    <div>
+      <Managers_Page></Managers_Page>
+    </div>
+  );
 }
-
-

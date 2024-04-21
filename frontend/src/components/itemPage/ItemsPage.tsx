@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Box } from '@mui/material';
-import { Link, useParams } from 'react-router-dom';
+import Box from '@mui/material/Box';
+import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { useParams } from 'react-router-dom';
 import './ItemsPage.css';
 
 interface Item {
@@ -15,25 +16,30 @@ export function ItemsPage() {
   const { storeId } = useParams<{ storeId: string }>(); // Get storeId from URL params
 
   useEffect(() => {
-    // Fetch store name from the database based on storeId
-    // Replace this with your actual fetch logic
-    fetchStoreName(storeId)
-      .then((data) => setStoreName(data.name))
-      .catch((error) => console.error('Error fetching store name:', error));
-
-    // Fetch items from the database based on storeId
-    // Replace this with your actual fetch logic
-    fetchItems(storeId)
-      .then((data) => setItems(data))
-      .catch((error) => console.error('Error fetching items:', error));
+    // Fetch store name and items when storeId changes
+    fetchStoreData(storeId)
+      .then((data) => {
+        setStoreName(data.storeName);
+        setItems(data.items);
+      })
+      .catch((error) => console.error('Error fetching store data:', error));
   }, [storeId]);
 
-  // Mock functions for fetching data (Replace with actual fetch logic)
+  // Function to fetch store name and items (Replace with actual fetch logic)
+  const fetchStoreData = async (storeId: string) => {
+    // Mock implementation
+    const storeNameResponse = await fetchStoreName(storeId);
+    const itemsResponse = await fetchItems(storeId);
+    return { storeName: storeNameResponse.name, items: itemsResponse };
+  };
+
+  // Mock function for fetching store name (Replace with actual fetch logic)
   const fetchStoreName = async (storeId: string) => {
     // Mock implementation
     return { name: "Store Name" };
   };
 
+  // Mock function for fetching items (Replace with actual fetch logic)
   const fetchItems = async (storeId: string) => {
     // Mock implementation
     return [
@@ -43,17 +49,24 @@ export function ItemsPage() {
     ];
   };
 
+  // Define columns for DataGrid
+  const columns: GridColDef[] = [
+    { field: 'id', headerName: 'ID', width: 90 },
+    { field: 'name', headerName: 'Name', width: 200 },
+    // Add other columns as needed
+  ];
+
   return (
     <div className="container">
       <h2 className="items-header">
         <span style={{ color: '#39cccc' }}>Items - {storeName}</span>
-      </h2> {/* Display store name */}
+      </h2>
       <Box
         className="items-table"
         sx={{
-          backgroundColor: '#39cccc',
+          backgroundColor: 'white',
+          boxShadow: "10px 8px 4px 0px #00000040",
           borderRadius: '44px',
-          boxShadow: '10px 8px 4px 0px #00000040',
           width: '800px',
           height: '600px',
           padding: '40px',
@@ -62,25 +75,13 @@ export function ItemsPage() {
           alignItems: 'center',
         }}
       >
-        {/* This is where the table will be fetched later */}
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              {/* Add other table headers as needed */}
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item) => (
-              <tr key={item.id}>
-                <td>{item.id}</td>
-                <td>{item.name}</td>
-                {/* Add other table cells as needed */}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <DataGrid
+          rows={items}
+          columns={columns}
+          pageSize={5}
+          checkboxSelection
+          disableSelectionOnClick
+        />
       </Box>
     </div>
   );

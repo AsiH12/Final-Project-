@@ -1,13 +1,9 @@
 import React from "react";
-import RootLayOut from "../components/rootlayout/RootLayOut";
 
 export default function Choose_Store() {
-    return (
-        <div>
-            <Choose_Store></Choose_Store>
-            <RootLayOut></RootLayOut>
-        </div>
-    )
+  return (
+    <div>
+      <Choose_Store></Choose_Store>
+    </div>
+  );
 }
-
-

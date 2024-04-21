@@ -1,14 +1,12 @@
 /* ChooseStorePage.css */
 
 .container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin-top: 10vh;
-    height: 90vh;
-    width: 100vw;
-  }
+  width: 80vw; /* Set the width to 80% of the viewport width */
+  height: 80vh; /* Set the height to 80% of the viewport height */
+  margin: 0 auto; /* Center the container horizontally */
+  padding: 20px; /* Add some padding for better spacing */
+  overflow: auto; /* Add scrollbars if the content exceeds the container size */
+}
   
   .manage-store-header {
     color: white;
@@ -23,9 +21,8 @@
   }
   
   .store-list {
-    background-color: #39cccc;
+    background-color: #ffffff;
     border-radius: 44px;
-    box-shadow: 10px 8px 4px 0px #00000040;
     width: 600px;
     padding: 20px;
     display: flex;

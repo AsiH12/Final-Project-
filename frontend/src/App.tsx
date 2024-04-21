@@ -62,20 +62,20 @@ export default function App() {
           { path: "/categories/Cars", element: <CategoryPage name="Cars" /> },
           { path: "/createstore", element: <CreateStorePage /> },             // dialog - DONE
           { path: "/changepassword", element: <ChangePassword /> },           // dialog - DONE
-          { path: "/changeaddress", element: <AddressForm /> },               // dialog
-          { path: "/edititem", element: <EditItemForm /> },                   // dialog
-          { path: "/createitem", element: <CreateItemForm /> },               // dialog
+          { path: "/changeaddress", element: <AddressForm /> },               // dialog - DONE
+          { path: "/edititem", element: <EditItemForm /> },                   // dialog - DONE
+          { path: "/createitem", element: <CreateItemForm /> },               // dialog - DONE
           { path: "/editprofile", element: <EditProfilePage /> },             // while hovering user in navbar
           { path: "/purchasehistory", element: <PurchaseHistoryPage /> },     // page - while hovering user in navbar
-          { path: "/choosestore", element: <ChooseStorePage /> },             // page - list of cards - shops i manage and shops i own - use mui card
-          { path: "/store", element: <StorePage /> },                         // dialog
-          { path: "/items", element: <ItemsPage /> },                         // page
-          { path: "/orders", element: <OrdersPage /> },                       // page
-          { path: "/revenues", element: <RevenuesPage /> },                   // page
-          { path: "/addmanager", element: <AddManagerPage /> },               // dialog
-          { path: "/managers", element: <ManagersPage /> },                   // page
-          { path: "/users", element: <UsersPage /> },                         // page
-          { path: "/discount", element: <CreateDiscountPage /> },             // page - list of card of all discounted and edit/remove/create a discount  - DONE
+          { path: "/choosestore", element: <ChooseStorePage /> },             // page - DONE
+          { path: "/store", element: <StorePage /> },                         // dialog/PopUp 
+          { path: "/items", element: <ItemsPage /> },                         // page - DONE
+          { path: "/orders", element: <OrdersPage /> },                       // page- DONE
+          { path: "/revenues", element: <RevenuesPage /> },                   // page - DONE
+          { path: "/addmanager", element: <AddManagerPage /> },               // dialog - DONE
+          { path: "/managers", element: <ManagersPage /> },                   // page - DONE
+          { path: "/users", element: <UsersPage /> },                         // page - DONE
+          { path: "/discount", element: <CreateDiscountPage /> },             // page - list of card of all discounted and edit/remove/create a discount  - HALF DONE
 
 
 

@@ -1,0 +1,62 @@
+/* CreateDiscountPage.css */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: 15vh; /* Increased margin top */
+    height: 85vh; /* Adjusted height */
+    width: 100vw;
+  }
+  
+  .manage-store-header {
+    color: #39cccc;
+    font-size: 2rem;
+    margin-bottom: 10px;
+  }
+  
+  .store-name {
+    color: #39cccc;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+  
+  .create-discount-header {
+    color: #39cccc;
+    font-size: 2rem;
+    margin-bottom: 20px;
+  }
+  
+  .create-discount-form {
+    background-color: #39cccc;
+    border-radius: 44px;
+    box-shadow: 10px 8px 4px 0px #00000040;
+    width: 600px;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .input-container {
+    margin-bottom: 20px;
+  }
+  
+  .allow-others-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .allow-others-label {
+    color: #fff;
+    font-size: 1.5rem;
+    margin-right: 10px;
+  }
+  
+  .allow-others-checkbox {
+    width: 30px;
+    height: 30px;
+  }
+  

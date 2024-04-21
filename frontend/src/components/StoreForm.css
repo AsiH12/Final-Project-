@@ -1,0 +1,48 @@
+/* StoreForm.css */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10vh;
+    height: 90vh;
+    width: 100vw;
+  }
+  
+  .store-form {
+    background-color: #39cccc;
+    border-radius: 44px;
+    box-shadow: 10px 8px 4px 0px #00000040;
+    width: 500px;
+    height: auto; /* Change to auto to allow content to adjust height */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .form-header {
+    color: white;
+    font-size: 4rem;
+    margin-top: 0;
+  }
+  
+  .input-container {
+    margin-bottom: 20px;
+  }
+  
+  .button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  
+  .create-button {
+    font-size: 1.5rem;
+    width: 220px;
+    height: 60px;
+    border-radius: 25px;
+  }
+  

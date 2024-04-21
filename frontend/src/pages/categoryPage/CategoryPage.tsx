@@ -1,7 +1,7 @@
 import React from 'react';
-import img1 from "../../public/images/img1.jpg";
-import img2 from "../../public/images/img2.jpg";
-import CardItem from '../components/CardItem';
+import img1 from "../../../public/images/img1.jpg";
+import img2 from "../../../public/images/img2.jpg";
+import CardItem from '../../components/CardItem';
 import { Box } from '@mui/material';
 import "./CategoryPage.css"
 export default function CategoryPage({name}) {

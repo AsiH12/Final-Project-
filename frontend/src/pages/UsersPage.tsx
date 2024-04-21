@@ -1,6 +1,6 @@
 import React from "react";
-import RootLayOut from "../components/RootLayOut";
-import { UsersPage } from "../components/UsersPage";
+import RootLayOut from "../components/rootlayout/RootLayOut";
+import { UsersPage } from "../components/userPage/UsersPage";
 
 export default function Managers_Page() {
     return (

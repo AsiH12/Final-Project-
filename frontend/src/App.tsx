@@ -1,32 +1,32 @@
 import { useState } from "react";
-import { LoginForm } from "./components/LoginForm";
+import { LoginForm } from "./components/loginForm/LoginForm";
 import { UserProfile } from "./components/UserProfile";
-import { RegisterForm } from "./components/RegistrationForm";
+import { RegisterForm } from "./components/registrationForm/RegistrationForm";
 import {
   Navigate,
   RouterProvider,
   createBrowserRouter,
 } from "react-router-dom";
-import RootLayOut from "./components/RootLayOut";
+import RootLayOut from "./components/rootlayout/RootLayOut";
 import HomePage from "./pages/HomePage";
-import CategoryPage from "./pages/CategoryPage";
+import CategoryPage from "./pages/categoryPage/CategoryPage";
 import CreateStorePage from "./pages/CreateStorePage";
 import ChangePassword from "./pages/ChangePasswordPage";
-import { AddressForm } from "./components/AddressForm";
-import { EditItemForm } from "./components/EditItemForm";
+import { AddressForm } from "./components/AddressForm/AddressForm";
+import { EditItemForm } from "./components/editItem/EditItemForm";
 import Create_item from "./pages/CreateItemPage";
-import { CreateItemForm } from "./components/CreateItemForm";
-import { EditProfilePage } from "./components/EditProfilePage";
-import { PurchaseHistoryPage } from "./components/PurchaseHistoryPage";
-import { ChooseStorePage } from "./components/ChooseStorePage";
-import { StorePage } from "./components/StorePage";
-import { ItemsPage } from "./components/ItemsPage";
-import { OrdersPage } from "./components/OrdersPage";
-import { RevenuesPage } from "./components/RevenuesPage";
-import { AddManagerPage } from "./components/AddManagerPage";
-import { ManagersPage } from "./components/ManagersPage";
-import { UsersPage } from "./components/UsersPage";
-import { CreateDiscountPage } from "./components/CreateDiscountPage";
+import { CreateItemForm } from "./components/createItem/CreateItemForm";
+import { EditProfilePage } from "./components/editProfile/EditProfilePage";
+import { PurchaseHistoryPage } from "./components/purchaseHistory/PurchaseHistoryPage";
+import { ChooseStorePage } from "./components/ChooseStorePage/ChooseStorePage";
+import { StorePage } from "./components/storePage/StorePage";
+import { ItemsPage } from "./components/itemPage/ItemsPage";
+import { OrdersPage } from "./components/orderPage/OrdersPage";
+import { RevenuesPage } from "./components/revenuesPage/RevenuesPage";
+import { AddManagerPage } from "./components/AddManagerPage/AddManagerPage";
+import { ManagersPage } from "./components/managePage/ManagersPage";
+import { UsersPage } from "./components/userPage/UsersPage";
+import { CreateDiscountPage } from "./components/createDiscount/CreateDiscountPage";
 
 const BACKEND_URL = "http://127.0.0.1:5000";
 
@@ -60,22 +60,22 @@ export default function App() {
             element: <CategoryPage name="Lifestyle" />,
           },
           { path: "/categories/Cars", element: <CategoryPage name="Cars" /> },
-          { path: "/createstore", element: <CreateStorePage /> },
-          { path: "/changepassword", element: <ChangePassword /> },
-          { path: "/changeaddress", element: <AddressForm /> },
-          { path: "/edititem", element: <EditItemForm /> },
-          { path: "/createitem", element: <CreateItemForm /> },
-          { path: "/editprofile", element: <EditProfilePage /> },
-          { path: "/purchasehistory", element: <PurchaseHistoryPage /> },
-          { path: "/choosestore", element: <ChooseStorePage /> },
-          { path: "/store", element: <StorePage /> },
-          { path: "/items", element: <ItemsPage /> },
-          { path: "/orders", element: <OrdersPage /> },
-          { path: "/revenues", element: <RevenuesPage /> },
-          { path: "/addmanager", element: <AddManagerPage /> },
-          { path: "/managers", element: <ManagersPage /> },
-          { path: "/users", element: <UsersPage /> },
-          { path: "/discount", element: <CreateDiscountPage /> },
+          { path: "/createstore", element: <CreateStorePage /> },             // dialog - DONE
+          { path: "/changepassword", element: <ChangePassword /> },           // dialog - DONE
+          { path: "/changeaddress", element: <AddressForm /> },               // dialog
+          { path: "/edititem", element: <EditItemForm /> },                   // dialog
+          { path: "/createitem", element: <CreateItemForm /> },               // dialog
+          { path: "/editprofile", element: <EditProfilePage /> },             // while hovering user in navbar
+          { path: "/purchasehistory", element: <PurchaseHistoryPage /> },     // page - while hovering user in navbar
+          { path: "/choosestore", element: <ChooseStorePage /> },             // page - list of cards - shops i manage and shops i own - use mui card
+          { path: "/store", element: <StorePage /> },                         // dialog
+          { path: "/items", element: <ItemsPage /> },                         // page
+          { path: "/orders", element: <OrdersPage /> },                       // page
+          { path: "/revenues", element: <RevenuesPage /> },                   // page
+          { path: "/addmanager", element: <AddManagerPage /> },               // dialog
+          { path: "/managers", element: <ManagersPage /> },                   // page
+          { path: "/users", element: <UsersPage /> },                         // page
+          { path: "/discount", element: <CreateDiscountPage /> },             // page - list of card of all discounted and edit/remove/create a discount  - DONE
 
 
 

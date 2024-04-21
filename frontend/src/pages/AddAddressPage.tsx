@@ -1,6 +1,6 @@
 import React from "react";
-import RootLayOut from "../components/RootLayOut";
-import { AddressForm } from "../components/AddressForm";
+import RootLayOut from "../components/rootlayout/RootLayOut";
+import { AddressForm } from "../components/AddressForm/AddressForm";
 
 export default function CreateStorePage() {
     return (

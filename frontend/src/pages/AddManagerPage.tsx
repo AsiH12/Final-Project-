@@ -1,5 +1,5 @@
 import React from "react";
-import RootLayOut from "../components/RootLayOut";
+import RootLayOut from "../components/rootlayout/RootLayOut";
 
 export default function Add_Manager_Page() {
     return (

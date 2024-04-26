@@ -7,13 +7,28 @@ CREATE TABLE IF NOT EXISTS users (
     role TEXT NOT NULL DEFAULT 'user'
 );
 
+CREATE TABLE IF NOT EXISTS categories (
+    id INTEGER PRIMARY KEY NOT NULL,
+    category_name TEXT NOT NULL UNIQUE
+);
+
 CREATE TABLE IF NOT EXISTS shops (
     id INTEGER PRIMARY KEY NOT NULL,
     name TEXT NOT NULL UNIQUE,
     description TEXT,
-    category TEXT NOT NULL CHECK(category IN ('LifeStyle', 'Fashion', 'Tech')),
     owner_id INTEGER NOT NULL,
     FOREIGN KEY (owner_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS products (
+    id INTEGER PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL,
+    shop_id INTEGER NOT NULL,
+    price INTEGER NOT NULL,
+    amount INTEGER NOT NULL,
+    maximum_discount INTEGER,
+    FOREIGN KEY (shop_id) REFERENCES shops(id)
 );
 
 CREATE TABLE IF NOT EXISTS managers (
@@ -21,18 +36,6 @@ CREATE TABLE IF NOT EXISTS managers (
     manager_id INTEGER NOT NULL,
     shop_id INTEGER NOT NULL,
     FOREIGN KEY (manager_id) REFERENCES users(id),
-    FOREIGN KEY (shop_id) REFERENCES shops(id)
-);
-
-CREATE TABLE IF NOT EXISTS products (
-    id INTEGER PRIMARY KEY NOT NULL,
-    name TEXT NOT NULL,
-    description TEXT NOT NULL,
-    category TEXT NOT NULL CHECK(category IN ('LifeStyle', 'Fashion', 'Tech')),
-    shop_id INTEGER NOT NULL,
-    price INTEGER NOT NULL,
-    amount INTEGER NOT NULL,
-    maximum_discount INTEGER,
     FOREIGN KEY (shop_id) REFERENCES shops(id)
 );
 
@@ -83,8 +86,24 @@ CREATE TABLE IF NOT EXISTS purchase_history (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+CREATE TABLE IF NOT EXISTS products_categories (
+    id INTEGER PRIMARY KEY NOT NULL,
+    product_id INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    FOREIGN KEY (product_id) REFERENCES products(id),
+    FOREIGN KEY (category_id) REFERENCES categories(id)
+);
+
+CREATE TABLE IF NOT EXISTS shops_categories (
+    id INTEGER PRIMARY KEY NOT NULL,
+    shop_id INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    FOREIGN KEY (shop_id) REFERENCES shops(id),
+    FOREIGN KEY (category_id) REFERENCES categories(id)
+);
+
 -- Inserting into users table
-INSERT INTO
+INSERT OR IGNORE INTO
     users (username, password, email, age, role)
 VALUES
     (
@@ -103,21 +122,23 @@ VALUES
         'manager'
     );
 
+-- Inserting into categories table
+INSERT OR IGNORE INTO categories (category_name) VALUES ('LifeStyle'), ('Fashion'), ('Tech'), ('Cars');
+
 -- Inserting into shops table
-INSERT INTO
-    shops (name, description, category, owner_id)
+INSERT OR IGNORE INTO
+    shops (name, description, owner_id)
 VALUES
-    ('Shop1', 'Fashion store', 'Fashion', 1),
-    ('Shop2', 'Tech gadgets store', 'Tech', 3),
+    ('Shop1', 'Fashion store', 1),
+    ('Shop2', 'Tech gadgets store', 3),
     (
         'Shop3',
         'Lifestyle products store',
-        'LifeStyle',
         2
     );
 
 -- Inserting into managers table
-INSERT INTO
+INSERT OR IGNORE INTO
     managers (manager_id, shop_id)
 VALUES
     (3, 1),
@@ -125,11 +146,10 @@ VALUES
     (3, 3);
 
 -- Inserting into products table
-INSERT INTO
+INSERT OR IGNORE INTO
     products (
         name,
         description,
-        category,
         shop_id,
         price,
         amount,
@@ -139,7 +159,6 @@ VALUES
     (
         'Product1',
         'Fashion product',
-        'Fashion',
         1,
         50,
         100,
@@ -148,7 +167,6 @@ VALUES
     (
         'Product2',
         'Tech product',
-        'Tech',
         2,
         100,
         50,
@@ -157,7 +175,6 @@ VALUES
     (
         'Product3',
         'Lifestyle product',
-        'LifeStyle',
         3,
         30,
         200,
@@ -165,7 +182,7 @@ VALUES
     );
 
 -- Inserting into discounts_products table
-INSERT INTO
+INSERT OR IGNORE INTO
     discounts_products (
         product_id,
         discount,
@@ -179,7 +196,7 @@ VALUES
     (3, '5%', '2024-05-01', 100, true);
 
 -- Inserting into discounts_shops table
-INSERT INTO
+INSERT OR IGNORE INTO
     discounts_shops (
         shop_id,
         discount,
@@ -193,7 +210,7 @@ VALUES
     (3, '10%', '2024-05-01', 150, true);
 
 -- Inserting into addresses table
-INSERT INTO
+INSERT OR IGNORE INTO
     addresses (address, city, country, user_id)
 VALUES
     ('123 Main St', 'New York', 'USA', 1),
@@ -201,7 +218,7 @@ VALUES
     ('789 Oak St', 'Chicago', 'USA', 3);
 
 -- Inserting into purchase_history table
-INSERT INTO
+INSERT OR IGNORE INTO
     purchase_history (
         product_id,
         shop_id,
@@ -255,3 +272,17 @@ VALUES
         true,
         2
     );
+
+-- Inserting into products_categories table
+INSERT OR IGNORE INTO products_categories (product_id, category_id) VALUES
+    (1, 2), -- Fashion
+    (2, 3), -- Tech
+    (3, 1); -- LifeStyle
+
+-- Inserting into shops_categories table
+INSERT OR IGNORE INTO shops_categories (shop_id, category_id) VALUES
+    (1, 2), -- Fashion
+    (1, 3), -- Tech
+    (2, 3), -- Tech
+    (3, 1); -- LifeStyle
+

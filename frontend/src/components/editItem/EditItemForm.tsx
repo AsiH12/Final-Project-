@@ -1,19 +1,26 @@
-import React, { useRef, useState } from 'react';
-import { Box, TextField, Button, Dialog, DialogTitle, DialogContent, DialogActions, Divider } from '@mui/material';
-import './EditItemForm.css';
+import React, { useRef, useState } from "react";
+import {
+  Box,
+  TextField,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Divider,
+} from "@mui/material";
+import "./EditItemForm.css";
 
 interface EditItemFormProps {
   onSaveItem: (data: ItemFormData) => void;
 }
 
 interface ItemFormData {
-  id: string;
   name: string;
   description: string;
   categories: string;
   price: string;
   amount: string;
-  storeId: string;
 }
 
 export function EditItemForm({ onSaveItem }: EditItemFormProps) {
@@ -27,48 +34,35 @@ export function EditItemForm({ onSaveItem }: EditItemFormProps) {
   const [open, setOpen] = useState<boolean>(false);
 
   const handleSaveItem = () => {
-    const id = idRef.current?.value || '';
-    const name = nameRef.current?.value || '';
-    const description = descriptionRef.current?.value || '';
-    const categories = categoriesRef.current?.value || '';
-    const price = priceRef.current?.value || '';
-    const amount = amountRef.current?.value || '';
-    const storeId = storeIdRef.current?.value || '';
+    const name = nameRef.current?.value || "";
+    const description = descriptionRef.current?.value || "";
+    const categories = categoriesRef.current?.value || "";
+    const price = priceRef.current?.value || "";
+    const amount = amountRef.current?.value || "";
 
-    onSaveItem({ id, name, description, categories, price, amount, storeId });
+    onSaveItem({ name, description, categories, price, amount });
     setOpen(false); // Close the dialog after saving item
   };
 
   return (
     <div className="container">
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={() => setOpen(true)}
-      >
+      <Button variant="contained" color="primary" onClick={() => setOpen(true)}>
         Edit Item
       </Button>
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>Edit Item</DialogTitle>
         <Divider />
         <DialogContent>
-          <Box sx={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-          }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
             <TextField
-              sx={{ width: '400px', background: 'white' }}
-              id="id"
-              label="ID"
-              variant="outlined"
-              inputRef={idRef}
-              fullWidth
-              margin="normal"
-            />
-            <TextField
-              sx={{ width: '400px', background: 'white' }}
+              sx={{ width: "400px", background: "white" }}
               id="name"
               label="Name"
               variant="outlined"
@@ -77,7 +71,7 @@ export function EditItemForm({ onSaveItem }: EditItemFormProps) {
               margin="normal"
             />
             <TextField
-              sx={{ width: '400px', background: 'white' }}
+              sx={{ width: "400px", background: "white" }}
               id="description"
               label="Description"
               variant="outlined"
@@ -86,7 +80,7 @@ export function EditItemForm({ onSaveItem }: EditItemFormProps) {
               margin="normal"
             />
             <TextField
-              sx={{ width: '400px', background: 'white' }}
+              sx={{ width: "400px", background: "white" }}
               id="categories"
               label="Categories"
               variant="outlined"
@@ -95,7 +89,7 @@ export function EditItemForm({ onSaveItem }: EditItemFormProps) {
               margin="normal"
             />
             <TextField
-              sx={{ width: '400px', background: 'white' }}
+              sx={{ width: "400px", background: "white" }}
               id="price"
               label="Price"
               variant="outlined"
@@ -104,20 +98,11 @@ export function EditItemForm({ onSaveItem }: EditItemFormProps) {
               margin="normal"
             />
             <TextField
-              sx={{ width: '400px', background: 'white' }}
+              sx={{ width: "400px", background: "white" }}
               id="amount"
               label="Amount"
               variant="outlined"
               inputRef={amountRef}
-              fullWidth
-              margin="normal"
-            />
-            <TextField
-              sx={{ width: '400px', background: 'white' }}
-              id="storeId"
-              label="Store ID"
-              variant="outlined"
-              inputRef={storeIdRef}
               fullWidth
               margin="normal"
             />

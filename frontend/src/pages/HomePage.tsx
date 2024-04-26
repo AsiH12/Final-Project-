@@ -1,56 +1,67 @@
-import React from 'react';
-import img1 from "../../public/images/img1.jpg";
-import img2 from "../../public/images/img2.jpg";
+import React, { useEffect, useState } from 'react';
 import CardItem from '../components/CardItem';
 import { Box } from '@mui/material';
+import img1 from "../../public/images/img1.jpg";
+
+// Define the interface for the product object
+interface Product {
+  name: string;
+  description: string;
+  shop_name: string;
+  price: number;
+  categories: string[];
+}
+
+// Define the interface for the CardItem component's props
+// interface CardItemProps {
+//   image: string;
+//   name: string;
+//   description: string;
+//   shop: string;
+//   price: number;
+//   categories: string[];
+// }
 
 export default function HomePage() {
-    const items =[
-        {image: img1, name: "new laptop", description: "very nice", shop: "KSP", price: 99.9, categories: ["TECH", "LIFESTYLE"]},
-        {image: img2, name: "new laptop", description: "very nice", shop: "KSP", price: 99.9, categories: ["TECH", "LIFESTYLE"]},
-        {image: img1, name: "new laptop", description: "very nice", shop: "KSP", price: 99.9, categories: ["TECH", "LIFESTYLE"]},
-        {image: img2, name: "new laptop", description: "very nice", shop: "KSP", price: 99.9, categories: ["TECH", "LIFESTYLE"]},
-        {image: img1, name: "new laptop", description: "very nice", shop: "KSP", price: 99.9, categories: ["TECH", "LIFESTYLE"]},
-        {image: img2, name: "new laptop", description: "very nice", shop: "KSP", price: 99.9, categories: ["TECH", "LIFESTYLE"]},
-        {image: img1, name: "new laptop", description: "very nice", shop: "KSP", price: 99.9, categories: ["TECH", "LIFESTYLE"]},
-        {image: img2, name: "new laptop", description: "very nice", shop: "KSP", price: 99.9, categories: ["TECH", "LIFESTYLE"]},
-        {image: img1, name: "new laptop", description: "very nice", shop: "KSP", price: 99.9, categories: ["TECH", "LIFESTYLE"]},
-        {image: img2, name: "new laptop", description: "very nice", shop: "KSP", price: 99.9, categories: ["TECH", "LIFESTYLE"]},
-        {image: img1, name: "new laptop", description: "very nice", shop: "KSP", price: 99.9, categories: ["TECH", "LIFESTYLE"]},
-        {image: img2, name: "new laptop", description: "very nice", shop: "KSP", price: 99.9, categories: ["TECH", "LIFESTYLE"]},
-        {image: img1, name: "new laptop", description: "very nice", shop: "KSP", price: 99.9, categories: ["TECH", "LIFESTYLE"]},
-        {image: img2, name: "new laptop", description: "very nice", shop: "KSP", price: 99.9, categories: ["TECH", "LIFESTYLE"]}
-    ];
+  const [products, setProducts] = useState<Product[]>([]);
 
-    return (
-        <div>
-            <Box
-                id="itemsBox"
-                style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    alignContent: "start",
-                    justifyContent: "center",
-                    paddingLeft: "1.5rem",
-                    height: "63vh",
-                    columnGap: "1.5rem",
-                    rowGap: "1.5rem",
-                    overflowX: "hidden",
-                    overflowY: "auto"
-                }}
-            >
-                {items.map((item, index) => (
-                    <CardItem
-                        key={index}
-                        image={item.image}
-                        name={item.name}
-                        description={item.description}
-                        shop={item.shop}
-                        price={item.price}
-                        categories={item.categories}
-                    />
-                ))}
-            </Box>
-        </div>
-    );
+  useEffect(() => {
+    fetch('http://127.0.0.1:5000/products')
+      .then(response => response.json())
+      .then(data => setProducts(data.products))
+      .catch(error => console.error('Error fetching products:', error));
+
+  }, []);
+
+  return (
+    <div>
+      <Box
+        id="itemsBox"
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignContent: 'start',
+          justifyContent: 'center',
+          paddingLeft: '1.5rem',
+          height: '63vh',
+          columnGap: '1.5rem',
+          rowGap: '1.5rem',
+          overflowX: 'hidden',
+          overflowY: 'auto',
+        }}
+      >
+        {products.map((product, index) => (
+          <CardItem
+            key={index}
+            image={img1} // Replace with actual image URL
+            name={product.name}
+            description={product.description}
+            shop={product.shop_name}
+            price={product.price}
+            categories={product.categories}
+          />
+        ))}
+      </Box>
+    </div>
+  );
 }

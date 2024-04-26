@@ -57,10 +57,9 @@ export default function App() {
           { path: "/categories/Tech", element: <CategoryPage name="Tech" /> },
           {
             path: "/categories/Lifestyle",
-            element: <CategoryPage name="Lifestyle" />,
+            element: <CategoryPage name="LifeStyle" />,
           },
           { path: "/categories/Cars", element: <CategoryPage name="Cars" /> },
-          { path: "/createstore", element: <CreateStorePage /> },             // dialog - DONE
           { path: "/changepassword", element: <ChangePassword /> },           // dialog - DONE
           { path: "/changeaddress", element: <AddressForm /> },               // dialog - DONE
           { path: "/edititem", element: <EditItemForm /> },                   // dialog - DONE

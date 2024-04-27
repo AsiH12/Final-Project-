@@ -27,13 +27,44 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
   const countryRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState<boolean>(false);
 
-  const handleSaveAddress = () => {
+  const handleSaveAddress = async () => {
     const address = addressRef.current?.value || "";
     const city = cityRef.current?.value || "";
     const country = countryRef.current?.value || "";
+    const user_id = 1;
 
-    onSaveAddress({ address, city, country });
-    setOpen(false); // Close the dialog after saving address
+    // Prepare the data to send to the backend
+    const data = {
+      address,
+      city,
+      country,
+      user_id
+    };
+
+    console.log(data)
+
+    try {
+      const response = await fetch('http://127.0.0.1:5000/addresses', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save address');
+      }
+
+      // If response is ok, call the callback function to handle the data
+      // onSaveAddress(data);
+
+      // Close the dialog after saving address
+      setOpen(false);
+    } catch (error) {
+      console.error('Error:', error.message);
+      // Handle error here (show an alert, error message, etc.)
+    }
   };
 
   return (

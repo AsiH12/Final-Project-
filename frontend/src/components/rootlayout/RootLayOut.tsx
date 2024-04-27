@@ -28,12 +28,14 @@ export default function RootLayOut() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
+  
+    console.log(response)
 
-    if (response.ok) {
-      alert("shop created successfully" );
-    } else {
-      throw new Error("Invalid credentials");
-    }
+    // if (response.ok) {
+    //   alert("shop created successfully" );
+    // } else {
+    //   throw new Error("Invalid credentials");
+    // }
   } catch (error) {
     alert("Error creating a shop: " + error.message);
   }
@@ -51,7 +53,7 @@ export default function RootLayOut() {
           <div style={{display: "flex", flexDirection: "row" , justifyContent: "space-between"}}>
             <div>
               <li>
-                <a href="/">HOME</a>
+                <a href="/home">HOME</a>
               </li>
               <li>
                 <a href="/categories">CATEGORIES</a>
@@ -59,7 +61,7 @@ export default function RootLayOut() {
             </div>
             <div>
             <li>
-              <a href="#" onClick={handleCreateStore}>
+              <a  onClick={handleCreateStore}>
                 CREATE A SHOP
               </a>
             </li>

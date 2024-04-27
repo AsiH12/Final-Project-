@@ -6,7 +6,7 @@ from db import close_db, get_db
 bp=Blueprint("addressesRoutes", __name__, url_prefix="/addresses")
 
 # Get all addresses route
-@bp.route("/", methods=["GET"])
+@bp.route("", methods=["GET"])
 def get_addresses():
     db = get_db()
     cursor = db.cursor()
@@ -42,7 +42,7 @@ def get_address_by_id(address_id):
         }), 200
 
 # Create new address route
-@bp.route("/", methods=["POST"])
+@bp.route("", methods=["POST"])
 def create_new_address():
     data = request.get_json()
     address = data.get("address")

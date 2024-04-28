@@ -1,34 +1,38 @@
 nav {
-    background-color: #001f3f; /* Change navbar color */
-    color: white;
-    height: 10vh; /* Set height to 92px */
-    width: 100%; /* Set width to 100% */
-    position: fixed; /* Fixed position to stick to the top */
-    top: 0; /* Align to the top */
-    left: 0; /* Align to the left */
-    z-index: 1000; /* Set a high z-index to ensure it's on top of other elements */
-    box-sizing: border-box;
-  }
-  
-  nav ul {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-  }
-  
-  nav ul li {
-    display: inline;
-    margin-right: 20px;
-  }
-  
-  nav ul li a {
-    color: white;
-    text-decoration: none;
-    font-size: 2em; /* Increase font size */
-    display: inline-block;
-    padding: 20px; /* Adjust padding to increase size */
-  }
-  
-  nav ul li a:hover {
-    text-decoration: underline;
-  }
+  background-color: #001f3f; /* Change navbar color */
+  color: white;
+  height: 10vh; /* Set height to 92px */
+  width: 100%; /* Set width to 100% */
+  position: fixed; /* Fixed position to stick to the top */
+  top: 0; /* Align to the top */
+  left: 0; /* Align to the left */
+  z-index: 1000; /* Set a high z-index to ensure it's on top of other elements */
+  box-sizing: border-box;
+}
+
+nav ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+nav ul li {
+  display: inline;
+  margin-right: 20px;
+}
+
+nav ul li a {
+  color: white;
+  text-decoration: none;
+  font-size: 2em; /* Increase font size */
+  display: inline-block;
+  padding: 20px; /* Adjust padding to increase size */
+}
+
+nav ul li a:hover {
+  text-decoration: underline;
+}
+
+.swal-dialog-custom {
+  z-index: 9999 !important; /* Adjust the z-index value as needed */
+}

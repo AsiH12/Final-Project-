@@ -3,9 +3,11 @@ import { Outlet } from "react-router-dom";
 import { StoreForm } from "../CreateStore";
 import Swal from "sweetalert2"; // Import SweetAlert2
 import "./RootLayOut.css";
+import zIndex from "@mui/material/styles/zIndex";
 
 export default function RootLayOut() {
   const [showStoreForm, setShowStoreForm] = useState(false);
+  const isLoggedIn = localStorage.getItem("access_token") ? true : false;
 
   const handleCreateStore = () => {
     setShowStoreForm(true);
@@ -25,40 +27,88 @@ export default function RootLayOut() {
           icon: "success",
           title: "Shop Created Successfully!",
           showConfirmButton: false,
-          timer: 1500 // Automatically close after 1.5 seconds
+          timer: 2000, // Automatically close after 1.5 seconds
+          customClass: {
+            container: "swal-dialog-custom",
+          },
         });
         setShowStoreForm(false);
       } else {
         throw new Error("Invalid credentials");
       }
     } catch (error) {
-      alert("Error creating a shop: " + error.message);
+      Swal.fire({
+        icon: "error",
+        title: "Failed to create new shop",
+        showConfirmButton: false,
+        timer: 2000, // Automatically close after 1.5 seconds
+        customClass: {
+          container: "swal-dialog-custom",
+        },
+      });
+      console.error("Error creating a shop: " + error.message);
     }
   };
 
   return (
     <div>
-      <nav>
-        <ul>
-          <div style={{display: "flex", flexDirection: "row" , justifyContent: "space-between"}}>
-            <div>
-              <li>
-                <a href="/home">HOME</a>
-              </li>
-              <li>
-                <a href="/categories">CATEGORIES</a>
-              </li>
+      {isLoggedIn ? (
+        <nav>
+          <ul>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "space-between",
+              }}
+            >
+              <div>
+                <li>
+                  <a href="/home">HOME</a>
+                </li>
+                <li>
+                  <a href="/categories">CATEGORIES</a>
+                </li>
+              </div>
+              <div>
+                <li>
+                  <a onClick={handleCreateStore}>CREATE A SHOP</a>
+                </li>
+              </div>
             </div>
-            <div>
-            <li>
-              <a  onClick={handleCreateStore}>
-                CREATE A SHOP
-              </a>
-            </li>
+          </ul>
+        </nav>
+      ) : (
+        <nav>
+          <ul>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "space-between",
+              }}
+            >
+              <div>
+                <li>
+                  <a href="/home">HOME</a>
+                </li>
+                <li>
+                  <a href="/categories">CATEGORIES</a>
+                </li>
+              </div>
+              <div>
+                <li>
+                  <a href="/home">SIGN IN</a>
+                </li>
+                <li>
+                  <a href="/categories">SIGN UP</a>
+                </li>
+              </div>
             </div>
-          </div>
-        </ul>
-      </nav>
+          </ul>
+        </nav>
+      )}
+
       <Outlet />
       {showStoreForm && (
         <StoreForm

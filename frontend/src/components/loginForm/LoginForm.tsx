@@ -1,5 +1,6 @@
 import React from 'react';
 import { useRef } from "react";
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import "./LoginForm.css";
 import { Box, TextField, Button } from '@mui/material';
 
@@ -8,6 +9,7 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ setUserToken }: LoginFormProps) {
+  const navigate = useNavigate(); // Initialize useNavigate
   const usernameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
 
@@ -25,8 +27,10 @@ export function LoginForm({ setUserToken }: LoginFormProps) {
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem("access_token", data.access_token);
+        localStorage.setItem("username", username);
+
         setUserToken(data.access_token);
-        // navigate("/home")
+        navigate("/home"); // Navigate to '/home' after successful login
       } else {
         throw new Error("Invalid credentials");
       }

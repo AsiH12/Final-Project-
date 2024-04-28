@@ -1,6 +1,17 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Box, TextField, Button, Dialog, DialogTitle, DialogContent, DialogActions, Divider, Autocomplete, Chip } from '@mui/material';
-import './StoreForm.css';
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Box,
+  TextField,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Divider,
+  Autocomplete,
+  Chip,
+} from "@mui/material";
+import "./StoreForm.css";
 
 interface StoreFormProps {
   open: boolean;
@@ -34,24 +45,30 @@ export function StoreForm({ open, onClose, onSubmit }: StoreFormProps) {
   const descriptionRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:5000/categories')
-      .then(response => response.json())
-      .then(data => setCategories(data.categories))
-      .catch(error => console.error('Error fetching categories:', error));
+    fetch("http://127.0.0.1:5000/categories")
+      .then((response) => response.json())
+      .then((data) => setCategories(data.categories))
+      .catch((error) => console.error("Error fetching categories:", error));
   }, []);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:5000/users')
-      .then(response => response.json())
-      .then(data => setManagers(data.users))
-      .catch(error => console.error('Error fetching managers:', error));
+    fetch("http://127.0.0.1:5000/users")
+      .then((response) => response.json())
+      .then((data) => setManagers(data.users))
+      .catch((error) => console.error("Error fetching managers:", error));
   }, []);
 
   const handleSubmit = () => {
-    const storeName = storeNameRef.current?.value || '';
-    const description = descriptionRef.current?.value || '';
+    const storeName = storeNameRef.current?.value || "";
+    const description = descriptionRef.current?.value || "";
 
-    onSubmit({ name: storeName, description, categories: selectedCategories, ownerId: 1, managers: selectedManagers });
+    onSubmit({
+      name: storeName,
+      description,
+      categories: selectedCategories,
+      owner_id: 1,
+      managers: selectedManagers,
+    });
   };
 
   return (
@@ -68,7 +85,7 @@ export function StoreForm({ open, onClose, onSubmit }: StoreFormProps) {
           }}
         >
           <TextField
-            sx={{ width: '400px', background: 'white' }}
+            sx={{ width: "400px", background: "white" }}
             id="storeName"
             label="Store Name"
             variant="outlined"
@@ -79,7 +96,7 @@ export function StoreForm({ open, onClose, onSubmit }: StoreFormProps) {
           />
 
           <TextField
-            sx={{ width: '400px', background: 'white' }}
+            sx={{ width: "400px", background: "white" }}
             id="description"
             label="Description"
             variant="outlined"
@@ -93,12 +110,17 @@ export function StoreForm({ open, onClose, onSubmit }: StoreFormProps) {
             multiple
             id="categories"
             fullWidth
-            options={categories.map(category => category.name)}
+            options={categories.map((category) => category.name)}
             getOptionLabel={(option) => option}
             filterSelectedOptions
             renderTags={(value, getTagProps) =>
               value.map((option, index) => (
-                <Chip key={index} variant="outlined" label={option} {...getTagProps({ index })} />
+                <Chip
+                  key={index}
+                  variant="outlined"
+                  label={option}
+                  {...getTagProps({ index })}
+                />
               ))
             }
             renderInput={(params) => (
@@ -118,12 +140,17 @@ export function StoreForm({ open, onClose, onSubmit }: StoreFormProps) {
             id="managers"
             multiple
             fullWidth
-            options={managers.map(manager => manager.username)}
+            options={managers.map((manager) => manager.username)}
             getOptionLabel={(option) => option}
             filterSelectedOptions
             renderTags={(value, getTagProps) =>
               value.map((option, index) => (
-                <Chip key={index} variant="outlined" label={option} {...getTagProps({ index })} />
+                <Chip
+                  key={index}
+                  variant="outlined"
+                  label={option}
+                  {...getTagProps({ index })}
+                />
               ))
             }
             renderInput={(params) => (

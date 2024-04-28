@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import img1 from "../../../public/images/img1.jpg";
-import img2 from "../../../public/images/img2.jpg";
+import img1 from "../../images/img1.jpg";
+import img2 from "../../images/img2.jpg";
 import CardItem from "../../components/CardItem";
 import { Box } from "@mui/material";
 import "./CategoryPage.css";

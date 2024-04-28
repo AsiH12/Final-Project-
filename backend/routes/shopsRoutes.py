@@ -66,8 +66,9 @@ def get_shop_by_id(shop_id):
 
 
 # Create new shop route
-@bp.route("", methods=["POST"])
+@bp.route("/new", methods=["POST"])
 def create_new_shop():
+    print(request)
     data = request.get_json()
     name = data.get("name")
     description = data.get("description")

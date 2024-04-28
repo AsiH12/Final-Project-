@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { StoreForm } from "../CreateStore";
+import Swal from "sweetalert2"; // Import SweetAlert2
 import "./RootLayOut.css";
 
 export default function RootLayOut() {
@@ -11,39 +12,28 @@ export default function RootLayOut() {
   };
 
   const handleSubmit = async (data) => {
-    console.log(data);
+    try {
+      const response = await fetch(`http://127.0.0.1:5000/shops/new`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
 
-    // Handle form submission here
-  //   {
-  //     "name": "New Shop Name1",
-  //     "description": "Description of the new shop",
-  //     "categories": ["Tech", "LifeStyle"],
-  //     "managers": ["admin2", "user2"],
-  //     "owner_id": 3
-  // }
-
-  try {
-    const response = await fetch(`http://127.0.0.1:5000/shops`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-  
-    console.log(response)
-
-    // if (response.ok) {
-    //   alert("shop created successfully" );
-    // } else {
-    //   throw new Error("Invalid credentials");
-    // }
-  } catch (error) {
-    alert("Error creating a shop: " + error.message);
-  }
-  
-  
-    
-    console.log(data);
-    setShowStoreForm(false);
+      if (response.ok) {
+        // Show SweetAlert2 popup if shop created successfully
+        Swal.fire({
+          icon: "success",
+          title: "Shop Created Successfully!",
+          showConfirmButton: false,
+          timer: 1500 // Automatically close after 1.5 seconds
+        });
+        setShowStoreForm(false);
+      } else {
+        throw new Error("Invalid credentials");
+      }
+    } catch (error) {
+      alert("Error creating a shop: " + error.message);
+    }
   };
 
   return (

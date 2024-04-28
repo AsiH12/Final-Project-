@@ -36,7 +36,7 @@ def get_purchase_history_by_id(purchase_id):
     return jsonify(purchase_dict), 200
 
 # Create new purchase history route
-@bp.route("/", methods=["POST"])
+@bp.route("", methods=["POST"])
 def create_purchase_history():
     data = request.get_json()
     db = get_db()

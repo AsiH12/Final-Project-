@@ -44,7 +44,7 @@ def get_discount_product_by_id(discount_id):
         }), 200
 
 # Create new discount for product route
-@bp.route("/", methods=["POST"])
+@bp.route("", methods=["POST"])
 def create_discount_product():
     data = request.get_json()
     product_id = data.get("product_id")

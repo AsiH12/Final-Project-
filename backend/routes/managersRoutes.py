@@ -48,7 +48,7 @@ def get_manager_by_id(manager_id):
 
 
 # Create new manager route
-@bp.route("/", methods=["POST"])
+@bp.route("", methods=["POST"])
 def create_new_manager():
     data = request.get_json()
     manager_id = data.get("manager_id")

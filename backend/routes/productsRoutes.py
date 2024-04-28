@@ -91,7 +91,7 @@ def get_products_by_category(category_name):
     return jsonify(products=product_list), 200
 
 # Create new product route
-@bp.route("/", methods=["POST"])
+@bp.route("", methods=["POST"])
 def create_new_product():
     data = request.get_json()
     name = data.get("name")

@@ -22,7 +22,7 @@ export default function CategoryPage({ name }) {
       .then((response) => response.json())
       .then((data) => setProducts(data.products))
       .catch((error) => console.error("Error fetching products:", error));
-  }, []);
+  }, [name]);
 
   return (
     <div className="container">

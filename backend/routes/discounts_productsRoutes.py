@@ -71,6 +71,7 @@ def get_discount_product_by_id(discount_id):
     
 @bp.route("/check-discount", methods=["POST"])
 def check_discount():
+    @jwt_required()
     data = request.get_json()
     discount_code = data.get("discount_code")
     cart = data.get("cart")

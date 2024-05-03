@@ -47,6 +47,7 @@ export default function CategoryPage({ name }) {
         {products.map((product, index) => (
           <CardItem
             key={index}
+            id={product.id}
             image={img1} // Replace with actual image URL
             name={product.name}
             description={product.description}

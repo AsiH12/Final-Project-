@@ -27,42 +27,43 @@ import { AddManagerPage } from "./components/AddManagerPage/AddManagerPage";
 import { ManagersPage } from "./components/managePage/ManagersPage";
 import { UsersPage } from "./components/userPage/UsersPage";
 import { CreateDiscountPage } from "./components/createDiscount/CreateDiscountPage";
+import CartPage from "./components/CartPage";
 
 const BACKEND_URL = "http://127.0.0.1:5000";
 
 const handleRouter = (userToken, setUserToken) => {
   let router;
 
-  // router = createBrowserRouter([
-  //   {
-  //     path: "/",
-  //     element: <RootLayOut />,
-  //     children: [
-  //       { path: "/", element: <Navigate to="/home" replace /> },
-  //       {
-  //         path: "/login",
-  //         element: <LoginForm setUserToken={setUserToken} />,
-  //       },
-  //       {
-  //         path: "/register",
-  //         element: <RegisterForm setUserToken={setUserToken} />,
-  //       },
-  //       { path: "/home", element: <HomePage /> },
-  //       {
-  //         path: "/categories/fashion",
-  //         element: <CategoryPage name="Fashion" />,
-  //       },
-  //       { path: "/categories/tech", element: <CategoryPage name="Tech" /> },
-  //       {
-  //         path: "/categories/lifestyle",
-  //         element: <CategoryPage name="LifeStyle" />,
-  //       },
-  //       { path: "/categories/cars", element: <CategoryPage name="Cars" /> },
-  //     ],
-  //   },
-  // ]);
+  router = createBrowserRouter([
+    {
+      path: "/",
+      element: <RootLayOut />,
+      children: [
+        { path: "/", element: <Navigate to="/home" replace /> },
+        {
+          path: "/login",
+          element: <LoginForm setUserToken={setUserToken} />,
+        },
+        {
+          path: "/register",
+          element: <RegisterForm setUserToken={setUserToken} />,
+        },
+        { path: "/home", element: <HomePage /> },
+        {
+          path: "/categories/fashion",
+          element: <CategoryPage name="Fashion" />,
+        },
+        { path: "/categories/tech", element: <CategoryPage name="Tech" /> },
+        {
+          path: "/categories/lifestyle",
+          element: <CategoryPage name="LifeStyle" />,
+        },
+        { path: "/categories/cars", element: <CategoryPage name="Cars" /> },
+      ],
+    },
+  ]);
 
-  // if (userToken !== null) {
+  if (userToken !== null) {
   console.log("authorized");
   router = createBrowserRouter([
     {
@@ -105,10 +106,11 @@ const handleRouter = (userToken, setUserToken) => {
         { path: "/managers", element: <ManagersPage /> }, // page - DONE
         { path: "/users", element: <UsersPage /> }, // page - DONE
         { path: "/discount", element: <CreateDiscountPage /> }, // page - list of card of all discounted and edit/remove/create a discount  - HALF DONE
+        { path: "/cart", element: <CartPage /> }, 
       ],
     },
   ]);
-  // }
+  }
 
   return router;
 };

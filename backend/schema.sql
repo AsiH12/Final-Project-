@@ -42,7 +42,8 @@ CREATE TABLE IF NOT EXISTS managers (
 CREATE TABLE IF NOT EXISTS discounts_products (
     id INTEGER PRIMARY KEY NOT NULL,
     product_id INTEGER NOT NULL,
-    discount TEXT NOT NULL,
+    discount_code TEXT UNIQUE NOT NULL,
+    discount INTEGER NOT NULL,
     expiration_date DATE NOT NULL,
     minimum_amount INTEGER NOT NULL,
     allow_others BOOLEAN NOT NULL,
@@ -52,7 +53,8 @@ CREATE TABLE IF NOT EXISTS discounts_products (
 CREATE TABLE IF NOT EXISTS discounts_shops (
     id INTEGER PRIMARY KEY NOT NULL,
     shop_id INTEGER NOT NULL,
-    discount TEXT NOT NULL,
+    discount_code TEXT UNIQUE NOT NULL,
+    discount INTEGER NOT NULL,
     expiration_date DATE NOT NULL,
     minimum_amount INTEGER NOT NULL,
     allow_others BOOLEAN NOT NULL,
@@ -103,51 +105,40 @@ CREATE TABLE IF NOT EXISTS shops_categories (
 );
 
 -- Inserting into users table
-INSERT OR IGNORE INTO
-    users (username, password, email, age, role)
+INSERT
+    OR IGNORE INTO users (username, password, email, age, role)
 VALUES
-    (
-        'admin2',
-        '1234',
-        'admin2@mysite.com',
-        32,
-        'admin'
-    ),
-    ('user2', '1234', 'user2@mysite.com', 28, 'user'),
-    (
-        'manager1',
-        '1234',
-        'manager1@mysite.com',
-        35,
-        'manager'
-    );
+    ('user3', '1234', 'user3@mysite.com', 30, 'user'),
+    ('user4', '1234', 'user4@mysite.com', 25, 'user'),
+    ('user5', '1234', 'user5@mysite.com', 40, 'user');
 
 -- Inserting into categories table
-INSERT OR IGNORE INTO categories (category_name) VALUES ('LifeStyle'), ('Fashion'), ('Tech'), ('Cars');
+INSERT
+    OR IGNORE INTO categories (category_name)
+VALUES
+    ('Home'),
+    ('Outdoor'),
+    ('Beauty');
 
 -- Inserting into shops table
-INSERT OR IGNORE INTO
-    shops (name, description, owner_id)
+INSERT
+    OR IGNORE INTO shops (name, description, owner_id)
 VALUES
-    ('Shop1', 'Fashion store', 1),
-    ('Shop2', 'Tech gadgets store', 3),
-    (
-        'Shop3',
-        'Lifestyle products store',
-        2
-    );
+    ('Shop4', 'Home goods store', 2),
+    ('Shop5', 'Outdoor equipment store', 1),
+    ('Shop6', 'Beauty products store', 3);
 
 -- Inserting into managers table
-INSERT OR IGNORE INTO
-    managers (manager_id, shop_id)
+INSERT
+    OR IGNORE INTO managers (manager_id, shop_id)
 VALUES
-    (3, 1),
-    (3, 2),
-    (3, 3);
+    (1, 4),
+    (2, 5),
+    (3, 6);
 
 -- Inserting into products table
-INSERT OR IGNORE INTO
-    products (
+INSERT
+    OR IGNORE INTO products (
         name,
         description,
         shop_id,
@@ -157,33 +148,33 @@ INSERT OR IGNORE INTO
     )
 VALUES
     (
-        'Product1',
-        'Fashion product',
-        1,
-        50,
-        100,
-        20
+        'Product4',
+        'Home decoration item',
+        4,
+        40,
+        150,
+        10
     ),
     (
-        'Product2',
-        'Tech product',
-        2,
-        100,
-        50,
+        'Product5',
+        'Outdoor tent',
+        5,
+        200,
+        30,
         NULL
     ),
     (
-        'Product3',
-        'Lifestyle product',
-        3,
-        30,
-        200,
-        15
+        'Product6',
+        'Beauty face cream',
+        6,
+        25,
+        100,
+        5
     );
 
 -- Inserting into discounts_products table
-INSERT OR IGNORE INTO
-    discounts_products (
+INSERT
+    OR IGNORE INTO discounts_products (
         product_id,
         discount,
         expiration_date,
@@ -191,13 +182,13 @@ INSERT OR IGNORE INTO
         allow_others
     )
 VALUES
-    (1, '10%', '2024-06-01', 50, true),
-    (2, '15%', '2024-07-01', 1, false),
-    (3, '5%', '2024-05-01', 100, true);
+    (4, '10%', '2024-06-01', 100, true),
+    (5, '20%', '2024-07-01', 1, false),
+    (6, '5%', '2024-05-01', 50, true);
 
 -- Inserting into discounts_shops table
-INSERT OR IGNORE INTO
-    discounts_shops (
+INSERT
+    OR IGNORE INTO discounts_shops (
         shop_id,
         discount,
         expiration_date,
@@ -205,21 +196,21 @@ INSERT OR IGNORE INTO
         allow_others
     )
 VALUES
-    (1, '20%', '2024-06-01', 100, true),
-    (2, '25%', '2024-07-01', 200, false),
-    (3, '10%', '2024-05-01', 150, true);
+    (4, '15%', '2024-06-01', 150, true),
+    (5, '30%', '2024-07-01', 300, false),
+    (6, '10%', '2024-05-01', 200, true);
 
 -- Inserting into addresses table
-INSERT OR IGNORE INTO
-    addresses (address, city, country, user_id)
+INSERT
+    OR IGNORE INTO addresses (address, city, country, user_id)
 VALUES
-    ('123 Main St', 'New York', 'USA', 1),
-    ('456 Elm St', 'Los Angeles', 'USA', 2),
-    ('789 Oak St', 'Chicago', 'USA', 3);
+    ('321 Pine St', 'San Francisco', 'USA', 4),
+    ('654 Cedar St', 'Seattle', 'USA', 5),
+    ('987 Birch St', 'Miami', 'USA', 6);
 
 -- Inserting into purchase_history table
-INSERT OR IGNORE INTO
-    purchase_history (
+INSERT
+    OR IGNORE INTO purchase_history (
         product_id,
         shop_id,
         user_id,
@@ -234,55 +225,102 @@ INSERT OR IGNORE INTO
     )
 VALUES
     (
+        4,
+        4,
+        5,
         1,
-        1,
-        2,
-        2,
-        50,
-        '2024-04-10',
-        'Los Angeles',
+        40,
+        '2024-04-13',
+        'Seattle',
         'USA',
-        '456 Elm St',
+        '654 Cedar St',
         true,
-        5
+        10
     ),
     (
+        5,
+        5,
+        6,
         2,
-        2,
-        3,
-        1,
-        100,
-        '2024-04-11',
-        'Chicago',
+        200,
+        '2024-04-14',
+        'Miami',
         'USA',
-        '789 Oak St',
+        '987 Birch St',
         true,
-        15
+        20
     ),
     (
+        6,
+        6,
+        4,
         3,
-        3,
-        1,
-        3,
-        30,
-        '2024-04-12',
-        'New York',
+        25,
+        '2024-04-15',
+        'San Francisco',
         'USA',
-        '123 Main St',
+        '321 Pine St',
         true,
         2
     );
 
 -- Inserting into products_categories table
-INSERT OR IGNORE INTO products_categories (product_id, category_id) VALUES
-    (1, 2), -- Fashion
-    (2, 3), -- Tech
-    (3, 1); -- LifeStyle
+INSERT
+    OR IGNORE INTO products_categories (product_id, category_id)
+VALUES
+    (4, 1),
+    -- Home
+    (5, 2),
+    -- Outdoor
+    (6, 3);
 
+-- Beauty
 -- Inserting into shops_categories table
-INSERT OR IGNORE INTO shops_categories (shop_id, category_id) VALUES
-    (1, 2), -- Fashion
-    (1, 3), -- Tech
-    (2, 3), -- Tech
-    (3, 1); -- LifeStyle
+INSERT
+    OR IGNORE INTO shops_categories (shop_id, category_id)
+VALUES
+    (4, 1),
+    -- Home
+    (4, 3),
+    -- Beauty
+    (5, 2),
+    -- Outdoor
+    (5, 3),
+    -- Beauty
+    (6, 3),
+    -- Beauty
+    (6, 1);
 
+-- Inserting into discounts_products table
+INSERT
+    OR IGNORE INTO discounts_products (
+        product_id,
+        discount_code,
+        discount,
+        expiration_date,
+        minimum_amount,
+        allow_others
+    )
+VALUES
+    (1, 'ASI15', 15, '2024-06-10', 50, true),
+    (2, 'SUMMER20', 20, '2024-07-15', 1, false),
+    (3, 'FALL10', 10, '2024-05-20', 100, true),
+    (4, 'SPRING25', 25, '2024-08-01', 150, true),
+    (5, 'WINTER12', 12, '2024-09-01', 200, false);
+
+-- Inserting into discounts_shops table
+INSERT
+    OR IGNORE INTO discounts_shops (
+        shop_id,
+        discount_code,
+        discount,
+        expiration_date,
+        minimum_amount,
+        allow_others
+    )
+VALUES
+    (1, 'SHOP25', 25, '2024-06-10', 100, true),
+    (2, 'BIGSALE30', 30, '2024-07-15', 200, false),
+    (3, 'SAVINGS20', 20, '2024-05-20', 150, true),
+    (4, 'MAYSALE35', 35, '2024-08-01', 200, true),
+    (5, 'EARLYBIRD15', 15, '2024-09-01', 250, false);

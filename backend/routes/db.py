@@ -25,6 +25,7 @@ def close_db(_e=None) -> None:
 def init_db() -> None:
     """Create the tables in the SQLite database"""
     SCHEMA_PATH = CURRENT_DIR / "schema.sql"
+    print(SCHEMA_PATH)
     db = sqlite3.connect(DB_PATH)
     db_schema = SCHEMA_PATH.read_text()
     cursor = db.cursor()

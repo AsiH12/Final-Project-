@@ -1,7 +1,15 @@
-import React from "react";
-import { Card, CardContent, CardMedia, Typography } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardMedia,
+  Typography,
+} from "@mui/material";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 
 export default function CardItem({
+  id,
   image,
   name,
   description,
@@ -9,15 +17,59 @@ export default function CardItem({
   price,
   categories,
 }) {
+  const isLoggedIn = localStorage.getItem("access_token") ? true : false;
+
+  const [quantity, setQuantity] = useState(() => {
+    // Get the current cart from local storage or initialize it to an empty array
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+    // Find the index of the item in the cart
+    const index = cart.findIndex((item) => item.name === name);
+
+    // If the item is in the cart, set quantity to its amount, otherwise set to 0
+    return index !== -1 ? cart[index].amount : 0;
+  });
+  const handleCartUpdate = () => {
+    // Get the current cart from local storage or initialize it to an empty array
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+    // Find the index of the item in the cart
+    const index = cart.findIndex((item) => item.name === name);
+
+    // If quantity is 0, remove the item from the cart
+    if (quantity === 0) {
+      if (index !== -1) {
+        cart.splice(index, 1);
+        localStorage.setItem("cart", JSON.stringify(cart));
+      }
+    } else {
+      // If the item is already in the cart, update its quantity
+      if (index !== -1) {
+        cart[index].amount = quantity;
+      } else {
+        // If the item is not in the cart, add it
+        cart.push({
+          id: id,
+          name: name,
+          price: price,
+          shop: shop,
+          image: image,
+          amount: quantity,
+        });
+      }
+      localStorage.setItem("cart", JSON.stringify(cart));
+    }
+  };
+
   return (
-    <Card sx={{ width: 300, boxShadow: 3, padding: "10px"}}>
+    <Card sx={{ width: 300, boxShadow: 3, padding: "10px" }}>
       <CardMedia
         component="img"
         width="350"
         height="250"
         image={image}
         alt={name}
-        />
+      />
       <CardContent>
         <Typography
           gutterBottom
@@ -25,8 +77,8 @@ export default function CardItem({
           component="div"
           fontSize="35px"
           marginTop="5px"
-          sx={{fontSize : "2rem"}}
-          >
+          sx={{ fontSize: "2rem" }}
+        >
           {name}
         </Typography>
         <Typography
@@ -34,8 +86,7 @@ export default function CardItem({
           color="text.secondary"
           fontSize="20px"
           marginTop="10px"
-          sx={{fontSize : "1.2rem"}}
-
+          sx={{ fontSize: "1.2rem" }}
         >
           {description}
         </Typography>
@@ -44,6 +95,7 @@ export default function CardItem({
             display: "flex",
             flexDirection: "row",
             justifyContent: "space-between",
+            alignItems: "center", // Center items vertically
           }}
         >
           <Typography
@@ -54,12 +106,13 @@ export default function CardItem({
           >
             {shop}
           </Typography>
+
           <Typography
             variant="body2"
             color="text.secondary"
             fontWeight="bold"
             marginTop="10px"
-            sx={{fontSize : "1.5rem"}}
+            sx={{ fontSize: "1.5rem" }}
           >
             {price}
           </Typography>
@@ -82,6 +135,32 @@ export default function CardItem({
             </li>
           ))}
         </ul>
+        {isLoggedIn && (
+          <div
+            style={{ display: "flex", alignItems: "center", marginTop: "10px" }}
+          >
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              fontWeight="bold"
+              marginTop="10px"
+              display="inline-block"
+              mr={2} // Add margin between text and input
+            >
+              Quantity:
+            </Typography>
+            <input
+              type="number"
+              min="0"
+              value={quantity}
+              onChange={(e) => setQuantity(parseInt(e.target.value))}
+              style={{ marginRight: "10px", width: "50px" }}
+            />
+            <Button variant="outlined" onClick={handleCartUpdate}>
+              <ShoppingCartIcon />
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

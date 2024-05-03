@@ -17,7 +17,7 @@ def get_purchase_history():
     purchase_history_list = []
     for purchase in purchase_history:
         purchase_dict = dict(purchase)
-        purchase_history_list.bpend(purchase_dict)
+        purchase_history_list.append(purchase_dict)
 
     return jsonify(purchase_history=purchase_history_list), 200
 

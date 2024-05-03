@@ -10,10 +10,11 @@ def get_products():
     db = get_db()
     cursor = db.cursor()
     cursor.execute("""
-        SELECT p.id, p.name, p.description, p.shop_id, p.price, p.amount, p.maximum_discount, GROUP_CONCAT(c.category_name) AS categories
+        SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, GROUP_CONCAT(c.category_name) AS categories
         FROM products p
         LEFT JOIN products_categories pc ON p.id = pc.product_id
         LEFT JOIN categories c ON pc.category_id = c.id
+        LEFT JOIN shops s ON p.shop_id = s.id
         GROUP BY p.id
     """)
     products = cursor.fetchall()
@@ -23,6 +24,7 @@ def get_products():
             "name": product["name"],
             "description": product["description"],
             "shop_id": product["shop_id"],
+            "shop_name": product["shop_name"],
             "price": product["price"],
             "amount": product["amount"],
             "maximum_discount": product["maximum_discount"],
@@ -31,6 +33,7 @@ def get_products():
         for product in products
     ]
     return jsonify(products=product_list), 200
+
 
 
 # Get product by ID route

@@ -20,7 +20,7 @@ def login():
         return jsonify({"error": "Invalid username or password"}), 401
     else:
         access_token = create_access_token(identity=user["id"])
-        return jsonify({"access_token": access_token}), 200
+        return jsonify({"access_token": access_token, "user_id": user["id"]}), 200
 
 
 # Logout route

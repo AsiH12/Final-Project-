@@ -35,6 +35,66 @@ def get_purchase_history_by_id(purchase_id):
     purchase_dict = dict(purchase)
     return jsonify(purchase_dict), 200
 
+# Get all purchase history by user ID with user name
+@bp.route("/user/<int:user_id>", methods=["GET"])
+def get_purchase_history_by_user_id(user_id):
+    db = get_db()
+    cursor = db.cursor()
+    query = """
+        SELECT ph.id, p.name AS product_name, s.name AS shop_name, u.username AS user_name, 
+               ph.quantity, ph.product_price, ph.purchase_date, ph.city, ph.country, 
+               ph.shipping_address, ph.shipping_completed, ph.discount
+        FROM purchase_history ph
+        JOIN products p ON ph.product_id = p.id
+        JOIN shops s ON ph.shop_id = s.id
+        JOIN users u ON ph.user_id = u.id
+        WHERE ph.user_id = ?
+    """
+    cursor.execute(query, (user_id,))
+    user_purchases = cursor.fetchall()
+    purchases_list = [dict(purchase) for purchase in user_purchases]
+    return jsonify(purchases_list), 200
+
+# Get all purchase history by product ID with product name
+@bp.route("/product/<int:product_id>", methods=["GET"])
+def get_purchase_history_by_product_id(product_id):
+    db = get_db()
+    cursor = db.cursor()
+    query = """
+        SELECT ph.id, p.name AS product_name, s.name AS shop_name, u.username AS user_name, 
+               ph.quantity, ph.product_price, ph.purchase_date, ph.city, ph.country, 
+               ph.shipping_address, ph.shipping_completed, ph.discount
+        FROM purchase_history ph
+        JOIN products p ON ph.product_id = p.id
+        JOIN shops s ON ph.shop_id = s.id
+        JOIN users u ON ph.user_id = u.id
+        WHERE ph.product_id = ?
+    """
+    cursor.execute(query, (product_id,))
+    product_purchases = cursor.fetchall()
+    purchases_list = [dict(purchase) for purchase in product_purchases]
+    return jsonify(purchases_list), 200
+
+# Get all purchase history by shop ID with shop name
+@bp.route("/shop/<int:shop_id>", methods=["GET"])
+def get_purchase_history_by_shop_id(shop_id):
+    db = get_db()
+    cursor = db.cursor()
+    query = """
+        SELECT ph.id, p.name AS product_name, s.name AS shop_name, u.username AS user_name, 
+               ph.quantity, ph.product_price, ph.purchase_date, ph.city, ph.country, 
+               ph.shipping_address, ph.shipping_completed, ph.discount
+        FROM purchase_history ph
+        JOIN products p ON ph.product_id = p.id
+        JOIN shops s ON ph.shop_id = s.id
+        JOIN users u ON ph.user_id = u.id
+        WHERE ph.shop_id = ?
+    """
+    cursor.execute(query, (shop_id,))
+    shop_purchases = cursor.fetchall()
+    purchases_list = [dict(purchase) for purchase in shop_purchases]
+    return jsonify(purchases_list), 200
+
 # Create new purchase history route
 @bp.route("", methods=["POST"])
 def create_purchase_history():

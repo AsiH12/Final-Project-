@@ -149,8 +149,11 @@ VALUES ('321 Pine St', 'San Francisco', 'USA', 4),
 -- Inserting into purchase_history table
 INSERT OR IGNORE INTO purchase_history (product_id, shop_id, user_id, quantity, product_price, purchase_date, city, country, shipping_address, shipping_completed, discount)
 VALUES (4, 4, 5, 1, 40, '2024-04-13', 'Seattle', 'USA', '654 Cedar St', true, 10),
-       (5, 5, 6, 2, 200, '2024-04-14', 'Miami', 'USA', '987 Birch St', true, 20),
-       (6, 6, 4, 3, 25, '2024-04-15', 'San Francisco', 'USA', '321 Pine St', true, 2);
+       (5, 5, 1, 2, 200, '2024-05-14', 'Miami', 'USA', '987 Birch St', true, 20),
+       (5, 5, 1, 3, 200, '2023-04-14', 'Tel Aviv', 'IL', '987 Birch St', true, 20),
+       (5, 5, 1, 4, 200, '2024-03-14', 'Miami', 'USA', '987 Birch St', true, 20),
+       (5, 5, 1, 5, 200, '2024-05-02', 'San Francisco', 'USA', '987 Birch St', true, 20),
+       (6, 6, 4, 6, 25, '2024-04-15', 'San Francisco', 'USA', '321 Pine St', true, 2);
 
 -- Inserting into products_categories table
 INSERT OR IGNORE INTO products_categories (product_id, category_id)

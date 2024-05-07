@@ -26,7 +26,9 @@ export function LoginForm({ setUserToken }: LoginFormProps) {
 
       if (response.ok) {
         const data = await response.json();
+        console.log(data)
         localStorage.setItem("access_token", data.access_token);
+        localStorage.setItem("user_id", data.user_id);
         localStorage.setItem("username", username);
 
         setUserToken(data.access_token);

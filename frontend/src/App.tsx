@@ -106,7 +106,7 @@ const handleRouter = (userToken, setUserToken) => {
         { path: "/managers", element: <ManagersPage /> }, // page - DONE
         { path: "/users", element: <UsersPage /> }, // page - DONE
         { path: "/discount", element: <CreateDiscountPage /> }, // page - list of card of all discounted and edit/remove/create a discount  - HALF DONE
-        { path: "/cart", element: <CartPage /> }, 
+        { path: "/cart", element: <CartPage /> }, // dialog
       ],
     },
   ]);

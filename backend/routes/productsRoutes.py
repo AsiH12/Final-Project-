@@ -104,9 +104,9 @@ def create_new_product():
     amount = data.get("amount")
     maximum_discount = data.get("maximum_discount")
     categories = data.get("categories")
-
+    print(data)
     # Validate input data
-    if not all([name, shop_id, price, amount, categories]):
+    if not all([name, shop_id, price, amount, categories, maximum_discount]):
         return jsonify({"error": "Incomplete product data"}), 400
 
     db = get_db()

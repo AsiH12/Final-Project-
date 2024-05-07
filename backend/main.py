@@ -2,7 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from db import close_db, get_db
-from routes import usersRoutes, shopsRoutes, purchase_historyRoutes, productsRoutes, categoriesRoutes, managersRoutes, discounts_productsRoutes, discount_shopsRoutes, addressesRoutes
+from routes import usersRoutes,apply_discountRoute ,shopsRoutes, purchase_historyRoutes, productsRoutes, categoriesRoutes, managersRoutes, discounts_productsRoutes, discount_shopsRoutes, addressesRoutes
 
 app = Flask(__name__)
 
@@ -25,4 +25,6 @@ app.register_blueprint(managersRoutes.bp)
 app.register_blueprint(discounts_productsRoutes.bp)
 app.register_blueprint(discount_shopsRoutes.bp)
 app.register_blueprint(addressesRoutes.bp)
+app.register_blueprint(apply_discountRoute.bp)
+
 

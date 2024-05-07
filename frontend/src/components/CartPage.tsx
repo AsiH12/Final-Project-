@@ -13,6 +13,7 @@ import {
   ListItemText,
   ListItemSecondaryAction,
   IconButton,
+  Dialog,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Swal from "sweetalert2";
@@ -24,13 +25,16 @@ interface CartItem {
   shop: string;
   price: number;
   amount: number;
+  discount: number;
+  originalPrice: number;
 }
 
 const CartPage = () => {
   // Initialize cart state
   const [cart, setCart] = useState<CartItem[]>([]);
   const [inputValue, setInputValue] = useState("");
-  const [discounts, setDiscounts] = useState([]);
+  const [discounts, setDiscounts] = useState<string[]>([]);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     // Retrieve cart data from localStorage
@@ -45,7 +49,6 @@ const CartPage = () => {
     const updatedCart = cart.filter((item) => item.id !== id);
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
-    updateCount(); // Call updateCount when cart changes
   };
 
   // Function to update the amount of an item in the cart
@@ -62,7 +65,6 @@ const CartPage = () => {
     });
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
-    updateCount(); // Call updateCount when cart changes
   };
 
   // Function to delete a discount
@@ -72,129 +74,84 @@ const CartPage = () => {
     setDiscounts(updatedDiscounts);
   };
 
-  // Calculate total price of items in the cart
-  const totalPrice = cart.reduce(
-    (acc, item) => acc + item.price * item.amount,
-    0
-  );
+  // Function to apply discount
+  const applyDiscount = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        throw new Error("Please log in to apply discounts.");
+      }
+
+      const response = await fetch("http://127.0.0.1:5000/apply-discount", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Send JWT token
+        },
+        body: JSON.stringify({
+          discount_code: inputValue,
+          cart: cart,
+          used_discounts: discounts, // Pass used discount codes
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const updatedCart = data.updated_cart.map((item: CartItem) => {
+          return {
+            ...item,
+            originalPrice: item.price, // Save original price
+          };
+        });
+        setCart(updatedCart);
+        setInputValue(""); // Clear input after applying discount
+        setDiscounts([...discounts, inputValue]); // Add discount code to discounts list
+      } else {
+        const errorMessage = await response.json();
+        throw new Error(errorMessage.error);
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.message,
+        customClass: {
+          container: "swal-dialog-custom",
+        },
+      });
+    }
+  };
 
   // Inside handleSubmit function
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (inputValue.trim() !== "") {
-      // Check if the discount code is already in use
-      if (discounts.includes(inputValue)) {
-        // Display pop-up dialog if the code is already in use
-        Swal.fire({
-          icon: "error",
-          title: "Discount Code Already in Use",
-          text: "This discount code is already in use.",
-        });
-        return; // Exit the function if the code is already in use
-      }
-
-      // Check if the discount code is usable for the cart
-      const token = localStorage.getItem("access_token"); // Assuming you store the JWT token in localStorage
-      if (!token) {
-        Swal.fire({
-          icon: "error",
-          title: "Authentication Error",
-          text: "Please log in to use discounts.",
-        });
-        return;
-      }
-
       try {
-        const response = await fetch(
-          "http://127.0.0.1:5000/discounts/products",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ discount_code: inputValue, cart: cart }),
-          }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          if (data.discount_usable) {
-            setDiscounts([...discounts, inputValue]);
-            setInputValue(""); // Clear input after submission
-          } else {
-            // Display pop-up dialog for invalid discount code
-            let errorMessage = "Please enter a valid discount code.";
-            if (data.reason === "code_not_exist") {
-              errorMessage = "This discount code doesn't exist.";
-            } else if (data.reason === "no_qualifying_product") {
-              errorMessage =
-                "None of the products in your cart qualify for this discount.";
-            }
-            Swal.fire({
-              icon: "error",
-              title: "Invalid Discount Code",
-              text: errorMessage,
-            });
-          }
-        } else {
-          // Display pop-up dialog for server error
-          Swal.fire({
-            icon: "error",
-            title: "Server Error",
-            text: "Failed to check discount code. Please try again later.",
-          });
+        // Check if the discount code is already in use
+        if (discounts.includes(inputValue)) {
+          // Display pop-up dialog if the code is already in use
+          throw new Error("This discount code is already in use.");
         }
+        // Apply discount
+        await applyDiscount();
       } catch (error) {
-        console.error("Error checking discount validity:", error);
         Swal.fire({
           icon: "error",
           title: "Error",
-          text: "An error occurred. Please try again later.",
+          text: error.message,
+          customClass: {
+            container: "swal-dialog-custom",
+          },
         });
       }
     }
   };
 
-  // Function to check if a discount code is valid for the items in the cart
-  const checkDiscountValidity = async (discountCode: string) => {
-    try {
-      const response = await fetch(
-        `http://127.0.0.1:5000/discounts/products/by-code/${discountCode}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        return data; // Assuming the backend returns the discount object
-      }
-      const response2 = await fetch(
-        `http://127.0.0.1:5000/discounts/shops/by-code/${discountCode}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (response2.ok) {
-        const data = await response2.json();
-        return data; // Assuming the backend returns the discount object
-      }
-      return null;
-    } catch (error) {
-      console.error("Error checking discount validity:", error);
-      return null;
-    }
-  };
-
-  // Function to check if a discount code has allowOthers: true
-  const checkAllowOthers = (discount: any) => {
-    return discount.allow_others == 1;
-  };
+  // Calculate total price of items in the cart
+  const totalPrice = cart.reduce(
+    (acc, item) => acc + item.price * item.amount,
+    0
+  );
 
   return (
     <Container
@@ -202,6 +159,7 @@ const CartPage = () => {
         display: "flex",
         flexDirection: "row",
         justifyContent: "space-between",
+        marginTop: "13vh",
       }}
     >
       <div style={{ width: "70vw" }}>
@@ -237,7 +195,9 @@ const CartPage = () => {
                   </div>
                   <div>
                     <Typography variant="body1">
-                      ${(item.price * item.amount).toFixed(2)}
+                      <span style={{ color: "black" }}>
+                        Price per 1 item: ${item.price.toFixed(2)}
+                      </span>
                     </Typography>
                     <CardActions>
                       <Button
@@ -268,57 +228,86 @@ const CartPage = () => {
           ))}
         </Grid>
       </div>
-      <div
-        style={{
-          width: "20vw",
-          height: "80vh",
-          marginTop: "50px",
-          marginLeft: "2rem",
-          padding: "1rem",
-          border: "2px solid black",
-          borderRadius: "1rem",
-          //   boxShadow: "0px 0px 10px rgba(0, 0, 0, 0.5)",
-        }}
-      >
-        <div>
-          {/* Form */}
-          <form
-            onSubmit={handleSubmit}
-            style={{ marginTop: "20px", width: "20vw" }}
+      <div>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => setOpen(true)}
+        >
+          Submit Order
+        </Button>
+
+        <Dialog open={open} onClose={() => setOpen(false)}>
+          <div
+            style={{
+              padding: "1rem",
+            }}
           >
-            <TextField
-              label="Enter Discount"
-              variant="outlined"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              style={{ marginRight: "10px" }}
-            />
-            <Button variant="contained" type="submit" color="primary">
-              Add Discount
-            </Button>
-          </form>
-          {/* Discounts List */}
-          <List style={{ marginTop: "20px" }}>
-            <Typography variant="h5">Discounts:</Typography>
-            {discounts.map((discount, index) => (
-              <ListItem key={index}>
-                <ListItemText primary={discount.discount_code} />
-                <ListItemSecondaryAction>
-                  <IconButton
-                    edge="end"
-                    aria-label="delete"
-                    onClick={() => deleteDiscount(index)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </ListItemSecondaryAction>
-              </ListItem>
-            ))}
-          </List>
-        </div>
-        <div style={{ marginTop: "auto" }}>
-          <Typography variant="h4">Total: ${totalPrice.toFixed(2)}</Typography>
-        </div>
+            <div>
+              <form onSubmit={handleSubmit} style={{ marginTop: "20px" }}>
+                <TextField
+                  label="Enter Discount"
+                  variant="outlined"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  style={{ marginRight: "10px" }}
+                />
+                <Button variant="contained" type="submit" color="primary">
+                  Add Discount
+                </Button>
+              </form>
+              <List style={{ marginTop: "20px" }}>
+                <Typography variant="h5">Discounts:</Typography>
+                {discounts.map((discount, index) => (
+                  <ListItem key={index}>
+                    <ListItemText primary={discount} />
+                    <ListItemSecondaryAction>
+                      <IconButton
+                        edge="end"
+                        aria-label="delete"
+                        onClick={() => deleteDiscount(index)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                ))}
+              </List>
+            </div>
+
+            <div style={{ marginTop: "20px" }}>
+              <Typography variant="h5">Cart Items:</Typography>
+              {cart.map((item) => (
+                <Card key={item.id} style={{ marginTop: "10px" }}>
+                  <CardContent>
+                    <Typography variant="body1">{item.name}</Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      Amount: {item.amount}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      <span style={{ color: "black" }}>
+                        Price: ${item.price.toFixed(2)}
+                      </span>
+                      {/* <br />
+                      {item.discount ? (
+                        <span style={{ color: "red", fontSize: "larger" }}>
+                          Discounted Price: ${item.price.toFixed(2)}
+                        </span>
+                      ) : (
+                        ""
+                      )} */}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <div style={{ marginTop: "20px" }}>
+              <Typography variant="h5">
+                Total Price: ${totalPrice.toFixed(2)}
+              </Typography>
+            </div>
+          </div>
+        </Dialog>
       </div>
     </Container>
   );

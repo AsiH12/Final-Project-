@@ -17,6 +17,7 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
 // Define type for items in the cart
 interface CartItem {
@@ -217,6 +218,31 @@ const CartPage = () => {
     }
   };
 
+  const navigate = useNavigate();
+
+  const handlePurchaseComplete = () => {
+    Swal.fire({
+      icon: "success",
+      title: "Purchase Completed Successfully",
+      timer: 3000,
+      showConfirmButton: false,
+      willOpen: () => {
+        const sweetAlertContainer = document.querySelector('.swal2-container');
+        if (sweetAlertContainer) {
+          sweetAlertContainer.style.zIndex = '1500'; // Set a higher z-index value for the SweetAlert2 container
+        }
+      },
+      didOpen: () => {
+        const sweetAlertPopup = document.querySelector('.swal2-popup');
+        if (sweetAlertPopup) {
+          sweetAlertPopup.style.zIndex = '1500'; // Set the same z-index value for the SweetAlert2 popup
+        }
+      },
+    }).then(() => {
+      navigate("/purchasehistory");
+    });
+  };
+
   return (
     <Container
       style={{
@@ -259,7 +285,8 @@ const CartPage = () => {
                     <div>
                       <Typography variant="body1">
                         <span style={{ color: "black" }}>
-                          Price per 1 item: ${item.price ? item.price.toFixed(2) : item.price}
+                          Price per 1 item: $
+                          {item.price ? item.price.toFixed(2) : item.price}
                         </span>
                       </Typography>
                       <CardActions>
@@ -372,6 +399,14 @@ const CartPage = () => {
                   )
                   .toFixed(2)}
               </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handlePurchaseComplete}
+                style={{ marginTop: "10px" }}
+              >
+                Complete Purchase
+              </Button>
             </div>
           </div>
         </Dialog>

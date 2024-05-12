@@ -3,6 +3,7 @@ import CardItem from '../components/CardItem';
 import { Box } from '@mui/material';
 import img1 from "../images/img1.jpg";
 
+
 // Define the interface for the product object
 interface Product {
   name: string;

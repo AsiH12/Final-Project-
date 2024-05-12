@@ -14,14 +14,18 @@ import {
   ListItemSecondaryAction,
   IconButton,
   Dialog,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
+import { useCartCount } from "../CartContext"; // Ensure you import useCartCount
 
 // Define type for items in the cart
 interface CartItem {
-  id: number;
+  product_id: number;
   name: string;
   shop: string;
   price: number;
@@ -37,6 +41,18 @@ const CartPage = () => {
   const [inputValue, setInputValue] = useState("");
   const [discounts, setDiscounts] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState("");
+  const [addresses, setAddresses] = useState([]);
+  const loggedUserId = localStorage.getItem("user_id");
+
+  const { cartCount, updateCount } = useCartCount(); // Use the context
+  const total = cart.reduce(
+    (acc, item) => acc + item.discountedPrice * item.amount,
+    0
+  );
+  const displayTotal = !isNaN(total)
+    ? total.toFixed(2)
+    : "Error calculating total";
 
   useEffect(() => {
     // Retrieve cart data from localStorage
@@ -46,28 +62,46 @@ const CartPage = () => {
     }
   }, []);
 
+  useEffect(() => {
+    // Fetch addresses from the server
+    fetch(`http://localhost:5000/addresses/user/${loggedUserId}`)
+      .then((response) => response.json())
+      .then((data) => setAddresses(data.addresses))
+      .catch((error) => console.error("Error fetching addresses:", error));
+  }, []);
+
+  useEffect(() => {
+    // Retrieve cart data from localStorage
+    if (cart.length > 0) {
+      localStorage.setItem("cart", JSON.stringify(cart));
+      updateCount();
+    }
+  }, [cart]);
+
+  const handleSelectAddress = (event) => {
+    setSelectedAddress(event.target.value);
+  };
+
   // Remove item from cart
-  const removeFromCart = (id: number) => {
-    const updatedCart = cart.filter((item) => item.id !== id);
+  const removeFromCart = (product_id: number) => {
+    console.log(cart);
+    const updatedCart = cart.filter((item) => item.product_id !== product_id);
+    console.log(updatedCart);
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
-    updateCartPrices(); // Update prices after removing an item
   };
 
   // Update item quantity in cart
-  const updateAmount = (id: number, newAmount: number) => {
-    if (newAmount < 1) {
-      newAmount = 1; // Ensure the new amount is at least 1
-    }
-    const updatedCart = cart.map((item) => {
-      if (item.id === id) {
-        return { ...item, amount: newAmount };
-      }
-      return item;
-    });
-    setCart(updatedCart);
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
-    updateCartPrices(); // Update prices after changing the amount
+  const updateAmount = (product_id: number, amount: number) => {
+    setCart((currentCart) =>
+      currentCart.map((item) => {
+        if (item.product_id === product_id) {
+          let newAmount = amount;
+          return { ...item, amount: newAmount };
+        }
+        return item;
+      })
+    );
   };
 
   // Delete a discount
@@ -121,6 +155,9 @@ const CartPage = () => {
       if (!token) {
         throw new Error("Please log in to apply discounts.");
       }
+      console.log(cart);
+      console.log(discounts);
+      console.log(inputValue);
 
       const response = await fetch("http://127.0.0.1:5000/apply-discounts", {
         method: "POST",
@@ -145,6 +182,7 @@ const CartPage = () => {
         throw new Error(errorMessage.error);
       }
     } catch (error) {
+      console.log(error);
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -178,70 +216,93 @@ const CartPage = () => {
     }
   };
 
-  // Function to update cart prices
-  const updateCartPrices = async () => {
-    try {
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        throw new Error("Please log in to apply discounts.");
-      }
+  const navigate = useNavigate();
 
-      const response = await fetch("http://127.0.0.1:5000/apply-discounts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Send JWT token
-        },
-        body: JSON.stringify({
-          cart: cart,
-          used_discounts: discounts,
-          new_discount_code: null, // No new discount code
-        }),
-      });
+  const handlePurchaseComplete = async () => {
+    if (selectedAddress !== "") {
+      try {
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+          throw new Error("Please log in to confirm purchase.");
+        }
+  
+        // Retrieve shop IDs for each cart item
+        const updatedCart = await Promise.all(cart.map(async (item) => {
+          console.log(item.shop);
+          const response = await fetch(`http://localhost:5000/shops/byname/${item.shop}`);
+          const data = await response.json();
+          return { ...item, shop_id: data.id }; // Append shop_id to each cart item
+        }));
+  
+        const responses = await Promise.all(
+          updatedCart.map((item) => {
+            const postData = {
+              product_id: item.product_id,
+              shop_id: item.shop_id, 
+              user_id: parseInt(loggedUserId!),
+              quantity: item.amount,
+              product_price: item.originalPrice,
+              purchase_date: new Date().toISOString(),
+              city: selectedAddress.split(", ")[1],
+              country: selectedAddress.split(", ")[2],
+              shipping_address: selectedAddress,
+              shipping_completed: false,
+              total_price: displayTotal,
+            };
+  
+            return fetch("http://localhost:5000/purchase-history", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify(postData),
+            });
+          })
+        );
+  
+        const failed = responses.some((response) => !response.ok);
+        if (failed) {
+          throw new Error("Failed to record some items in purchase history.");
+        }
 
-      if (response.ok) {
-        const data = await response.json();
-        setCart(data.cartItems); // Update cart
-      } else {
-        const errorMessage = await response.json();
-        throw new Error(errorMessage.error);
+        setDiscounts([]);
+        localStorage.removeItem("cart");
+
+  
+        Swal.fire({
+          icon: "success",
+          title: "Purchase Completed Successfully",
+          timer: 3000,
+          showConfirmButton: false,
+          customClass: {
+            container: "swal-dialog-custom",
+          },
+        }).then(() => {
+          navigate("/purchasehistory");
+        });
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: error.message,
+          customClass: {
+            container: "swal-dialog-custom",
+          },
+        });
       }
-    } catch (error) {
+    } else {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: error.message,
+        text: "You have to select an address",
         customClass: {
           container: "swal-dialog-custom",
         },
       });
     }
   };
-
-  const navigate = useNavigate();
-
-  const handlePurchaseComplete = () => {
-    Swal.fire({
-      icon: "success",
-      title: "Purchase Completed Successfully",
-      timer: 3000,
-      showConfirmButton: false,
-      willOpen: () => {
-        const sweetAlertContainer = document.querySelector('.swal2-container');
-        if (sweetAlertContainer) {
-          sweetAlertContainer.style.zIndex = '1500'; // Set a higher z-index value for the SweetAlert2 container
-        }
-      },
-      didOpen: () => {
-        const sweetAlertPopup = document.querySelector('.swal2-popup');
-        if (sweetAlertPopup) {
-          sweetAlertPopup.style.zIndex = '1500'; // Set the same z-index value for the SweetAlert2 popup
-        }
-      },
-    }).then(() => {
-      navigate("/purchasehistory");
-    });
-  };
+  
 
   return (
     <Container
@@ -258,7 +319,7 @@ const CartPage = () => {
         </Typography>
         <Grid container spacing={2}>
           {cart.map((item) => (
-            <Grid item xs={12} key={item.id}>
+            <Grid item xs={12} key={item.product_id}>
               <Card
                 sx={{
                   width: "70vw",
@@ -286,27 +347,33 @@ const CartPage = () => {
                       <Typography variant="body1">
                         <span style={{ color: "black" }}>
                           Price per 1 item: $
-                          {item.price ? item.price.toFixed(2) : item.price}
+                          {item.originalPrice
+                            ? item.originalPrice.toFixed(2)
+                            : item.originalPrice}
                         </span>
                       </Typography>
                       <CardActions>
                         <Button
                           variant="outlined"
-                          onClick={() => updateAmount(item.id, item.amount - 1)}
+                          onClick={() =>
+                            updateAmount(item.product_id, item.amount - 1)
+                          }
                           disabled={item.amount <= 1}
                         >
                           -
                         </Button>
                         <Button
                           variant="outlined"
-                          onClick={() => updateAmount(item.id, item.amount + 1)}
+                          onClick={() =>
+                            updateAmount(item.product_id, item.amount + 1)
+                          }
                         >
                           +
                         </Button>
                         <Button
                           variant="contained"
                           color="secondary"
-                          onClick={() => removeFromCart(item.id)}
+                          onClick={() => removeFromCart(item.product_id)}
                         >
                           Remove
                         </Button>
@@ -363,7 +430,7 @@ const CartPage = () => {
             <div style={{ marginTop: "20px" }}>
               <Typography variant="h5">Cart Items:</Typography>
               {cart.map((item) => (
-                <Card key={item.id} style={{ marginTop: "10px" }}>
+                <Card key={item.product_id} style={{ marginTop: "10px" }}>
                   <CardContent>
                     <Typography variant="body1">{item.name}</Typography>
                     <Typography variant="body2" color="textSecondary">
@@ -387,18 +454,40 @@ const CartPage = () => {
               ))}
             </div>
             <div style={{ marginTop: "20px" }}>
-              <Typography variant="h5">
-                Total Price: $
-                {cart
-                  .reduce(
-                    (acc, item) =>
-                      acc +
-                      (item.discountedPrice || item.originalPrice) *
-                        item.amount,
-                    0
-                  )
-                  .toFixed(2)}
+              <Typography variant="h5">Total Price: ${displayTotal}</Typography>
+              <Typography
+                variant="h6"
+                gutterBottom
+                style={{ marginTop: "20px" }}
+              >
+                Select a Delivery Address
               </Typography>
+              <RadioGroup
+                value={selectedAddress}
+                onChange={handleSelectAddress}
+              >
+                {addresses &&
+                  addresses.map((address, index) => (
+                    <FormControlLabel
+                      key={index}
+                      value={
+                        address.address +
+                        ", " +
+                        address.city +
+                        ", " +
+                        address.country
+                      }
+                      control={<Radio />}
+                      label={
+                        address.address +
+                        ", " +
+                        address.city +
+                        ", " +
+                        address.country
+                      }
+                    />
+                  ))}
+              </RadioGroup>
               <Button
                 variant="contained"
                 color="primary"

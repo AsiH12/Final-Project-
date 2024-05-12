@@ -58,8 +58,8 @@ export function PurchaseHistoryPage() {
     { field: 'city', headerName: 'City', width: 120, editable: false },
     { field: 'country', headerName: 'Country', width: 120, editable: false },
     { field: 'shipping_address', headerName: 'Shipping Address', width: 200, editable: false },
-    { field: 'shipping_completed', headerName: 'Shipping Completed', width: 180, editable: false },
-    { field: 'discount', headerName: 'Discount', type: 'number', width: 130, editable: false },
+    { field: 'shipping_completed', headerName: 'Shipping Completed', width: 180, editable: false, type: "boolean" },
+    { field: 'total_price', headerName: 'Total Price', type: 'number', width: 130, editable: false },
   ];
 
   return (

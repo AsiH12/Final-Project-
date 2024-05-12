@@ -12,6 +12,7 @@ def get_addresses():
     cursor = db.cursor()
     cursor.execute("SELECT id, address, city, country, user_id FROM addresses")
     addresses = cursor.fetchall()
+    close_db()
     address_list = [{
         "id": address["id"],
         "address": address["address"],
@@ -30,6 +31,7 @@ def get_address_by_id(address_id):
         "SELECT id, address, city, country, user_id FROM addresses WHERE id = ?", (address_id,)
     )
     address = cursor.fetchone()
+    close_db()
     if address is None:
         return jsonify({"error": "Address not found"}), 404
     else:
@@ -40,6 +42,30 @@ def get_address_by_id(address_id):
             "country": address["country"],
             "user_id": address["user_id"]
         }), 200
+        
+        # Get all addresses for a specific user
+@bp.route("/user/<int:user_id>", methods=["GET"])
+def get_addresses_by_user_id(user_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute(
+        "SELECT id, address, city, country, user_id FROM addresses WHERE user_id = ?",
+        (user_id,)
+    )
+    addresses = cursor.fetchall()
+    close_db()
+    if addresses:
+        address_list = [{
+            "id": address["id"],
+            "address": address["address"],
+            "city": address["city"],
+            "country": address["country"],
+            "user_id": address["user_id"]
+        } for address in addresses]
+        return jsonify(addresses=address_list), 200
+    else:
+        return jsonify({"error": "No addresses found for this user"}), 404
+
 
 # Create new address route
 @bp.route("", methods=["POST"])
@@ -69,6 +95,7 @@ def create_new_address():
         (address, city, country, user_id)
     )
     db.commit()
+    close_db()
 
     return jsonify({"message": "Address created successfully"}), 201
 

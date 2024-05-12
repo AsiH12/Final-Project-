@@ -43,7 +43,7 @@ def get_purchase_history_by_user_id(user_id):
     query = """
         SELECT ph.id, p.name AS product_name, s.name AS shop_name, u.username AS user_name, 
                ph.quantity, ph.product_price, ph.purchase_date, ph.city, ph.country, 
-               ph.shipping_address, ph.shipping_completed, ph.discount
+               ph.shipping_address, ph.shipping_completed, ph.total_price
         FROM purchase_history ph
         JOIN products p ON ph.product_id = p.id
         JOIN shops s ON ph.shop_id = s.id
@@ -63,7 +63,7 @@ def get_purchase_history_by_product_id(product_id):
     query = """
         SELECT ph.id, p.name AS product_name, s.name AS shop_name, u.username AS user_name, 
                ph.quantity, ph.product_price, ph.purchase_date, ph.city, ph.country, 
-               ph.shipping_address, ph.shipping_completed, ph.discount
+               ph.shipping_address, ph.shipping_completed, ph.total_price
         FROM purchase_history ph
         JOIN products p ON ph.product_id = p.id
         JOIN shops s ON ph.shop_id = s.id
@@ -83,7 +83,7 @@ def get_purchase_history_by_shop_id(shop_id):
     query = """
         SELECT ph.id, p.name AS product_name, s.name AS shop_name, u.username AS user_name, 
                ph.quantity, ph.product_price, ph.purchase_date, ph.city, ph.country, 
-               ph.shipping_address, ph.shipping_completed, ph.discount
+               ph.shipping_address, ph.shipping_completed, ph.total_price
         FROM purchase_history ph
         JOIN products p ON ph.product_id = p.id
         JOIN shops s ON ph.shop_id = s.id
@@ -99,10 +99,11 @@ def get_purchase_history_by_shop_id(shop_id):
 @bp.route("", methods=["POST"])
 def create_purchase_history():
     data = request.get_json()
+    print(data)
     db = get_db()
     cursor = db.cursor()
     cursor.execute(
-        "INSERT INTO purchase_history (product_id, shop_id, user_id, quantity, product_price, purchase_date, city, country, shipping_address, shipping_completed, discount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO purchase_history (product_id, shop_id, user_id, quantity, product_price, purchase_date, city, country, shipping_address, shipping_completed, total_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             data.get("product_id"),
             data.get("shop_id"),
@@ -114,7 +115,7 @@ def create_purchase_history():
             data.get("country"),
             data.get("shipping_address"),
             data.get("shipping_completed"),
-            data.get("discount")
+            data.get("total_price")
         )
     )
     db.commit()

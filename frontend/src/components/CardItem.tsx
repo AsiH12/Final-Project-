@@ -7,6 +7,8 @@ import {
   Typography,
 } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import { useCartCount } from '../CartContext';  // Ensure you import useCartCount
+
 
 export default function CardItem({
   id,
@@ -18,6 +20,7 @@ export default function CardItem({
   categories,
 }) {
   const isLoggedIn = localStorage.getItem("access_token") ? true : false;
+  const { cartCount, updateCount } = useCartCount(); // Use the context
 
   const [quantity, setQuantity] = useState(() => {
     // Get the current cart from local storage or initialize it to an empty array
@@ -41,6 +44,7 @@ export default function CardItem({
       if (index !== -1) {
         cart.splice(index, 1);
         localStorage.setItem("cart", JSON.stringify(cart));
+        updateCount();
       }
     } else {
       // If the item is already in the cart, update its quantity
@@ -49,15 +53,17 @@ export default function CardItem({
       } else {
         // If the item is not in the cart, add it
         cart.push({
-          id: id,
+          product_id: id,
           name: name,
-          price: price,
           shop: shop,
           image: image,
           amount: quantity,
+          discountedPrice:price,
+          originalPrice:price,
         });
       }
       localStorage.setItem("cart", JSON.stringify(cart));
+      updateCount();
     }
   };
 

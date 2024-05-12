@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS purchase_history (
     country TEXT NOT NULL,
     shipping_address TEXT NOT NULL,
     shipping_completed BOOLEAN NOT NULL,
-    discount INTEGER NOT NULL,
+    total_price INTEGER NOT NULL,
     FOREIGN KEY (product_id) REFERENCES products(id),
     FOREIGN KEY (shop_id) REFERENCES shops(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
@@ -112,9 +112,10 @@ VALUES ('user3', '1234', 'user3@mysite.com', 30, 'user'),
 
 -- Inserting into categories table
 INSERT OR IGNORE INTO categories (category_name)
-VALUES ('Home'),
-       ('Outdoor'),
-       ('Beauty');
+VALUES ('LifeStyle'),
+       ('Fashion'),
+       ('Tech'),
+       ('Carts');
 
 -- Inserting into shops table
 INSERT OR IGNORE INTO shops (name, description, owner_id)
@@ -142,33 +143,31 @@ VALUES ('Product1', 'Home decoration item', 4, 40, 150, 10),
 
 -- Inserting into addresses table
 INSERT OR IGNORE INTO addresses (address, city, country, user_id)
-VALUES ('321 Pine St', 'San Francisco', 'USA', 4),
-       ('654 Cedar St', 'Seattle', 'USA', 5),
-       ('987 Birch St', 'Miami', 'USA', 6);
+VALUES ('321 Pine St', 'San Francisco', 'USA', 1),
+       ('654 Cedar St', 'Seattle', 'USA', 2),
+       ('321 Pine St', 'San Francisco', 'USA', 1),
+       ('654 Cedar St', 'Seattle', 'USA', 2),
+       ('987 Birch St', 'Miami', 'USA', 3);
 
--- Inserting into purchase_history table
-INSERT OR IGNORE INTO purchase_history (product_id, shop_id, user_id, quantity, product_price, purchase_date, city, country, shipping_address, shipping_completed, discount)
-VALUES (4, 4, 5, 1, 40, '2024-04-13', 'Seattle', 'USA', '654 Cedar St', true, 10),
-       (5, 5, 1, 2, 200, '2024-05-14', 'Miami', 'USA', '987 Birch St', true, 20),
-       (5, 5, 1, 3, 200, '2023-04-14', 'Tel Aviv', 'IL', '987 Birch St', true, 20),
-       (5, 5, 1, 4, 200, '2024-03-14', 'Miami', 'USA', '987 Birch St', true, 20),
-       (5, 5, 1, 5, 200, '2024-05-02', 'San Francisco', 'USA', '987 Birch St', true, 20),
-       (6, 6, 4, 6, 25, '2024-04-15', 'San Francisco', 'USA', '321 Pine St', true, 2);
+
 
 -- Inserting into products_categories table
 INSERT OR IGNORE INTO products_categories (product_id, category_id)
-VALUES (4, 1),  -- Home
-       (5, 2),  -- Outdoor
-       (6, 3);  -- Beauty
+VALUES (1, 1), 
+       (2, 2),  
+       (3, 3), 
+       (1, 2),  
+       (4, 2),  
+       (2, 3);  
 
 -- Inserting into shops_categories table
 INSERT OR IGNORE INTO shops_categories (shop_id, category_id)
-VALUES (4, 1),  -- Home
-       (4, 3),  -- Beauty
-       (5, 2),  -- Outdoor
-       (5, 3),  -- Beauty
-       (6, 3),  -- Beauty
-       (6, 1);  -- Home
+VALUES (4, 1), 
+       (4, 3),  
+       (5, 2),  
+       (5, 3),  
+       (6, 3), 
+       (6, 1);  
 
 -- Inserting into discounts_products table
 INSERT OR IGNORE INTO discounts_products (product_id, discount_code, discount, expiration_date, minimum_amount, allow_others)

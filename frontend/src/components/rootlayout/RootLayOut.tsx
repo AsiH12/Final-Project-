@@ -129,17 +129,27 @@ export default function RootLayOut() {
                     <MenuItem onClick={() => navigate("/purchasehistory")}>
                       Purchase History
                     </MenuItem>
-                    <MenuItem onClick={() => navigate("/editprofile")}>Edit Profile</MenuItem>
-                    <MenuItem onClick={() => navigate("/items")}>Manage Items</MenuItem>
-                    <MenuItem onClick={() => navigate("/choosestore")}>Manage Stores</MenuItem>
+                    <MenuItem onClick={() => navigate("/editprofile")}>
+                      Edit Profile
+                    </MenuItem>
+                    <MenuItem onClick={() => navigate("/items")}>
+                      Manage Items
+                    </MenuItem>
+                    <MenuItem onClick={() => navigate("/choosestore")}>
+                      Manage Stores
+                    </MenuItem>
                     <MenuItem onClick={() => navigate("/managers")}>
                       Manage Managers
                     </MenuItem>
                     <MenuItem onClick={() => navigate("/discount")}>
                       Manage Discounts
                     </MenuItem>
-                    <MenuItem onClick={() => navigate("/orders")}>Orders</MenuItem>
-                    <MenuItem onClick={() => navigate("/revenues")}>Revenues</MenuItem>
+                    <MenuItem onClick={() => navigate("/orders")}>
+                      Orders
+                    </MenuItem>
+                    <MenuItem onClick={() => navigate("/revenues")}>
+                      Revenues
+                    </MenuItem>
                     <Button onClick={handleLogout}>Log Out</Button>
                   </Menu>
                 </li>
@@ -204,34 +214,36 @@ export default function RootLayOut() {
                 </li>
               </div>
               <div>
-                {location.pathname !== "/login" && location.pathname !== "/register" && (
-                  <React.Fragment>
-                    <li>
-                      <a
-                        onClick={() => navigate("/login")}
-                        style={{ fontSize: "1.5rem" }}
-                      >
-                        SIGN IN
-                      </a>
-                    </li>
-                    <span>|</span>
-                    <li>
-                      <a
-                        onClick={() => navigate("/register")}
-                        style={{ fontSize: "1.5rem" }}
-                      >
-                        SIGN UP
-                      </a>
-                    </li>
-                  </React.Fragment>
-                )}
+                {location.pathname !== "/login" &&
+                  location.pathname !== "/register" && (
+                    <React.Fragment>
+                      <li>
+                        <a
+                          onClick={() => navigate("/login")}
+                          style={{ fontSize: "1.5rem" }}
+                        >
+                          SIGN IN
+                        </a>
+                      </li>
+                      <span>|</span>
+                      <li>
+                        <a
+                          onClick={() => navigate("/register")}
+                          style={{ fontSize: "1.5rem" }}
+                        >
+                          SIGN UP
+                        </a>
+                      </li>
+                    </React.Fragment>
+                  )}
               </div>
             </div>
           </ul>
         </nav>
       )}
 
-      <Outlet />
+      <Outlet style={{ marginTop: "13vh" }} />
+
       {showStoreForm && (
         <StoreForm
           open={showStoreForm}

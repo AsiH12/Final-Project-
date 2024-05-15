@@ -3,6 +3,11 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required, get_jwt_identity
 
 from db import close_db, get_db
+
+app = Flask(__name__)
+CORS(app)
+jwt = JWTManager(app)
+
 bp = Blueprint("productsRoutes", __name__, url_prefix="/products")
 
 @bp.route("/", methods=["GET"])
@@ -34,18 +39,16 @@ def get_products():
     ]
     return jsonify(products=product_list), 200
 
-
-
-# Get product by ID route
 @bp.route("/<int:product_id>", methods=["GET"])
 def get_product_by_id(product_id):
     db = get_db()
     cursor = db.cursor()
     cursor.execute("""
-        SELECT p.id, p.name, p.description, p.shop_id, p.price, p.amount, p.maximum_discount, GROUP_CONCAT(c.category_name) AS categories
+        SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, GROUP_CONCAT(c.category_name) AS categories
         FROM products p
         LEFT JOIN products_categories pc ON p.id = pc.product_id
         LEFT JOIN categories c ON pc.category_id = c.id
+        LEFT JOIN shops s ON p.shop_id = s.id
         WHERE p.id = ?
         GROUP BY p.id
     """, (product_id,))
@@ -58,22 +61,23 @@ def get_product_by_id(product_id):
             "name": product["name"],
             "description": product["description"],
             "shop_id": product["shop_id"],
+            "shop_name": product["shop_name"],
             "price": product["price"],
             "amount": product["amount"],
             "maximum_discount": product["maximum_discount"],
             "categories": product["categories"].split(",") if product["categories"] else []
         }), 200
 
-
 @bp.route("/category/<category_name>", methods=["GET"])
 def get_products_by_category(category_name):
     db = get_db()
     cursor = db.cursor()
     cursor.execute("""
-        SELECT p.id, p.name, p.description, p.shop_id, p.price, p.amount, p.maximum_discount, GROUP_CONCAT(c.category_name) AS categories
+        SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, GROUP_CONCAT(c.category_name) AS categories
         FROM products p
         LEFT JOIN products_categories pc ON p.id = pc.product_id
         LEFT JOIN categories c ON pc.category_id = c.id
+        LEFT JOIN shops s ON p.shop_id = s.id
         WHERE c.category_name = ?
         GROUP BY p.id
     """, (category_name,))
@@ -84,6 +88,7 @@ def get_products_by_category(category_name):
             "name": product["name"],
             "description": product["description"],
             "shop_id": product["shop_id"],
+            "shop_name": product["shop_name"],
             "price": product["price"],
             "amount": product["amount"],
             "maximum_discount": product["maximum_discount"],
@@ -123,9 +128,6 @@ def get_products_by_shop_id(shop_id):
     ]
     return jsonify(products=product_list), 200
 
-
-
-# Create new product route
 @bp.route("", methods=["POST"])
 def create_new_product():
     data = request.get_json()
@@ -136,7 +138,7 @@ def create_new_product():
     amount = data.get("amount")
     maximum_discount = data.get("maximum_discount")
     categories = data.get("categories")
-    print(data)
+
     # Validate input data
     if not all([name, shop_id, price, amount, categories, maximum_discount]):
         return jsonify({"error": "Incomplete product data"}), 400
@@ -166,10 +168,32 @@ def create_new_product():
 
     db.commit()
 
-    return jsonify({"message": "Product created successfully"}), 201
+    # Fetch the newly created product
+    cursor.execute("""
+        SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, GROUP_CONCAT(c.category_name) AS categories
+        FROM products p
+        LEFT JOIN products_categories pc ON p.id = pc.product_id
+        LEFT JOIN categories c ON pc.category_id = c.id
+        LEFT JOIN shops s ON p.shop_id = s.id
+        WHERE p.id = ?
+        GROUP BY p.id
+    """, (product_id,))
+    new_product = cursor.fetchone()
 
+    product = {
+        "id": new_product["id"],
+        "name": new_product["name"],
+        "description": new_product["description"],
+        "shop_id": new_product["shop_id"],
+        "shop_name": new_product["shop_name"],
+        "price": new_product["price"],
+        "amount": new_product["amount"],
+        "maximum_discount": new_product["maximum_discount"],
+        "categories": new_product["categories"].split(",") if new_product["categories"] else []
+    }
 
-# Update product by ID route
+    return jsonify(product), 201
+
 @bp.route("/<int:product_id>", methods=["PATCH"])
 def update_product_by_id(product_id):
     data = request.get_json()
@@ -191,7 +215,6 @@ def update_product_by_id(product_id):
                 data.get("price"),
                 data.get("amount"),
                 data.get("maximum_discount"),
-                
                 product_id,
             ),
         )
@@ -207,8 +230,6 @@ def update_product_by_id(product_id):
         db.commit()
         return jsonify({"message": "Product updated successfully"}), 200
 
-
-# Delete product by ID route
 @bp.route("/<int:product_id>", methods=["DELETE"])
 def delete_product_by_id(product_id):
     db = get_db()
@@ -223,3 +244,9 @@ def delete_product_by_id(product_id):
         cursor.execute("DELETE FROM products_categories WHERE product_id = ?", (product_id,))
         db.commit()
         return jsonify({"message": "Product deleted successfully"}), 200
+
+# Register the blueprint
+app.register_blueprint(bp)
+
+if __name__ == '__main__':
+    app.run(debug=True)

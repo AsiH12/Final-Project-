@@ -1,22 +1,52 @@
-import React from 'react';
-import { Box, Card, CardContent, Typography } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Box, Card, CardContent, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Button } from '@mui/material';
 import './ChooseStorePage.css';
+import { useNavigate } from 'react-router-dom';
 
 interface ChooseStorePageProps {
   onStoreSelect: (storeName: string) => void;
 }
 
 export function ChooseStorePage({ onStoreSelect }: ChooseStorePageProps) {
-  // Sample store data, you can replace this with your actual data
-  const stores = [
-    { name: 'Store 1', ownedBy: 'John Doe', managedBy: 'Jane Smith' },
-    { name: 'Store 2', ownedBy: 'Alice Johnson', managedBy: 'Bob Brown' },
-    { name: 'Store 3', ownedBy: 'Charlie Davis', managedBy: 'David Wilson' },
-    { name: 'Store 4', ownedBy: 'Eve Taylor', managedBy: 'Frank Miller' },
-  ];
+  const [stores, setStores] = useState([]);
+  const [selectedStore, setSelectedStore] = useState(null);
+  const [open, setOpen] = useState(false);
 
-  const handleStoreSelect = (storeName: string) => {
-    onStoreSelect(storeName);
+  const user_id = localStorage.getItem("user_id");
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchStores = async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/shops/manager/${user_id}`);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        console.log('Fetched stores:', data.stores);
+        setStores(data.shops);
+      } catch (error) {
+        console.error('Error fetching stores:', error);
+      }
+    };
+
+    fetchStores();
+  }, [user_id]);
+
+  const handleStoreSelect = (store) => {
+    setSelectedStore(store);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setSelectedStore(null);
+  };
+
+  const handleNavigation = (path) => {
+    console.log(selectedStore)
+    navigate(path, { state: { storeName: selectedStore.name, role: selectedStore.role, owner:  selectedStore.owner_id } });
   };
 
   return (
@@ -33,40 +63,71 @@ export function ChooseStorePage({ onStoreSelect }: ChooseStorePageProps) {
           display: 'flex',
           gap: '20px',
           justifyContent: 'center',
+          flexWrap: 'wrap',
         }}
       >
-        {stores.map((store, index) => (
-          <Card
-            key={`store-${index}`}
-            className="store-card"
-            onClick={() => handleStoreSelect(store.name)}
-            sx={{
-              minWidth: 1800,
-              height: 200,
-              display: 'flex',
-              borderRadius: '10px',
-              cursor: 'pointer',
-              '&:hover': {
-                backgroundColor: '#f0f0f0',
-              },
-            }}
-          >
-            <CardContent sx={{ flexGrow: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="h5" component="div">
-                {store.name}
-              </Typography>
-              <Box>
-                <Typography variant="body2" component="p">
-                  <strong>Owned by:</strong> {store.ownedBy}
+        {stores && stores.length > 0 ? (
+          stores.map((store, index) => (
+            <Card
+              key={`store-${index}`}
+              className="store-card"
+              onClick={() => handleStoreSelect(store)}
+              sx={{
+                minWidth: 300,
+                height: 200,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                '&:hover': {
+                  backgroundColor: '#f0f0f0',
+                },
+              }}
+            >
+              <CardContent sx={{ textAlign: 'center' }}>
+                <Typography variant="h5" component="div">
+                  {store.name}
                 </Typography>
                 <Typography variant="body2" component="p">
-                  <strong>Managed by:</strong> {store.managedBy}
+                  {store.description}
                 </Typography>
-              </Box>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <Typography variant="h6" component="div">
+            No stores available
+          </Typography>
+        )}
       </Box>
+
+      <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>Manage {selectedStore?.name}</DialogTitle>
+        <DialogContent>
+          <Button onClick={() => handleNavigation('/items')} color="primary">
+            Manage Items
+          </Button>
+          <Button onClick={() => handleNavigation('/managers')} color="primary">
+            Manage Managers
+          </Button>
+          <Button onClick={() => handleNavigation('/discount')} color="primary">
+            Manage Discounts
+          </Button>
+          <Button onClick={() => handleNavigation('/orders')} color="primary">
+            Orders
+          </Button>
+          <Button onClick={() => handleNavigation('/revenues')} color="primary">
+            Revenues
+          </Button>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }

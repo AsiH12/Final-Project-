@@ -140,6 +140,28 @@ def get_user_by_id(user_id):
             ),
             200,
         )
+@bp.route("/shop/<int:shop_id>", methods=["GET"])
+def get_available_users(shop_id):
+    db = get_db()
+    cursor = db.cursor()
+    
+    # Query to get users who are not owners and not managers of the specified shop
+    cursor.execute("""
+        SELECT u.id, u.username, u.email
+        FROM users u
+        WHERE u.id NOT IN (
+            SELECT manager_id FROM managers WHERE shop_id = ?
+        )
+        AND u.id NOT IN (
+            SELECT owner_id FROM shops WHERE id = ?
+        )
+    """, (shop_id, shop_id))
+    
+    users = cursor.fetchall()
+    user_list = [{"id": user["id"], "username": user["username"], "email": user["email"]} for user in users]
+    return jsonify(users=user_list), 200
+
+
 
 
 # Delete user by ID route

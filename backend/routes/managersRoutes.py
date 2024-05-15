@@ -45,7 +45,35 @@ def get_manager_by_id(manager_id):
             ),
             200,
         )
+# Get all managers of a specific shop route
+@bp.route("/shop/<int:shop_id>", methods=["GET"])
+def get_managers_by_shop(shop_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute(
+        """
+        SELECT m.id, m.manager_id, m.shop_id, u.username, u.email
+        FROM managers m
+        JOIN users u ON m.manager_id = u.id
+        WHERE m.shop_id = ?
+        """,
+        (shop_id,)
+    )
+    managers = cursor.fetchall()
+    if not managers:
+        return jsonify({"error": "No managers found for this shop"}), 404
 
+    manager_list = [
+        {
+            "id": manager["id"],
+            "manager_id": manager["manager_id"],
+            "shop_id": manager["shop_id"],
+            "username": manager["username"],
+            "email": manager["email"],
+        }
+        for manager in managers
+    ]
+    return jsonify(managers=manager_list), 200
 
 # Create new manager route
 @bp.route("", methods=["POST"])

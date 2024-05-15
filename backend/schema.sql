@@ -145,7 +145,7 @@ VALUES ('Product1', 'Home decoration item', 4, 40, 150, 10),
 INSERT OR IGNORE INTO addresses (address, city, country, user_id)
 VALUES ('321 Pine St', 'San Francisco', 'USA', 1),
        ('654 Cedar St', 'Seattle', 'USA', 2),
-       ('321 Pine St', 'San Francisco', 'USA', 1),
+       ('Eliakim 55 b', 'Eliakim', 'Israel', 1),
        ('654 Cedar St', 'Seattle', 'USA', 2),
        ('987 Birch St', 'Miami', 'USA', 3);
 

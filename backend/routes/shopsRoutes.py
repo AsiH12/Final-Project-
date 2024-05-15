@@ -83,7 +83,64 @@ def get_shop_by_id(shop_id):
         
         
         # Get shop by name route
+        
+@bp.route("/manager/<int:user_id>", methods=["GET"])
+def get_shops_by_manager(user_id):
+    db = get_db()
+    cursor = db.cursor()
 
+    cursor.execute("""
+        SELECT s.id, s.name, s.description, s.owner_id,
+               CASE
+                   WHEN s.owner_id = ? THEN 'owner'
+                   ELSE 'manager'
+               END as role
+        FROM shops s
+        LEFT JOIN managers m ON s.id = m.shop_id
+        WHERE s.owner_id = ? OR m.manager_id = ?
+        GROUP BY s.id
+    """, (user_id, user_id, user_id))
+
+    shops = cursor.fetchall()
+    shop_list = [
+        {
+            "id": shop["id"],
+            "name": shop["name"],
+            "description": shop["description"],
+            "owner_id": shop["owner_id"],
+            "role": shop["role"]
+        }
+        for shop in shops
+    ]
+    return jsonify(shops=shop_list), 200
+
+
+@bp.route("/my-stores", methods=["GET"])
+@jwt_required()
+def get_my_stores():
+    current_user_id = get_jwt_identity()
+    print("current_user_id")
+    db = get_db()
+    cursor = db.cursor()
+    
+    cursor.execute("""
+        SELECT DISTINCT s.id, s.name, s.description
+        FROM shops s
+        LEFT JOIN managers m ON s.id = m.shop_id
+        WHERE s.owner_id = ? OR m.manager_id = ?
+    """, (current_user_id, current_user_id))
+    print(current_user_id)
+    
+    stores = cursor.fetchall()
+    store_list = [
+        {
+            "id": store["id"],
+            "name": store["name"],
+            "description": store["description"]
+        }
+        for store in stores
+    ]
+    return jsonify(stores=store_list), 200
 # Create new shop route
 @bp.route("/new", methods=["POST"])
 def create_new_shop():

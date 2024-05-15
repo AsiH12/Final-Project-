@@ -9,9 +9,10 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Autocomplete from "@mui/material/Autocomplete";
 import Chip from "@mui/material/Chip";
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import Swal from 'sweetalert2';
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
+import Swal from "sweetalert2";
 import "./ItemsPage.css";
 
 interface Item {
@@ -33,6 +34,7 @@ interface Category {
 export function ItemsPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [open, setOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [currentItem, setCurrentItem] = useState<Item | null>(null);
   const storeId = 4;
   const storeName = "shop4";
@@ -40,7 +42,9 @@ export function ItemsPage() {
 
   useEffect(() => {
     const fetchItems = async () => {
-      const response = await fetch(`http://localhost:5000/products/shop/${storeId}`);
+      const response = await fetch(
+        `http://localhost:5000/products/shop/${storeId}`
+      );
       const data = await response.json();
       setItems(data.products);
     };
@@ -51,40 +55,46 @@ export function ItemsPage() {
       setAllCategories(data.categories);
     };
 
-    fetchItems().catch((error) => console.error('Error fetching items:', error));
-    fetchCategories().catch((error) => console.error('Error fetching categories:', error));
+    fetchItems().catch((error) =>
+      console.error("Error fetching items:", error)
+    );
+    fetchCategories().catch((error) =>
+      console.error("Error fetching categories:", error)
+    );
   }, [storeId]);
 
   const handleEditClick = (item: Item) => {
     setCurrentItem(item);
+    setIsEditing(true);
     setOpen(true);
   };
 
   const handleClose = () => {
     setOpen(false);
     setCurrentItem(null);
+    setIsEditing(false);
   };
 
   const handleDeleteClick = async (id: number) => {
     const response = await fetch(`http://localhost:5000/products/${id}`, {
-      method: 'DELETE'
+      method: "DELETE",
     });
     if (response.ok) {
       setItems((prevItems) => prevItems.filter((item) => item.id !== id));
       Swal.fire({
-        icon: 'success',
-        title: 'Deleted!',
-        text: 'Item has been deleted successfully.',
+        icon: "success",
+        title: "Deleted!",
+        text: "Item has been deleted successfully.",
         customClass: {
           container: "swal-dialog-custom",
         },
       });
     } else {
-      console.error('Error deleting item');
+      console.error("Error deleting item");
       Swal.fire({
-        icon: 'error',
-        title: 'Error!',
-        text: 'Error deleting item.',
+        icon: "error",
+        title: "Error!",
+        text: "Error deleting item.",
         customClass: {
           container: "swal-dialog-custom",
         },
@@ -94,36 +104,65 @@ export function ItemsPage() {
 
   const handleSave = async () => {
     if (currentItem) {
-      const response = await fetch(`http://localhost:5000/products/${currentItem.id}`, {
-        method: 'PATCH',
+      const url = isEditing
+        ? `http://localhost:5000/products/${currentItem.id}`
+        : `http://localhost:5000/products`;
+      const method = isEditing ? "PATCH" : "POST";
+
+      const response = await fetch(url, {
+        method,
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          ...currentItem,
-          categories: currentItem.categories.map(category => category.name)
+          name: currentItem.name,
+          description: currentItem.description,
+          shop_id: storeId,
+          price: currentItem.price,
+          amount: currentItem.amount,
+          maximum_discount: currentItem.maximum_discount,
+          categories: allCategories
+            .filter((category) =>
+              currentItem.categories.includes(category.name)
+            )
+            .map((category) => category.id),
         }),
       });
-  
+
       if (response.ok) {
-        setItems((prevItems) =>
-          prevItems.map((item) => (item.id === currentItem.id ? currentItem : item))
-        );
+        if (isEditing) {
+          setItems((prevItems) =>
+            prevItems.map((item) =>
+              item.id === currentItem.id ? currentItem : item
+            )
+          );
+          Swal.fire({
+            icon: "success",
+            title: "Updated!",
+            text: "Item has been updated successfully.",
+            customClass: {
+              container: "swal-dialog-custom",
+            },
+          });
+        } else {
+          const newItem = await response.json();
+          setItems((prevItems) => [...prevItems, newItem]);
+          Swal.fire({
+            icon: "success",
+            title: "Created!",
+            text: "Item has been created successfully.",
+            customClass: {
+              container: "swal-dialog-custom",
+            },
+          });
+        }
         handleClose();
-        Swal.fire({
-          icon: 'success',
-          title: 'Updated!',
-          text: 'Item has been updated successfully.',
-          customClass: {
-            container: "swal-dialog-custom",
-          },
-        });
       } else {
-        console.error('Error updating item');
+        console.error("Error saving item");
         Swal.fire({
-          icon: 'error',
-          title: 'Error!',
-          text: 'Error updating item.',
+          icon: "error",
+          title: "Error!",
+          text: "Error saving item.",
           customClass: {
             container: "swal-dialog-custom",
           },
@@ -131,7 +170,6 @@ export function ItemsPage() {
       }
     }
   };
-  
 
   const handleDialogDelete = () => {
     if (currentItem) {
@@ -158,6 +196,21 @@ export function ItemsPage() {
     }
   };
 
+  const handleAddClick = () => {
+    setCurrentItem({
+      id: 0,
+      name: "",
+      description: "",
+      shop_name: storeName,
+      price: 0,
+      amount: 0,
+      maximum_discount: 0,
+      categories: [],
+    });
+    setIsEditing(false);
+    setOpen(true);
+  };
+
   const columns: GridColDef[] = [
     { field: "name", headerName: "Name", width: 200 },
     { field: "description", headerName: "Description", width: 200 },
@@ -167,9 +220,9 @@ export function ItemsPage() {
     { field: "maximum_discount", headerName: "Maximum Discount", width: 150 },
     { field: "categories", headerName: "Categories", width: 200 },
     {
-      field: 'actions',
-      headerName: 'Actions',
-      type: 'actions',
+      field: "actions",
+      headerName: "Actions",
+      type: "actions",
       width: 150,
       getActions: (params) => [
         <GridActionsCellItem
@@ -191,6 +244,14 @@ export function ItemsPage() {
       <h2 className="items-header">
         <span style={{ color: "#39cccc" }}>Items - {storeName}</span>
       </h2>
+      <Button
+        variant="contained"
+        color="primary"
+        startIcon={<AddIcon />}
+        onClick={handleAddClick}
+      >
+        Create Product
+      </Button>
       <Box
         className="items-table"
         sx={{
@@ -203,19 +264,19 @@ export function ItemsPage() {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
+          marginTop: "20px",
         }}
       >
         <DataGrid
           rows={items}
           columns={columns}
-          pageSize={5}
-          checkboxSelection
+          pageSize={10}
           disableSelectionOnClick
           getRowId={(row) => row.id}
         />
       </Box>
       <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>Edit Item</DialogTitle>
+        <DialogTitle>{isEditing ? "Edit Item" : "Create Item"}</DialogTitle>
         <DialogContent>
           <TextField
             margin="dense"
@@ -223,7 +284,7 @@ export function ItemsPage() {
             label="Name"
             type="text"
             fullWidth
-            value={currentItem?.name || ''}
+            value={currentItem?.name || ""}
             onChange={handleChange}
           />
           <TextField
@@ -232,7 +293,17 @@ export function ItemsPage() {
             label="Description"
             type="text"
             fullWidth
-            value={currentItem?.description || ''}
+            value={currentItem?.description || ""}
+            onChange={handleChange}
+          />
+          <TextField
+            margin="dense"
+            name="shop_name"
+            label="Shop Name"
+            type="text"
+            fullWidth
+            disabled
+            value={currentItem?.shop_name || storeName}
             onChange={handleChange}
           />
           <TextField
@@ -241,7 +312,7 @@ export function ItemsPage() {
             label="Price"
             type="number"
             fullWidth
-            value={currentItem?.price || ''}
+            value={currentItem?.price || ""}
             onChange={handleChange}
           />
           <TextField
@@ -250,7 +321,7 @@ export function ItemsPage() {
             label="Amount"
             type="number"
             fullWidth
-            value={currentItem?.amount || ''}
+            value={currentItem?.amount || ""}
             onChange={handleChange}
           />
           <TextField
@@ -259,7 +330,7 @@ export function ItemsPage() {
             label="Maximum Discount"
             type="number"
             fullWidth
-            value={currentItem?.maximum_discount || ''}
+            value={currentItem?.maximum_discount || ""}
             onChange={handleChange}
           />
           <Autocomplete
@@ -272,7 +343,11 @@ export function ItemsPage() {
             onChange={handleCategoryChange}
             renderTags={(value: Category[], getTagProps) =>
               value.map((option, index) => (
-                <Chip key={option.id} label={option.name} {...getTagProps({ index })} />
+                <Chip
+                  key={option.id}
+                  label={option.name}
+                  {...getTagProps({ index })}
+                />
               ))
             }
             renderInput={(params) => (
@@ -289,9 +364,11 @@ export function ItemsPage() {
           <Button onClick={handleClose} color="primary">
             Back
           </Button>
-          <Button onClick={handleDialogDelete} color="secondary">
-            Delete
-          </Button>
+          {isEditing && (
+            <Button onClick={handleDialogDelete} color="secondary">
+              Delete
+            </Button>
+          )}
           <Button onClick={handleSave} color="primary">
             Save
           </Button>

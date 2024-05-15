@@ -93,6 +93,38 @@ def get_products_by_category(category_name):
     ]
     return jsonify(products=product_list), 200
 
+@bp.route("/shop/<int:shop_id>", methods=["GET"])
+def get_products_by_shop_id(shop_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, GROUP_CONCAT(c.category_name) AS categories
+        FROM products p
+        LEFT JOIN products_categories pc ON p.id = pc.product_id
+        LEFT JOIN categories c ON pc.category_id = c.id
+        LEFT JOIN shops s ON p.shop_id = s.id
+        WHERE p.shop_id = ?
+        GROUP BY p.id
+    """, (shop_id,))
+    products = cursor.fetchall()
+    product_list = [
+        {
+            "id": product["id"],
+            "name": product["name"],
+            "description": product["description"],
+            "shop_id": product["shop_id"],
+            "shop_name": product["shop_name"],
+            "price": product["price"],
+            "amount": product["amount"],
+            "maximum_discount": product["maximum_discount"],
+            "categories": product["categories"].split(",") if product["categories"] else []
+        }
+        for product in products
+    ]
+    return jsonify(products=product_list), 200
+
+
+
 # Create new product route
 @bp.route("", methods=["POST"])
 def create_new_product():
@@ -159,6 +191,7 @@ def update_product_by_id(product_id):
                 data.get("price"),
                 data.get("amount"),
                 data.get("maximum_discount"),
+                
                 product_id,
             ),
         )

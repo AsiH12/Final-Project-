@@ -35,33 +35,20 @@ def get_shops():
     return jsonify(shops=shop_list), 200
 
 
-@bp.route("/byname/<string:shop_name>", methods=["GET"])
-def get_shop_by_name(shop_name):
+@bp.route("/getidbyname/<string:shop_name>", methods=["GET"])
+def get_shop_id_by_name(shop_name):
     db = get_db()
     cursor = db.cursor()
     cursor.execute("""
-  SELECT s.id, s.name, s.description, s.owner_id, GROUP_CONCAT(DISTINCT c.category_name) AS categories, 
-               GROUP_CONCAT(DISTINCT m.username) AS managers
-        FROM shops s
-        LEFT JOIN shops_categories sc ON s.id = sc.shop_id
-        LEFT JOIN categories c ON sc.category_id = c.id
-        LEFT JOIN managers sm ON s.id = sm.shop_id
-        LEFT JOIN users m ON sm.manager_id = m.id
-        WHERE s.name = ?
-        GROUP BY s.id
+        SELECT id FROM shops WHERE name = ?
     """, (shop_name,))
     shop = cursor.fetchone()
+    close_db()
     if shop is None:
         return jsonify({"error": "Shop not found"}), 404
     else:
-        return jsonify({
-            "id": shop["id"],
-            "name": shop["name"],
-            "description": shop["description"],
-            "owner_id": shop["owner_id"],
-            "categories": shop["categories"].split(",") if shop["categories"] else [],
-            "managers": shop["managers"].split(",") if shop["managers"] else []
-        }), 200
+        return jsonify({"id": shop["id"]}), 200
+
 
 
 

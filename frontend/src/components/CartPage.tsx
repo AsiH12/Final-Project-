@@ -226,16 +226,9 @@ const CartPage = () => {
           throw new Error("Please log in to confirm purchase.");
         }
   
-        // Retrieve shop IDs for each cart item
-        const updatedCart = await Promise.all(cart.map(async (item) => {
-          console.log(item.shop);
-          const response = await fetch(`http://localhost:5000/shops/byname/${item.shop}`);
-          const data = await response.json();
-          return { ...item, shop_id: data.id }; // Append shop_id to each cart item
-        }));
-  
+
         const responses = await Promise.all(
-          updatedCart.map((item) => {
+          cart.map((item) => {
             const postData = {
               product_id: item.product_id,
               shop_id: item.shop_id, 

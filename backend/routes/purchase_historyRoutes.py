@@ -119,6 +119,7 @@ def create_purchase_history():
         )
     )
     db.commit()
+    close_db()
     return jsonify({"message": "Purchase history created successfully"}), 201
 
 # Delete purchase history by ID route

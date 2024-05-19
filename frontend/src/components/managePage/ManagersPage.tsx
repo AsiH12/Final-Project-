@@ -1,16 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Select, MenuItem } from "@mui/material";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Select,
+  MenuItem,
+} from "@mui/material";
 import { DataGrid, GridColDef, GridActionsCellItem } from "@mui/x-data-grid";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Swal from "sweetalert2";
 import "./ManagersPage.css";
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 
 interface Manager {
   id: number;
   username: string;
   email: string;
-  shop_id: number;
+  storeId: number;
 }
 
 interface User {
@@ -24,15 +33,13 @@ export function ManagersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [open, setOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
-  const shop_id = 4; // Define the shop_id to filter managers
   const location = useLocation();
-
-  const { storeName, role, owner } = location.state || {
-    storeName: null,
+  const { shop_name } = useParams();
+  const { storeId, role, owner } = location.state || {
+    storeId: null,
     role: null,
-    owner:  null,
+    owner: null,
   };
-  console.log(storeName + " " + role + " " + owner);
 
   useEffect(() => {
     fetchManagers()
@@ -42,12 +49,15 @@ export function ManagersPage() {
 
   const fetchManagers = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/managers/shop/${shop_id}`);
+      const response = await fetch(
+        `http://localhost:5000/managers/shop_name/${shop_name}`
+      );
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
+
       const data = await response.json();
-      return data.managers;
+      return data.managers || [];
     } catch (error) {
       console.error("There was a problem with the fetch operation:", error);
       return [];
@@ -56,12 +66,14 @@ export function ManagersPage() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/users/shop/${shop_id}`);
+      const response = await fetch(
+        `http://localhost:5000/users/shop_name/${shop_name}`
+      );
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
       const data = await response.json();
-      return data.users;
+      return data.users || [];
     } catch (error) {
       console.error("There was a problem with the fetch operation:", error);
       return [];
@@ -100,13 +112,12 @@ export function ManagersPage() {
   const handleAddManager = async () => {
     if (!selectedUser) return;
     try {
-      console.log(selectedUser)
       const response = await fetch(`http://localhost:5000/managers`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ manager_id: selectedUser, shop_id }),
+        body: JSON.stringify({ manager_id: selectedUser, shop_id: storeId }),
       });
       if (response.ok) {
         fetchManagers().then((data) => setManagers(data));
@@ -216,6 +227,7 @@ export function ManagersPage() {
           columns={columns}
           pageSize={5}
           disableSelectionOnClick
+          getRowId={(row) => row.id}
         />
       </Box>
     </div>

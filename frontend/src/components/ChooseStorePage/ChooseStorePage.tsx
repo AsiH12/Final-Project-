@@ -24,7 +24,7 @@ export function ChooseStorePage({ onStoreSelect }: ChooseStorePageProps) {
           throw new Error('Network response was not ok');
         }
         const data = await response.json();
-        console.log('Fetched stores:', data.stores);
+        console.log('Fetched stores:', data.shops);
         setStores(data.shops);
       } catch (error) {
         console.error('Error fetching stores:', error);
@@ -45,8 +45,7 @@ export function ChooseStorePage({ onStoreSelect }: ChooseStorePageProps) {
   };
 
   const handleNavigation = (path) => {
-    console.log(selectedStore)
-    navigate(path, { state: { storeName: selectedStore.name, role: selectedStore.role, owner:  selectedStore.owner_id } });
+    navigate(`${path}/${selectedStore.name}`, { state: { storeId: selectedStore.id, storeName: selectedStore.name, role: selectedStore.role, owner: selectedStore.owner_id } });
   };
 
   return (

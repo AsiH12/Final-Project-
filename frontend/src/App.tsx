@@ -64,52 +64,51 @@ const handleRouter = (userToken, setUserToken) => {
   ]);
 
   if (userToken !== null) {
-  console.log("authorized");
-  router = createBrowserRouter([
-    {
-      path: "/",
-      element: <RootLayOut />,
-      children: [
-        { path: "/", element: <Navigate to="/home" replace /> },
-        {
-          path: "/login",
-          element: <LoginForm setUserToken={setUserToken} />,
-        },
-        {
-          path: "/register",
-          element: <RegisterForm setUserToken={setUserToken} />,
-        },
-
-        { path: "/home", element: <HomePage /> },
-        {
-          path: "/categories/fashion",
-          element: <CategoryPage name="Fashion" />,
-        },
-        { path: "/categories/Tech", element: <CategoryPage name="Tech" /> },
-        {
-          path: "/categories/Lifestyle",
-          element: <CategoryPage name="LifeStyle" />,
-        },
-        { path: "/categories/Cars", element: <CategoryPage name="Cars" /> },
-        { path: "/changepassword", element: <ChangePassword /> }, // dialog - DONE
-        { path: "/changeaddress", element: <AddressForm /> }, // dialog - DONE
-        { path: "/edititem", element: <EditItemForm /> }, // dialog - DONE
-        { path: "/createitem", element: <CreateItemForm /> }, // dialog - DONE
-        { path: "/editprofile", element: <EditProfilePage /> }, // while hovering user in navbar
-        { path: "/purchasehistory", element: <PurchaseHistoryPage /> }, // page - while hovering user in navbar
-        { path: "/choosestore", element: <ChooseStorePage /> }, // page - DONE
-        { path: "/store", element: <StorePage /> }, // dialog/PopUp
-        { path: "/items", element: <ItemsPage /> }, // page - DONE
-        { path: "/orders", element: <OrdersPage /> }, // page- DONE
-        { path: "/revenues", element: <RevenuesPage /> }, // page - DONE
-        { path: "/addmanager", element: <AddManagerPage /> }, // dialog - DONE
-        { path: "/managers", element: <ManagersPage /> }, // page - DONE
-        { path: "/users", element: <UsersPage /> }, // page - DONE
-        { path: "/discount", element: <CreateDiscountPage /> }, // page - list of card of all discounted and edit/remove/create a discount  - HALF DONE
-        { path: "/cart", element: <CartPage /> }, // dialog
-      ],
-    },
-  ]);
+    console.log("authorized");
+    router = createBrowserRouter([
+      {
+        path: "/",
+        element: <RootLayOut />,
+        children: [
+          { path: "/", element: <Navigate to="/home" replace /> },
+          {
+            path: "/login",
+            element: <LoginForm setUserToken={setUserToken} />,
+          },
+          {
+            path: "/register",
+            element: <RegisterForm setUserToken={setUserToken} />,
+          },
+          { path: "/home", element: <HomePage /> },
+          {
+            path: "/categories/fashion",
+            element: <CategoryPage name="Fashion" />,
+          },
+          { path: "/categories/Tech", element: <CategoryPage name="Tech" /> },
+          {
+            path: "/categories/Lifestyle",
+            element: <CategoryPage name="LifeStyle" />,
+          },
+          { path: "/categories/Cars", element: <CategoryPage name="Cars" /> },
+          { path: "/changepassword", element: <ChangePassword /> }, // dialog - DONE
+          { path: "/changeaddress", element: <AddressForm /> }, // dialog - DONE
+          { path: "/edititem", element: <EditItemForm /> }, // dialog - DONE
+          { path: "/createitem", element: <CreateItemForm /> }, // dialog - DONE
+          { path: "/editprofile", element: <EditProfilePage /> }, // while hovering user in navbar
+          { path: "/purchasehistory", element: <PurchaseHistoryPage /> }, // page - while hovering user in navbar
+          { path: "/choosestore", element: <ChooseStorePage /> }, // page - DONE
+          { path: "/store", element: <StorePage /> }, // dialog/PopUp
+          { path: "/items/:shop_name", element: <ItemsPage /> }, // page - DONE
+          { path: "/orders/:shop_name", element: <OrdersPage /> }, // page- DONE
+          { path: "/revenues/:shop_name", element: <RevenuesPage /> }, // page - DONE
+          { path: "/addmanager", element: <AddManagerPage /> }, // dialog - DONE
+          { path: "/managers/:shop_name", element: <ManagersPage /> }, // page - DONE
+          { path: "/users", element: <UsersPage /> }, // page - DONE
+          { path: "/discount/:shop_name", element: <CreateDiscountPage /> }, // page - list of card of all discounted and edit/remove/create a discount  - HALF DONE
+          { path: "/cart", element: <CartPage /> }, // dialog
+        ],
+      },
+    ]);
   }
 
   return router;

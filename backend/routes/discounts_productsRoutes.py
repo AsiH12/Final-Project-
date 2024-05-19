@@ -82,6 +82,96 @@ def get_discount_product_by_id(discount_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+# Get discount for product by product ID route
+@bp.route("/product/<int:product_id>", methods=["GET"])
+def get_discounts_by_product_id(product_id):
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute(
+            "SELECT id, product_id, discount_code, discount, expiration_date, minimum_amount, allow_others FROM discounts_products WHERE product_id = ?",
+            (product_id,)
+        )
+        discounts = cursor.fetchall()
+        if not discounts:
+            return jsonify({"error": "No discounts found for this product"}), 404
+        discounts_list = [{
+            "id": discount["id"],
+            "product_id": discount["product_id"],
+            "discount_code": discount["discount_code"],
+            "discount": discount["discount"],
+            "expiration_date": discount["expiration_date"],
+            "minimum_amount": discount["minimum_amount"],
+            "allow_others": discount["allow_others"]
+        } for discount in discounts]
+        return jsonify(discounts=discounts_list), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Get all product discounts by shop ID route
+@bp.route("/by_shop/<int:shop_id>", methods=["GET"])
+def get_discounts_by_shop_id(shop_id):
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute(
+            """
+            SELECT dp.id, dp.product_id, dp.discount_code, dp.discount, dp.expiration_date, dp.minimum_amount, dp.allow_others
+            FROM discounts_products dp
+            JOIN products p ON dp.product_id = p.id
+            WHERE p.shop_id = ?
+            """,
+            (shop_id,)
+        )
+        discounts = cursor.fetchall()
+        if not discounts:
+            return jsonify({"error": "No discounts found for this shop"}), 404
+        discounts_list = [{
+            "id": discount["id"],
+            "product_id": discount["product_id"],
+            "discount_code": discount["discount_code"],
+            "discount": discount["discount"],
+            "expiration_date": discount["expiration_date"],
+            "minimum_amount": discount["minimum_amount"],
+            "allow_others": discount["allow_others"]
+        } for discount in discounts]
+        return jsonify(discounts=discounts_list), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Get all product discounts by shop name route
+@bp.route("/by_shop_name/<string:shop_name>", methods=["GET"])
+def get_discounts_by_shop_name(shop_name):
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute(
+            """
+            SELECT dp.id, dp.product_id, dp.discount_code, dp.discount, dp.expiration_date, dp.minimum_amount, dp.allow_others
+            FROM discounts_products dp
+            JOIN products p ON dp.product_id = p.id
+            JOIN shops s ON p.shop_id = s.id
+            WHERE s.name = ?
+            """,
+            (shop_name,)
+        )
+        discounts = cursor.fetchall()
+        if not discounts:
+            return jsonify({"error": "No discounts found for this shop"}), 404
+        discounts_list = [{
+            "id": discount["id"],
+            "product_id": discount["product_id"],
+            "discount_code": discount["discount_code"],
+            "discount": discount["discount"],
+            "expiration_date": discount["expiration_date"],
+            "minimum_amount": discount["minimum_amount"],
+            "allow_others": discount["allow_others"]
+        } for discount in discounts]
+        return jsonify(discounts=discounts_list), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 # Check if a discount is applicable for the given cart
 @bp.route("/check-discount", methods=["POST"])
 @jwt_required()

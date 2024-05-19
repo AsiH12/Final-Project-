@@ -75,6 +75,65 @@ def get_discount_shop_by_id(discount_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+# Get discounts for a specific shop by shop ID
+@bp.route("/shops/by_shop/<int:shop_id>", methods=["GET"])
+def get_discounts_by_shop_id(shop_id):
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute(
+            "SELECT id, shop_id, discount_code, discount, expiration_date, minimum_amount, allow_others FROM discounts_shops WHERE shop_id = ?",
+            (shop_id,)
+        )
+        discounts = cursor.fetchall()
+        if not discounts:
+            return jsonify({"error": "No discounts found for this shop"}), 404
+        discounts_list = [{
+            "id": discount["id"],
+            "shop_id": discount["shop_id"],
+            "discount_code": discount["discount_code"],
+            "discount": discount["discount"],
+            "expiration_date": discount["expiration_date"],
+            "minimum_amount": discount["minimum_amount"],
+            "allow_others": discount["allow_others"]
+        } for discount in discounts]
+        return jsonify(discounts=discounts_list), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# Get discounts for a specific shop by shop name
+@bp.route("/shops/by_shop_name/<string:shop_name>", methods=["GET"])
+def get_discounts_by_shop_name(shop_name):
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute(
+            """
+            SELECT ds.id, ds.shop_id, ds.discount_code, ds.discount, ds.expiration_date, ds.minimum_amount, ds.allow_others
+            FROM discounts_shops ds
+            JOIN shops s ON ds.shop_id = s.id
+            WHERE s.name = ?
+            """,
+            (shop_name,)
+        )
+        discounts = cursor.fetchall()
+        if not discounts:
+            return jsonify({"error": "No discounts found for this shop"}), 404
+        discounts_list = [{
+            "id": discount["id"],
+            "shop_id": discount["shop_id"],
+            "discount_code": discount["discount_code"],
+            "discount": discount["discount"],
+            "expiration_date": discount["expiration_date"],
+            "minimum_amount": discount["minimum_amount"],
+            "allow_others": discount["allow_others"]
+        } for discount in discounts]
+        return jsonify(discounts=discounts_list), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 # Create a new discount for shop route
 @bp.route("/shops", methods=["POST"])
 @jwt_required()
@@ -155,3 +214,4 @@ def delete_discount_shop(discount_id):
         return jsonify({"message": "Discount for shop deleted successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+

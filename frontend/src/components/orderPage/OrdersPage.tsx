@@ -1,59 +1,87 @@
 import React, { useState, useEffect } from "react";
 import { Box } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import "./OrdersPage.css";
 
 interface Order {
   id: number;
-  // Add other order properties as needed
+  product_name: string;
+  shop_name: string;
+  user_name: string;
+  quantity: number;
+  product_price: number;
+  purchase_date: string;
+  city: string;
+  country: string;
+  shipping_address: string;
+  shipping_completed: boolean;
+  total_price: number;
 }
 
 export function OrdersPage() {
-  const [storeName, setStoreName] = useState<string>(""); // State to store the store name
   const [orders, setOrders] = useState<Order[]>([]); // State to store orders
-  const { storeId } = useParams<{ storeId: string }>(); // Get storeId from URL params
+
+  const location = useLocation();
+
+  const { shop_name } = useParams();
+  const { storeId, role, owner } = location.state || {
+    storeId: null,
+    role: null,
+    owner: null,
+  };
 
   useEffect(() => {
-    // Fetch store name and orders when storeId changes
-    fetchStoreData(storeId)
-      .then((data) => {
-        setStoreName(data.storeName);
-        setOrders(data.orders);
-      })
-      .catch((error) => console.error("Error fetching store data:", error));
+    if (storeId) {
+      fetchOrders()
+        .then((data) => {
+          setOrders(data);
+        })
+        .catch((error) => console.error("Error fetching store data:", error));
+    }
   }, [storeId]);
 
-  // Function to fetch store name and orders (Replace with actual fetch logic)
-  const fetchStoreData = async (storeId: string) => {
-    // Mock implementation
-    const storeNameResponse = await fetchStoreName(storeId);
-    const ordersResponse = await fetchOrders(storeId);
-    return { storeName: storeNameResponse.name, orders: ordersResponse };
-  };
-
-  // Mock function for fetching store name (Replace with actual fetch logic)
-  const fetchStoreName = async (storeId: string) => {
-    // Mock implementation
-    return { name: "Store Name" };
-  };
-
-  // Mock function for fetching orders (Replace with actual fetch logic)
-  const fetchOrders = async (storeId: string) => {
-    // Mock implementation
-    return [{ id: 1 }, { id: 2 }, { id: 3 }];
+  // Function to fetch store name and orders
+  const fetchOrders = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/purchase-history/shop_name/${shop_name}`
+      );
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const data = await response.json();
+      if (!data.error) return data;
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
   };
 
   // Define columns for DataGrid
   const columns: GridColDef[] = [
     { field: "id", headerName: "ID", width: 90 },
-    // Add other columns as needed
+    { field: "product_name", headerName: "Product Name", width: 150 },
+    { field: "shop_name", headerName: "Shop Name", width: 150 },
+    { field: "user_name", headerName: "User Name", width: 150 },
+    { field: "quantity", headerName: "Quantity", width: 120 },
+    { field: "product_price", headerName: "Product Price", width: 150 },
+    { field: "purchase_date", headerName: "Purchase Date", width: 150 },
+    { field: "city", headerName: "City", width: 150 },
+    { field: "country", headerName: "Country", width: 150 },
+    { field: "shipping_address", headerName: "Shipping Address", width: 200 },
+    {
+      field: "shipping_completed",
+      headerName: "Shipping Completed",
+      width: 150,
+    },
+    { field: "total_price", headerName: "Total Price", width: 150 },
   ];
 
   return (
     <div className="container">
       <h2 className="orders-header">
-        <span style={{ color: "#39cccc" }}>Orders - {storeName}</span>
+        <span style={{ color: "#39cccc" }}>Orders - {shop_name}</span>
       </h2>
       <Box
         className="orders-table"
@@ -61,7 +89,7 @@ export function OrdersPage() {
           backgroundColor: "white",
           borderRadius: "44px",
           boxShadow: "10px 8px 4px 0px #00000040",
-          width: "800px",
+          width: "1000px",
           height: "600px",
           padding: "40px",
           display: "flex",
@@ -73,6 +101,7 @@ export function OrdersPage() {
           rows={orders}
           columns={columns}
           pageSize={5}
+          rowsPerPageOptions={[5, 10, 15]}
           checkboxSelection
           disableSelectionOnClick
         />

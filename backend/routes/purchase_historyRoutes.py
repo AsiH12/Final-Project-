@@ -95,6 +95,26 @@ def get_purchase_history_by_shop_id(shop_id):
     purchases_list = [dict(purchase) for purchase in shop_purchases]
     return jsonify(purchases_list), 200
 
+# Get all purchase history by shop name
+@bp.route("/shop_name/<string:shop_name>", methods=["GET"])
+def get_purchase_history_by_shop_name(shop_name):
+    db = get_db()
+    cursor = db.cursor()
+    query = """
+        SELECT ph.id, p.name AS product_name, s.name AS shop_name, u.username AS user_name, 
+               ph.quantity, ph.product_price, ph.purchase_date, ph.city, ph.country, 
+               ph.shipping_address, ph.shipping_completed, ph.total_price
+        FROM purchase_history ph
+        JOIN products p ON ph.product_id = p.id
+        JOIN shops s ON ph.shop_id = s.id
+        JOIN users u ON ph.user_id = u.id
+        WHERE s.name = ?
+    """
+    cursor.execute(query, (shop_name,))
+    shop_purchases = cursor.fetchall()
+    purchases_list = [dict(purchase) for purchase in shop_purchases]
+    return jsonify(purchases_list), 200
+
 # Create new purchase history route
 @bp.route("", methods=["POST"])
 def create_purchase_history():

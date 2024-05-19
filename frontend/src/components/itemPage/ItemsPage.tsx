@@ -14,6 +14,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import Swal from "sweetalert2";
 import "./ItemsPage.css";
+import { useParams, useLocation } from "react-router-dom";
 
 interface Item {
   id: number;
@@ -36,9 +37,12 @@ export function ItemsPage() {
   const [open, setOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentItem, setCurrentItem] = useState<Item | null>(null);
-  const storeId = 4;
-  const storeName = "shop4";
+  const { shop_name } = useParams();
+  const location = useLocation();
+  const { storeId, storeName } = location.state;
   const [allCategories, setAllCategories] = useState<Category[]>([]);
+
+  console.log(shop_name)
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -46,7 +50,7 @@ export function ItemsPage() {
         `http://localhost:5000/products/shop/${storeId}`
       );
       const data = await response.json();
-      setItems(data.products);
+      if (!data.error) setItems(data.products);
     };
 
     const fetchCategories = async () => {

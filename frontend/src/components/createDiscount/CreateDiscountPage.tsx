@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   Box,
   TextField,
@@ -7,17 +7,24 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Divider
+  Divider,
+  IconButton,
+  Typography,
 } from "@mui/material";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { Edit, Delete } from "@mui/icons-material";
+import Swal from "sweetalert2";
+import { useLocation, useParams } from "react-router-dom";
 import "./CreateDiscountPage.css";
 
-interface CreateDiscountPageProps {
-  storeName: string;
-}
-
-export function CreateDiscountPage({ storeName }: CreateDiscountPageProps) {
+export function CreateDiscountPage() {
+  const location = useLocation();
+  const { shop_name } = useParams();
+  const { storeId, } = location.state;
   const [allowOthers, setAllowOthers] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
+  const [shopDiscounts, setShopDiscounts] = useState<any[]>([]);
+  const [productDiscounts, setProductDiscounts] = useState<any[]>([]);
 
   const discountNameRef = useRef<HTMLInputElement>(null);
   const productIdRef = useRef<HTMLInputElement>(null);
@@ -25,6 +32,36 @@ export function CreateDiscountPage({ storeName }: CreateDiscountPageProps) {
   const discountCodeRef = useRef<HTMLInputElement>(null);
   const expirationDateRef = useRef<HTMLInputElement>(null);
   const minimumAmountRef = useRef<HTMLInputElement>(null);
+
+
+  useEffect(() => {
+    fetchShopDiscounts();
+    fetchProductDiscounts();
+  }, []);
+
+  const fetchShopDiscounts = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/discounts/shops/by_shop_name/${shop_name}`
+      );
+      const data = await response.json();
+      if (!data.error) setShopDiscounts(data.discounts);
+    } catch (error) {
+      console.error("Error fetching shop discounts:", error);
+    }
+  };
+
+  const fetchProductDiscounts = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/discounts/products/by_shop_name/${shop_name}`
+      );
+      const data = await response.json();
+      if (!data.error) setProductDiscounts(data.discounts);
+    } catch (error) {
+      console.error("Error fetching product discounts:", error);
+    }
+  };
 
   const handleCreateDiscount = () => {
     const discountName = discountNameRef.current?.value || "";
@@ -47,10 +84,124 @@ export function CreateDiscountPage({ storeName }: CreateDiscountPageProps) {
     setOpen(false);
   };
 
+  const handleEdit = async (id: number, isProductDiscount: boolean) => {
+    const discountType = isProductDiscount ? "products" : "shops";
+    try {
+      // Implement edit functionality
+      console.log(`Edit discount with id: ${id}`);
+      // Example edit implementation (you need to adjust it to your needs)
+      const response = await fetch(
+        `http://localhost:5000/discounts/${discountType}/${id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            // Add fields to update here
+            discount_code: "NEW_CODE",
+          }),
+        }
+      );
+      const data = await response.json();
+      if (response.ok) {
+        Swal.fire("Success", "Discount updated successfully", "success");
+        fetchShopDiscounts();
+        fetchProductDiscounts();
+      } else {
+        Swal.fire("Error", data.error || "Failed to update discount", "error");
+      }
+    } catch (error) {
+      console.error(`Error editing ${discountType} discount:`, error);
+      Swal.fire(
+        "Error",
+        "An error occurred while updating the discount",
+        "error"
+      );
+    }
+  };
+
+  const handleDelete = async (id: number, isProductDiscount: boolean) => {
+    const discountType = isProductDiscount ? "products" : "shops";
+    try {
+      // Implement delete functionality
+      console.log(`Delete discount with id: ${id}`);
+      const response = await fetch(
+        `http://localhost:5000/discounts/${discountType}/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+      const data = await response.json();
+      if (response.ok) {
+        Swal.fire("Success", "Discount deleted successfully", "success");
+        fetchShopDiscounts();
+        fetchProductDiscounts();
+      } else {
+        Swal.fire("Error", data.error || "Failed to delete discount", "error");
+      }
+    } catch (error) {
+      console.error(`Error deleting ${discountType} discount:`, error);
+      Swal.fire(
+        "Error",
+        "An error occurred while deleting the discount",
+        "error"
+      );
+    }
+  };
+
+  const productDiscountColumns: GridColDef[] = [
+    { field: "id", headerName: "ID", width: 90 },
+    { field: "product_id", headerName: "Product ID", width: 150 },
+    { field: "discount_code", headerName: "Discount Code", width: 150 },
+    { field: "discount", headerName: "Discount", width: 150 },
+    { field: "expiration_date", headerName: "Expiration Date", width: 150 },
+    { field: "minimum_amount", headerName: "Minimum Amount", width: 150 },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 150,
+      renderCell: (params) => (
+        <>
+          <IconButton onClick={() => handleEdit(params.row.id, true)}>
+            <Edit />
+          </IconButton>
+          <IconButton onClick={() => handleDelete(params.row.id, true)}>
+            <Delete />
+          </IconButton>
+        </>
+      ),
+    },
+  ];
+
+  const shopDiscountColumns: GridColDef[] = [
+    { field: "id", headerName: "ID", width: 90 },
+    { field: "shop_id", headerName: "Shop ID", width: 150 },
+    { field: "discount_code", headerName: "Discount Code", width: 150 },
+    { field: "discount", headerName: "Discount", width: 150 },
+    { field: "expiration_date", headerName: "Expiration Date", width: 150 },
+    { field: "minimum_amount", headerName: "Minimum Amount", width: 150 },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 150,
+      renderCell: (params) => (
+        <>
+          <IconButton onClick={() => handleEdit(params.row.id, false)}>
+            <Edit />
+          </IconButton>
+          <IconButton onClick={() => handleDelete(params.row.id, false)}>
+            <Delete />
+          </IconButton>
+        </>
+      ),
+    },
+  ];
+
   return (
     <div className="container">
       <h2 className="manage-store-header">Manage Store</h2>
-      <h3 className="store-name">{storeName}</h3>
+      <h3 className="store-name">{shop_name}</h3>
       <h2 className="create-discount-header">Create New Discount</h2>
       <div className="button-container">
         <Button
@@ -65,7 +216,7 @@ export function CreateDiscountPage({ storeName }: CreateDiscountPageProps) {
       </div>
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>Create New Discount</DialogTitle>
-        <Divider></Divider>
+        <Divider />
         <DialogContent>
           <Box
             className="create-discount-form"
@@ -86,26 +237,7 @@ export function CreateDiscountPage({ storeName }: CreateDiscountPageProps) {
               fullWidth
               margin="normal"
             />
-            <TextField
-              sx={{ width: "400px", background: "white" }}
-              id="productId"
-              label="Product ID"
-              variant="outlined"
-              inputRef={productIdRef}
-              className="input-container"
-              fullWidth
-              margin="normal"
-            />
-            <TextField
-              sx={{ width: "400px", background: "white" }}
-              id="storeId"
-              label="Store ID"
-              variant="outlined"
-              inputRef={storeIdRef}
-              className="input-container"
-              fullWidth
-              margin="normal"
-            />
+
             <TextField
               sx={{ width: "400px", background: "white" }}
               id="discountCode"
@@ -116,9 +248,6 @@ export function CreateDiscountPage({ storeName }: CreateDiscountPageProps) {
               fullWidth
               margin="normal"
             />
-            {/* <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <DatePicker label="expiration" />
-        </LocalizationProvider> */}
             <TextField
               sx={{ width: "400px", background: "white" }}
               id="expirationDate"
@@ -142,10 +271,10 @@ export function CreateDiscountPage({ storeName }: CreateDiscountPageProps) {
               className="input-container"
               fullWidth
               margin="normal"
-            />{" "}
+            />
           </Box>
         </DialogContent>
-        <Divider></Divider>
+        <Divider />
         <DialogActions>
           <Button onClick={() => setOpen(false)} color="primary">
             Cancel
@@ -155,6 +284,50 @@ export function CreateDiscountPage({ storeName }: CreateDiscountPageProps) {
           </Button>
         </DialogActions>
       </Dialog>
+      <div className="discount-tables">
+        <div className="table-section">
+          <Typography variant="h6" gutterBottom>
+            Product Discount
+          </Typography>
+          <Button
+            sx={{ marginBottom: "10px" }}
+            variant="contained"
+            color="primary"
+          >
+            Add coupon
+          </Button>
+          <div style={{ height: 400, width: "100%" }}>
+            <DataGrid
+              rows={productDiscounts}
+              columns={productDiscountColumns}
+              pageSize={5}
+              rowsPerPageOptions={[5]}
+              checkboxSelection
+            />
+          </div>
+        </div>
+        <div className="table-section">
+          <Typography variant="h6" gutterBottom>
+            Shop Discount
+          </Typography>
+          <Button
+            sx={{ marginBottom: "10px" }}
+            variant="contained"
+            color="primary"
+          >
+            Add coupon
+          </Button>
+          <div style={{ height: 400, width: "100%" }}>
+            <DataGrid
+              rows={shopDiscounts}
+              columns={shopDiscountColumns}
+              pageSize={5}
+              rowsPerPageOptions={[5]}
+              checkboxSelection
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

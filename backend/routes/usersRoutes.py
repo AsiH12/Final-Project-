@@ -1,9 +1,9 @@
 from flask import Blueprint, Flask, request, jsonify
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required,get_jwt_identity
+from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required, get_jwt_identity
 
 from db import close_db, get_db
-bp=Blueprint("usersRoutes", __name__, url_prefix="/users")
+bp = Blueprint("usersRoutes", __name__, url_prefix="/users")
 
 # Login route
 @bp.route("/login", methods=["POST"])
@@ -22,13 +22,11 @@ def login():
         access_token = create_access_token(identity=user["id"])
         return jsonify({"access_token": access_token, "user_id": user["id"]}), 200
 
-
 # Logout route
 @bp.route("/logout", methods=["POST"])
 def logout():
     # You might want to implement token invalidation or blacklist here
     return jsonify({"message": "Successfully logged out"}), 200
-
 
 # Get current user route
 @bp.route("/me")
@@ -58,7 +56,6 @@ def get_me():
             200,
         )
 
-
 # Get all users route
 @bp.route("/", methods=["GET"])
 def get_users():
@@ -78,7 +75,6 @@ def get_users():
         for user in users
     ]
     return jsonify(users=user_list), 200
-
 
 # Create new user route
 @bp.route("/register", methods=["POST"])
@@ -115,7 +111,6 @@ def create_new_user():
 
     return jsonify({"message": "User created successfully"}), 201
 
-
 # Get user by ID route
 @bp.route("/<int:user_id>", methods=["GET"])
 def get_user_by_id(user_id):
@@ -140,11 +135,12 @@ def get_user_by_id(user_id):
             ),
             200,
         )
+
 @bp.route("/shop/<int:shop_id>", methods=["GET"])
 def get_available_users(shop_id):
     db = get_db()
     cursor = db.cursor()
-    
+
     # Query to get users who are not owners and not managers of the specified shop
     cursor.execute("""
         SELECT u.id, u.username, u.email
@@ -156,12 +152,35 @@ def get_available_users(shop_id):
             SELECT owner_id FROM shops WHERE id = ?
         )
     """, (shop_id, shop_id))
-    
+
     users = cursor.fetchall()
     user_list = [{"id": user["id"], "username": user["username"], "email": user["email"]} for user in users]
     return jsonify(users=user_list), 200
+# Get available users by shop name
+@bp.route("/shop_name/<string:shop_name>", methods=["GET"])
+def get_available_users_by_shop_name(shop_name):
+    db = get_db()
+    cursor = db.cursor()
 
+    # Query to get users who are not owners and not managers of the specified shop
+    query = """
+        SELECT u.id, u.username, u.email
+        FROM users u
+        WHERE u.id NOT IN (
+            SELECT manager_id FROM managers m
+            JOIN shops s ON m.shop_id = s.id
+            WHERE s.name = ?
+        )
+        AND u.id NOT IN (
+            SELECT owner_id FROM shops s
+            WHERE s.name = ?
+        )
+    """
+    cursor.execute(query, (shop_name, shop_name))
 
+    users = cursor.fetchall()
+    user_list = [{"id": user["id"], "username": user["username"], "email": user["email"]} for user in users]
+    return jsonify(users=user_list), 200
 
 
 # Delete user by ID route
@@ -178,7 +197,6 @@ def delete_user_by_id(user_id):
         cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
         db.commit()
         return jsonify({"message": "User deleted successfully"}), 200
-
 
 # Update user by ID route
 @bp.route("/<int:user_id>", methods=["PATCH"])
@@ -206,7 +224,6 @@ def update_user_by_id(user_id):
         db.commit()
         return jsonify({"message": "User updated successfully"}), 200
 
-
 # Reset password route
 @bp.route("/reset-password/<int:user_id>", methods=["PATCH"])
 def reset_password(user_id):
@@ -218,7 +235,8 @@ def reset_password(user_id):
     db = get_db()
     cursor = db.cursor()
 
-    # Check if the user exists
+
+     # Check if the user exists
     cursor.execute("SELECT id FROM users WHERE id = ?", (user_id,))
     existing_user = cursor.fetchone()
     if existing_user is None:

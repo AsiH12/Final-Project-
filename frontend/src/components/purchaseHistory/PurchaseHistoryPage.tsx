@@ -77,7 +77,6 @@ export function PurchaseHistoryPage() {
           onFilterModelChange={(model) => setFilterModel(model)}
           pageSize={10}
           rowsPerPageOptions={[5, 10, 25]}
-          checkboxSelection
           disableColumnMenu
         />
       )}

@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Box } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { useLocation, useParams } from "react-router-dom";
+import { Box, Button } from "@mui/material";
+import { DataGrid, GridColDef, GridActionsCellItem } from "@mui/x-data-grid";
+import { useParams, useLocation } from "react-router-dom";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
+import Swal from "sweetalert2";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import TextField from "@mui/material/TextField";
+import Autocomplete from "@mui/material/Autocomplete";
 import "./OrdersPage.css";
 
 interface Order {
@@ -19,46 +29,65 @@ interface Order {
   total_price: number;
 }
 
-export function OrdersPage() {
+interface Shop {
+  id: number;
+  name: string;
+  description: string;
+  owner_id: number;
+  role: string;
+}
+
+export function OrdersPage({ ownerView }) {
   const [orders, setOrders] = useState<Order[]>([]); // State to store orders
-
-  const location = useLocation();
-
   const { shop_name } = useParams();
-  const { storeId, role, owner } = location.state || {
-    storeId: null,
-    role: null,
-    owner: null,
-  };
+  const location = useLocation();
+  const logged_user_id = localStorage.getItem("user_id");
 
   useEffect(() => {
-    if (storeId) {
-      fetchOrders()
-        .then((data) => {
-          setOrders(data);
-        })
-        .catch((error) => console.error("Error fetching store data:", error));
-    }
-  }, [storeId]);
-
-  // Function to fetch store name and orders
-  const fetchOrders = async () => {
-    try {
-      const response = await fetch(
-        `http://localhost:5000/purchase-history/shop_name/${shop_name}`
-      );
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
+    const fetchOrders = async () => {
+      const url = ownerView
+        ? `http://localhost:5000/purchase-history/manager_owner/${logged_user_id}`
+        : `http://localhost:5000/purchase-history/shop_name/${shop_name}`;
+      const response = await fetch(url);
       const data = await response.json();
-      if (!data.error) return data;
-    } catch (error) {
-      console.log(error);
-      return [];
+      if (!data.error) setOrders(data.purchases);
+    };
+
+    fetchOrders().catch((error) =>
+      console.error("Error fetching orders:", error)
+    );
+  }, [shop_name, ownerView]);
+
+  const handleDeleteClick = async (id: number) => {
+    const response = await fetch(
+      `http://localhost:5000/purchase-history/${id}`,
+      {
+        method: "DELETE",
+      }
+    );
+    if (response.ok) {
+      setOrders((prevOrders) => prevOrders.filter((order) => order.id !== id));
+      Swal.fire({
+        icon: "success",
+        title: "Deleted!",
+        text: "Order has been deleted successfully.",
+        customClass: {
+          container: "swal-dialog-custom",
+        },
+      });
+    } else {
+      console.error("Error deleting order");
+      Swal.fire({
+        icon: "error",
+        title: "Error!",
+        text: "Error deleting order.",
+        customClass: {
+          container: "swal-dialog-custom",
+        },
+      });
     }
   };
 
-  // Define columns for DataGrid
   const columns: GridColDef[] = [
     { field: "id", headerName: "ID", width: 90 },
     { field: "product_name", headerName: "Product Name", width: 150 },
@@ -70,18 +99,33 @@ export function OrdersPage() {
     { field: "city", headerName: "City", width: 150 },
     { field: "country", headerName: "Country", width: 150 },
     { field: "shipping_address", headerName: "Shipping Address", width: 200 },
-    {
-      field: "shipping_completed",
-      headerName: "Shipping Completed",
-      width: 150,
-    },
+    // {
+    //   field: "shipping_completed",
+    //   headerName: "Shipping Completed",
+    //   width: 150,
+    // },
     { field: "total_price", headerName: "Total Price", width: 150 },
+    {
+      field: "actions",
+      headerName: "Actions",
+      type: "actions",
+      width: 150,
+      getActions: (params) => [
+        <GridActionsCellItem
+          icon={<DeleteIcon />}
+          label="Delete"
+          onClick={() => handleDeleteClick(params.id as number)}
+        />,
+      ],
+    },
   ];
 
   return (
     <div className="container">
       <h2 className="orders-header">
-        <span style={{ color: "#39cccc" }}>Orders - {shop_name}</span>
+        <span style={{ color: "#39cccc" }}>
+          {ownerView ? "Orders" : `Orders - ${shop_name}`}
+        </span>
       </h2>
       <Box
         className="orders-table"
@@ -102,7 +146,6 @@ export function OrdersPage() {
           columns={columns}
           pageSize={5}
           rowsPerPageOptions={[5, 10, 15]}
-          checkboxSelection
           disableSelectionOnClick
         />
       </Box>

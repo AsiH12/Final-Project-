@@ -98,13 +98,31 @@ const handleRouter = (userToken, setUserToken) => {
           { path: "/purchasehistory", element: <PurchaseHistoryPage /> }, // page - while hovering user in navbar
           { path: "/choosestore", element: <ChooseStorePage /> }, // page - DONE
           { path: "/store", element: <StorePage /> }, // dialog/PopUp
-          { path: "/items/:shop_name", element: <ItemsPage /> }, // page - DONE
-          { path: "/orders/:shop_name", element: <OrdersPage /> }, // page- DONE
-          { path: "/revenues/:shop_name", element: <RevenuesPage /> }, // page - DONE
+          {
+            path: "/items/:shop_name",
+            element: <ItemsPage ownerView={false} />,
+          }, // page - DONE
+          {
+            path: "/orders/:shop_name",
+            element: <OrdersPage ownerView={false} />,
+          }, // page- DONE
           { path: "/addmanager", element: <AddManagerPage /> }, // dialog - DONE
-          { path: "/managers/:shop_name", element: <ManagersPage /> }, // page - DONE
+          {
+            path: "/managers/:shop_name",
+            element: <ManagersPage ownerView={false} />,
+          }, // page - DONE
           { path: "/users", element: <UsersPage /> }, // page - DONE
-          { path: "/discount/:shop_name", element: <CreateDiscountPage /> }, // page - list of card of all discounted and edit/remove/create a discount  - HALF DONE
+          {
+            path: "/discount/:shop_name",
+            element: <CreateDiscountPage ownerView={false} />,
+          }, // page - list of card of all discounted and edit/remove/create a discount  - HALF DONE
+          { path: "/items", element: <ItemsPage ownerView={true} /> }, // page - DONE
+          { path: "/orders", element: <OrdersPage ownerView={true} /> }, // page- DONE
+          { path: "/managers", element: <ManagersPage ownerView={true} /> }, // page - DONE
+          {
+            path: "/discount",
+            element: <CreateDiscountPage ownerView={true} />,
+          }, // page - list of card of all discounted and edit/remove/create a discount  - HALF DONE
           { path: "/cart", element: <CartPage /> }, // dialog
         ],
       },
@@ -125,6 +143,15 @@ export default function App() {
     }
   }, []);
 
+  useEffect(() => {
+    fetch(BACKEND_URL + "/users/me", {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("access_token"),
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => console.log(data));
+  }, []);
   return (
     <div>
       <RouterProvider router={handleRouter(userToken, setUserToken)} />

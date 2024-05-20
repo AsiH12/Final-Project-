@@ -92,8 +92,65 @@ def get_purchase_history_by_shop_id(shop_id):
     """
     cursor.execute(query, (shop_id,))
     shop_purchases = cursor.fetchall()
+    close_db()
     purchases_list = [dict(purchase) for purchase in shop_purchases]
     return jsonify(purchases_list), 200
+
+@bp.route("/manager_owner/<int:user_id>", methods=["GET"])
+def get_user_purchases(user_id):
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        
+        # Get all shops where the user is an owner or manager
+        cursor.execute("""
+            SELECT DISTINCT s.id AS shop_id
+            FROM shops s
+            LEFT JOIN managers m ON s.id = m.shop_id
+            WHERE s.owner_id = ? OR m.manager_id = ?
+        """, (user_id, user_id))
+        
+        shop_ids = [row["shop_id"] for row in cursor.fetchall()]
+        
+        if not shop_ids:
+            return jsonify(purchases=[]), 200
+
+        # Get all purchases for the relevant shops
+        cursor.execute("""
+            SELECT p.*, prod.name as product_name, s.name as shop_name, u.username as user_name
+            FROM purchase_history p
+            LEFT JOIN products prod ON p.product_id = prod.id
+            LEFT JOIN shops s ON p.shop_id = s.id
+            LEFT JOIN users u ON p.user_id = u.id
+            WHERE p.shop_id IN ({})
+        """.format(','.join('?' for _ in shop_ids)), shop_ids)
+        
+        purchases = cursor.fetchall()
+        purchase_list = [
+            {
+                "id": purchase["id"],
+                "product_id": purchase["product_id"],
+                "shop_id": purchase["shop_id"],
+                "user_id": purchase["user_id"],
+                "quantity": purchase["quantity"],
+                "product_price": purchase["product_price"],
+                "purchase_date": purchase["purchase_date"],
+                "city": purchase["city"],
+                "country": purchase["country"],
+                "shipping_address": purchase["shipping_address"],
+                "shipping_completed": purchase["shipping_completed"],
+                "total_price": purchase["total_price"],
+                "product_name": purchase["product_name"],
+                "shop_name": purchase["shop_name"],
+                "user_name": purchase["user_name"]
+            }
+            for purchase in purchases
+        ]
+        
+        return jsonify(purchases=purchase_list), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 # Get all purchase history by shop name
 @bp.route("/shop_name/<string:shop_name>", methods=["GET"])

@@ -28,16 +28,15 @@ def logout():
     # You might want to implement token invalidation or blacklist here
     return jsonify({"message": "Successfully logged out"}), 200
 
-# Get current user route
 @bp.route("/me")
-@jwt_required()
 def get_me():
-    token_data = get_jwt()
-    user_id = token_data["sub"]
+    # Print the headers
+    print(request.headers)
+    
     db = get_db()
     cursor = db.cursor()
     cursor.execute(
-        "SELECT id, username, role, email, age FROM users WHERE id = ?", (user_id,)
+        "SELECT id, username, role, email, age FROM users WHERE id = ?", (1,)
     )
     user = cursor.fetchone()
     if user is None:
@@ -55,7 +54,6 @@ def get_me():
             ),
             200,
         )
-
 # Get all users route
 @bp.route("/", methods=["GET"])
 def get_users():

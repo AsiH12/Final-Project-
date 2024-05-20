@@ -171,6 +171,49 @@ def get_discounts_by_shop_name(shop_name):
         return jsonify(discounts=discounts_list), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@bp.route("/user/<int:user_id>", methods=["GET"])
+def get_discounts_for_user(user_id):
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        
+        # Get all shop IDs where the user is an owner or manager
+        cursor.execute("""
+            SELECT DISTINCT s.id AS shop_id
+            FROM shops s
+            LEFT JOIN managers m ON s.id = m.shop_id
+            WHERE s.owner_id = ? OR m.manager_id = ?
+        """, (user_id, user_id))
+
+        shop_ids = [row["shop_id"] for row in cursor.fetchall()]
+
+        if not shop_ids:
+            return jsonify(discounts=[]), 200
+
+        # Get all discount products for the relevant shops
+        cursor.execute("""
+            SELECT dp.id, dp.product_id, dp.discount_code, dp.discount, dp.expiration_date, dp.minimum_amount, dp.allow_others
+            FROM discounts_products dp
+            JOIN products p ON dp.product_id = p.id
+            WHERE p.shop_id IN ({})
+        """.format(','.join('?' for _ in shop_ids)), shop_ids)
+
+        discounts = cursor.fetchall()
+        discounts_list = [{
+            "id": discount["id"],
+            "product_id": discount["product_id"],
+            "discount_code": discount["discount_code"],
+            "discount": discount["discount"],
+            "expiration_date": discount["expiration_date"],
+            "minimum_amount": discount["minimum_amount"],
+            "allow_others": discount["allow_others"]
+        } for discount in discounts]
+
+        return jsonify(discounts=discounts_list), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 # Check if a discount is applicable for the given cart
 @bp.route("/check-discount", methods=["POST"])

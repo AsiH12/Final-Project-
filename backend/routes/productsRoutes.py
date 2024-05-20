@@ -128,6 +128,69 @@ def get_products_by_shop_id(shop_id):
     ]
     return jsonify(products=product_list), 200
 
+@bp.route("/owner/<int:owner_id>", methods=["GET"])
+def get_products_by_owner_id(owner_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, GROUP_CONCAT(c.category_name) AS categories
+        FROM products p
+        LEFT JOIN shops s ON p.shop_id = s.id
+        LEFT JOIN products_categories pc ON p.id = pc.product_id
+        LEFT JOIN categories c ON pc.category_id = c.id
+        WHERE s.owner_id = ?
+        GROUP BY p.id
+    """, (owner_id,))
+    products = cursor.fetchall()
+    product_list = [
+        {
+            "id": product["id"],
+            "name": product["name"],
+            "description": product["description"],
+            "shop_id": product["shop_id"],
+            "shop_name": product["shop_name"],
+            "price": product["price"],
+            "amount": product["amount"],
+            "maximum_discount": product["maximum_discount"],
+            "categories": product["categories"].split(",") if product["categories"] else []
+        }
+        for product in products
+    ]
+    return jsonify(products=product_list), 200
+
+@bp.route("/manager_owner/<int:user_id>", methods=["GET"])
+def get_products_by_manager_or_owner(user_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, GROUP_CONCAT(c.category_name) AS categories
+        FROM products p
+        LEFT JOIN shops s ON p.shop_id = s.id
+        LEFT JOIN products_categories pc ON p.id = pc.product_id
+        LEFT JOIN categories c ON pc.category_id = c.id
+        LEFT JOIN managers m ON s.id = m.shop_id
+        WHERE s.owner_id = ? OR m.manager_id = ?
+        GROUP BY p.id
+    """, (user_id, user_id))
+    products = cursor.fetchall()
+    close_db()
+    product_list = [
+        {
+            "id": product["id"],
+            "name": product["name"],
+            "description": product["description"],
+            "shop_id": product["shop_id"],
+            "shop_name": product["shop_name"],
+            "price": product["price"],
+            "amount": product["amount"],
+            "maximum_discount": product["maximum_discount"],
+            "categories": product["categories"].split(",") if product["categories"] else []
+        }
+        for product in products
+    ]
+    return jsonify(products=product_list), 200
+
+
 @bp.route("", methods=["POST"])
 def create_new_product():
     data = request.get_json()

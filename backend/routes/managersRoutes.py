@@ -82,16 +82,16 @@ def get_managers_by_shop_name(shop_name):
 
       
         
-# Get all managers of a specific shop route
 @bp.route("/shop/<int:shop_id>", methods=["GET"])
 def get_managers_by_shop(shop_id):
     db = get_db()
     cursor = db.cursor()
     cursor.execute(
         """
-        SELECT m.id, m.manager_id, m.shop_id, u.username, u.email
+        SELECT m.id, m.manager_id, m.shop_id, u.username, u.email, s.name as shop_name
         FROM managers m
         JOIN users u ON m.manager_id = u.id
+        JOIN shops s ON m.shop_id = s.id
         WHERE m.shop_id = ?
         """,
         (shop_id,)
@@ -107,11 +107,49 @@ def get_managers_by_shop(shop_id):
             "shop_id": manager["shop_id"],
             "username": manager["username"],
             "email": manager["email"],
+            "shop_name": manager["shop_name"]
         }
         for manager in managers
     ]
     return jsonify(managers=manager_list), 200
 
+@bp.route("/owner/<int:user_id>", methods=["GET"])
+def get_managers_by_owner(user_id):
+    db = get_db()
+    cursor = db.cursor()
+    
+    # Get all shop ids owned by the user
+    cursor.execute("SELECT id FROM shops WHERE owner_id = ?", (user_id,))
+    shop_ids = [row["id"] for row in cursor.fetchall()]
+    
+    if not shop_ids:
+        return jsonify({"error": "No shops found for this owner"}), 404
+    
+    # Get all managers for the shops owned by the user
+    query = """
+        SELECT m.id, m.manager_id, m.shop_id, u.username, u.email, s.name as shop_name
+        FROM managers m
+        JOIN users u ON m.manager_id = u.id
+        JOIN shops s ON m.shop_id = s.id
+        WHERE s.id IN ({})
+    """.format(','.join('?' for _ in shop_ids))
+    cursor.execute(query, shop_ids)
+    
+    managers = cursor.fetchall()
+    
+    manager_list = [
+        {
+            "id": manager["id"],
+            "manager_id": manager["manager_id"],
+            "shop_id": manager["shop_id"],
+            "username": manager["username"],
+            "email": manager["email"],
+            "shop_name": manager["shop_name"]
+        }
+        for manager in managers
+    ]
+    
+    return jsonify(managers=manager_list), 200
 
 
 # Create new manager route

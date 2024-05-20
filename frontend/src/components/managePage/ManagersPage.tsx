@@ -8,6 +8,8 @@ import {
   DialogTitle,
   Select,
   MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import { DataGrid, GridColDef, GridActionsCellItem } from "@mui/x-data-grid";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -28,11 +30,21 @@ interface User {
   email: string;
 }
 
-export function ManagersPage() {
+interface Shop {
+  id: number;
+  name: string;
+  description: string;
+  owner_id: number;
+  role: string;
+}
+
+export function ManagersPage({ ownerView }) {
   const [managers, setManagers] = useState<Manager[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [shops, setShops] = useState<Shop[]>([]);
   const [open, setOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [selectedShop, setSelectedShop] = useState<string | null>(null);
   const location = useLocation();
   const { shop_name } = useParams();
   const { storeId, role, owner } = location.state || {
@@ -40,45 +52,36 @@ export function ManagersPage() {
     role: null,
     owner: null,
   };
-
-  useEffect(() => {
-    fetchManagers()
-      .then((data) => setManagers(data))
-      .catch((error) => console.error("Error fetching managers:", error));
-  }, []);
+  const logged_user_id = localStorage.getItem("user_id");
 
   const fetchManagers = async () => {
-    try {
-      const response = await fetch(
-        `http://localhost:5000/managers/shop_name/${shop_name}`
-      );
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-
-      const data = await response.json();
-      return data.managers || [];
-    } catch (error) {
-      console.error("There was a problem with the fetch operation:", error);
-      return [];
-    }
+    const url = ownerView
+      ? `http://localhost:5000/managers/owner/${logged_user_id}`
+      : `http://localhost:5000/managers/shop_name/${shop_name}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    if (!data.error) setManagers(data.managers);
   };
 
-  const fetchUsers = async () => {
-    try {
-      const response = await fetch(
-        `http://localhost:5000/users/shop_name/${shop_name}`
-      );
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      const data = await response.json();
-      return data.users || [];
-    } catch (error) {
-      console.error("There was a problem with the fetch operation:", error);
-      return [];
-    }
+  const fetchUserShops = async () => {
+    const response = await fetch(
+      `http://localhost:5000/shops/manager/${logged_user_id}`
+    );
+    const data = await response.json();
+    setShops(data.shops);
   };
+
+  useEffect(() => {
+    fetchManagers().catch((error) =>
+      console.error("Error fetching managers:", error)
+    );
+
+    if (ownerView) {
+      fetchUserShops().catch((error) =>
+        console.error("Error fetching user shops:", error)
+      );
+    }
+  }, [ownerView]);
 
   const handleDeleteClick = async (id: number) => {
     const response = await fetch(`http://localhost:5000/managers/${id}`, {
@@ -110,17 +113,17 @@ export function ManagersPage() {
   };
 
   const handleAddManager = async () => {
-    if (!selectedUser) return;
+    if (!selectedUser || !selectedShop) return;
     try {
       const response = await fetch(`http://localhost:5000/managers`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ manager_id: selectedUser, shop_id: storeId }),
+        body: JSON.stringify({ manager_id: selectedUser, shop_id: selectedShop }),
       });
       if (response.ok) {
-        fetchManagers().then((data) => setManagers(data));
+        await fetchManagers();
         Swal.fire({
           icon: "success",
           title: "Added!",
@@ -146,10 +149,28 @@ export function ManagersPage() {
     }
   };
 
+  const fetchUsers = async (shopName) => {
+    const url = `http://localhost:5000/users/shop_name/${shopName}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    if (!data.error) return data.users || [];
+  };
+
   const handleClickOpen = async () => {
-    const availableUsers = await fetchUsers();
-    setUsers(availableUsers);
+    if (ownerView) {
+      await fetchUserShops();
+    }
     setOpen(true);
+  };
+
+  const handleShopChange = async (event) => {
+    const shopId = event.target.value;
+    setSelectedShop(shopId);
+    const shopName = shops.find(shop => shop.id === shopId)?.name;
+    if (shopName) {
+      const availableUsers = await fetchUsers(shopName);
+      setUsers(availableUsers);
+    }
   };
 
   const handleClose = () => {
@@ -159,6 +180,7 @@ export function ManagersPage() {
   const columns: GridColDef[] = [
     { field: "username", headerName: "Username", width: 150 },
     { field: "email", headerName: "Email", width: 150 },
+    { field: "shop_name", headerName: "Shop", width: 150 },
     {
       field: "actions",
       headerName: "Actions",
@@ -176,28 +198,54 @@ export function ManagersPage() {
 
   return (
     <div className="container">
-      <h2 className="manage-store-header">Managers</h2>
+      <h2 className="manage-store-header">
+        {ownerView ? "Managers" : `Managers - ${shop_name}`}
+      </h2>
       <Button variant="contained" color="primary" onClick={handleClickOpen}>
         Add Manager
       </Button>
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Add Manager</DialogTitle>
         <DialogContent>
-          <Select
-            value={selectedUser}
-            onChange={(e) => setSelectedUser(e.target.value as string)}
-            displayEmpty
-            fullWidth
-          >
-            <MenuItem value="" disabled>
-              Select a user
-            </MenuItem>
-            {users.map((user) => (
-              <MenuItem key={user.id} value={user.id}>
-                {user.username}
+          {ownerView && (
+            <FormControl fullWidth>
+              <InputLabel>Shop</InputLabel>
+              <Select
+                value={selectedShop}
+                onChange={handleShopChange}
+                displayEmpty
+                fullWidth
+              >
+                <MenuItem value="" disabled>
+                  Select a shop
+                </MenuItem>
+                {shops.map((shop) => (
+                  <MenuItem key={shop.id} value={shop.id}>
+                    {shop.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+          <FormControl fullWidth>
+            <InputLabel>User</InputLabel>
+            <Select
+              value={selectedUser}
+              onChange={(e) => setSelectedUser(e.target.value as string)}
+              displayEmpty
+              fullWidth
+              disabled={!selectedShop}
+            >
+              <MenuItem value="" disabled>
+                Select a user
               </MenuItem>
-            ))}
-          </Select>
+              {users.map((user) => (
+                <MenuItem key={user.id} value={user.id}>
+                  {user.username}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} color="primary">

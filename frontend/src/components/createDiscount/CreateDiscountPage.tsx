@@ -10,6 +10,10 @@ import {
   Divider,
   IconButton,
   Typography,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Edit, Delete } from "@mui/icons-material";
@@ -17,26 +21,36 @@ import Swal from "sweetalert2";
 import { useLocation, useParams } from "react-router-dom";
 import "./CreateDiscountPage.css";
 
-export function CreateDiscountPage() {
+export function CreateDiscountPage({ ownerView }) {
   const location = useLocation();
   const { shop_name } = useParams();
-  const { storeId, } = location.state;
+  const { storeId } = location.state;
   const [allowOthers, setAllowOthers] = useState<boolean>(false);
-  const [open, setOpen] = useState<boolean>(false);
+  const [openShopDialog, setOpenShopDialog] = useState<boolean>(false);
+  const [openProductDialog, setOpenProductDialog] = useState<boolean>(false);
   const [shopDiscounts, setShopDiscounts] = useState<any[]>([]);
   const [productDiscounts, setProductDiscounts] = useState<any[]>([]);
+  const [shops, setShops] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [selectedShop, setSelectedShop] = useState<string | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+  const logged_user_id = localStorage.getItem("user_id");
 
-  const discountNameRef = useRef<HTMLInputElement>(null);
-  const productIdRef = useRef<HTMLInputElement>(null);
-  const storeIdRef = useRef<HTMLInputElement>(null);
   const discountCodeRef = useRef<HTMLInputElement>(null);
   const expirationDateRef = useRef<HTMLInputElement>(null);
   const minimumAmountRef = useRef<HTMLInputElement>(null);
 
-
   useEffect(() => {
     fetchShopDiscounts();
     fetchProductDiscounts();
+    if (ownerView) {
+      fetchOwnerProductDiscounts();
+      fetchOwnerShopDiscounts();
+      fetchUserShops();
+    } else {
+      fetchShopDiscounts();
+      fetchProductDiscounts();
+    }
   }, []);
 
   const fetchShopDiscounts = async () => {
@@ -63,33 +77,80 @@ export function CreateDiscountPage() {
     }
   };
 
-  const handleCreateDiscount = () => {
-    const discountName = discountNameRef.current?.value || "";
-    const productId = productIdRef.current?.value || "";
-    const storeId = storeIdRef.current?.value || "";
+  const fetchOwnerShopDiscounts = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/discounts/shops/user/${logged_user_id}`
+      );
+      const data = await response.json();
+      if (!data.error) setShopDiscounts(data.discounts);
+    } catch (error) {
+      console.error("Error fetching shop discounts:", error);
+    }
+  };
+
+  const fetchOwnerProductDiscounts = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/discounts/products/user/${logged_user_id}`
+      );
+      const data = await response.json();
+      if (!data.error) setProductDiscounts(data.discounts);
+    } catch (error) {
+      console.error("Error fetching product discounts:", error);
+    }
+  };
+
+  const fetchUserShops = async () => {
+    const response = await fetch(
+      `http://localhost:5000/discounts/shops/user/${logged_user_id}`
+    );
+    const data = await response.json();
+    setShops(data.discounts);
+  };
+
+  const fetchProductsByShop = async (shopName) => {
+    const response = await fetch(
+      `http://localhost:5000/discounts/products/by_shop_name/${shopName}`
+    );
+    const data = await response.json();
+    setProducts(data.discounts);
+  };
+
+  const handleCreateDiscountShop = () => {
     const discountCode = discountCodeRef.current?.value || "";
     const expirationDate = expirationDateRef.current?.value || "";
     const minimumAmount = minimumAmountRef.current?.value || "";
 
     // Send the data to the server or handle as needed
-    console.log("Discount Name:", discountName);
-    console.log("Product ID:", productId);
-    console.log("Store ID:", storeId);
     console.log("Discount Code:", discountCode);
     console.log("Expiration Date:", expirationDate);
     console.log("Minimum Amount:", minimumAmount);
     console.log("Allow Others:", allowOthers);
 
     // Close the dialog
-    setOpen(false);
+    setOpenShopDialog(false);
+  };
+
+  const handleCreateDiscountProduct = () => {
+    const discountCode = discountCodeRef.current?.value || "";
+    const expirationDate = expirationDateRef.current?.value || "";
+    const minimumAmount = minimumAmountRef.current?.value || "";
+
+    // Send the data to the server or handle as needed
+    console.log("Discount Code:", discountCode);
+    console.log("Expiration Date:", expirationDate);
+    console.log("Minimum Amount:", minimumAmount);
+    console.log("Allow Others:", allowOthers);
+
+    // Close the dialog
+    setOpenProductDialog(false);
   };
 
   const handleEdit = async (id: number, isProductDiscount: boolean) => {
     const discountType = isProductDiscount ? "products" : "shops";
     try {
-      // Implement edit functionality
       console.log(`Edit discount with id: ${id}`);
-      // Example edit implementation (you need to adjust it to your needs)
       const response = await fetch(
         `http://localhost:5000/discounts/${discountType}/${id}`,
         {
@@ -98,7 +159,6 @@ export function CreateDiscountPage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            // Add fields to update here
             discount_code: "NEW_CODE",
           }),
         }
@@ -124,7 +184,6 @@ export function CreateDiscountPage() {
   const handleDelete = async (id: number, isProductDiscount: boolean) => {
     const discountType = isProductDiscount ? "products" : "shops";
     try {
-      // Implement delete functionality
       console.log(`Delete discount with id: ${id}`);
       const response = await fetch(
         `http://localhost:5000/discounts/${discountType}/${id}`,
@@ -200,22 +259,28 @@ export function CreateDiscountPage() {
 
   return (
     <div className="container">
-      <h2 className="manage-store-header">Manage Store</h2>
-      <h3 className="store-name">{shop_name}</h3>
-      <h2 className="create-discount-header">Create New Discount</h2>
-      <div className="button-container">
-        <Button
-          sx={{ height: "60px", borderRadius: "25px", fontSize: "1.5rem" }}
-          variant="contained"
-          color="primary"
-          className="create-discount-button"
-          onClick={() => setOpen(true)}
-        >
-          Create Discount
-        </Button>
-      </div>
-      <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>Create New Discount</DialogTitle>
+      <h2 className="manage-store-header">
+        {ownerView ? "Discounts-Shops" : `Discounts-Shops - ${shop_name}`}
+      </h2>
+      <h2 className="manage-store-header">
+        {ownerView ? "Discounts-Products" : `Discounts-Products - ${shop_name}`}
+      </h2>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => setOpenShopDialog(true)}
+      >
+        Create Shop Discount
+      </Button>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => setOpenProductDialog(true)}
+      >
+        Create Product Discount
+      </Button>
+      <Dialog open={openShopDialog} onClose={() => setOpenShopDialog(false)}>
+        <DialogTitle>Create New Shop Discount</DialogTitle>
         <Divider />
         <DialogContent>
           <Box
@@ -227,17 +292,38 @@ export function CreateDiscountPage() {
               alignItems: "center",
             }}
           >
-            <TextField
-              sx={{ width: "400px", background: "white" }}
-              id="discountName"
-              label="Discount Name"
-              variant="outlined"
-              inputRef={discountNameRef}
-              className="input-container"
-              fullWidth
-              margin="normal"
-            />
-
+            {ownerView ? (
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Shop</InputLabel>
+                <Select
+                  value={selectedShop}
+                  onChange={(e) => setSelectedShop(e.target.value as string)}
+                  displayEmpty
+                  fullWidth
+                >
+                  <MenuItem value="" disabled>
+                    Select a shop
+                  </MenuItem>
+                  {shops.map((shop) => (
+                    <MenuItem key={shop.id} value={shop.id}>
+                      {shop.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            ) : (
+              <TextField
+                sx={{ width: "400px", background: "white" }}
+                id="shopName"
+                label="Shop Name"
+                variant="outlined"
+                value={shop_name}
+                disabled
+                className="input-container"
+                fullWidth
+                margin="normal"
+              />
+            )}
             <TextField
               sx={{ width: "400px", background: "white" }}
               id="discountCode"
@@ -276,10 +362,112 @@ export function CreateDiscountPage() {
         </DialogContent>
         <Divider />
         <DialogActions>
-          <Button onClick={() => setOpen(false)} color="primary">
+          <Button onClick={() => setOpenShopDialog(false)} color="primary">
             Cancel
           </Button>
-          <Button onClick={handleCreateDiscount} color="primary">
+          <Button onClick={handleCreateDiscountShop} color="primary">
+            Create
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={openProductDialog}
+        onClose={() => setOpenProductDialog(false)}
+      >
+        <DialogTitle>Create New Product Discount</DialogTitle>
+        <Divider />
+        <DialogContent>
+          <Box
+            className="create-discount-form"
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            {ownerView ? (
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Product</InputLabel>
+                <Select
+                  value={selectedProduct}
+                  onChange={(e) => setSelectedProduct(e.target.value as string)}
+                  displayEmpty
+                  fullWidth
+                  disabled={!selectedShop}
+                >
+                  <MenuItem value="" disabled>
+                    Select a product
+                  </MenuItem>
+                  {products.map((product) => (
+                    <MenuItem key={product.id} value={product.id}>
+                      {product.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            ) : (
+              <TextField
+                sx={{ width: "400px", background: "white" }}
+                id="productName"
+                label="Product Name"
+                variant="outlined"
+                select
+                value={selectedProduct}
+                onChange={(e) => setSelectedProduct(e.target.value as string)}
+                className="input-container"
+                fullWidth
+                margin="normal"
+              >
+                {products.map((product) => (
+                  <MenuItem key={product.id} value={product.id}>
+                    {product.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
+            <TextField
+              sx={{ width: "400px", background: "white" }}
+              id="discountCode"
+              label="Discount Code"
+              variant="outlined"
+              inputRef={discountCodeRef}
+              className="input-container"
+              fullWidth
+              margin="normal"
+            />
+            <TextField
+              sx={{ width: "400px", background: "white" }}
+              id="expirationDate"
+              label="Expiration Date"
+              variant="outlined"
+              type="date"
+              InputLabelProps={{
+                shrink: true,
+              }}
+              inputRef={expirationDateRef}
+              className="input-container"
+              fullWidth
+              margin="normal"
+            />
+            <TextField
+              sx={{ width: "400px", background: "white" }}
+              id="minimumAmount"
+              label="Minimum Amount"
+              variant="outlined"
+              inputRef={minimumAmountRef}
+              className="input-container"
+              fullWidth
+              margin="normal"
+            />
+          </Box>
+        </DialogContent>
+        <Divider />
+        <DialogActions>
+          <Button onClick={() => setOpenProductDialog(false)} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleCreateDiscountProduct} color="primary">
             Create
           </Button>
         </DialogActions>
@@ -287,19 +475,12 @@ export function CreateDiscountPage() {
       <div className="discount-tables">
         <div className="table-section">
           <Typography variant="h6" gutterBottom>
-            Product Discount
+            Shop Discount
           </Typography>
-          <Button
-            sx={{ marginBottom: "10px" }}
-            variant="contained"
-            color="primary"
-          >
-            Add coupon
-          </Button>
           <div style={{ height: 400, width: "100%" }}>
             <DataGrid
-              rows={productDiscounts}
-              columns={productDiscountColumns}
+              rows={shopDiscounts}
+              columns={shopDiscountColumns}
               pageSize={5}
               rowsPerPageOptions={[5]}
               checkboxSelection
@@ -308,19 +489,12 @@ export function CreateDiscountPage() {
         </div>
         <div className="table-section">
           <Typography variant="h6" gutterBottom>
-            Shop Discount
+            Product Discount
           </Typography>
-          <Button
-            sx={{ marginBottom: "10px" }}
-            variant="contained"
-            color="primary"
-          >
-            Add coupon
-          </Button>
           <div style={{ height: 400, width: "100%" }}>
             <DataGrid
-              rows={shopDiscounts}
-              columns={shopDiscountColumns}
+              rows={productDiscounts}
+              columns={productDiscountColumns}
               pageSize={5}
               rowsPerPageOptions={[5]}
               checkboxSelection

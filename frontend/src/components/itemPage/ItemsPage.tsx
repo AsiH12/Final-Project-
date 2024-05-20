@@ -32,23 +32,34 @@ interface Category {
   name: string;
 }
 
-export function ItemsPage() {
+interface Shop {
+  id: number;
+  name: string;
+  description: string;
+  owner_id: number;
+  role: string;
+}
+
+export function ItemsPage({ ownerView }) {
   const [items, setItems] = useState<Item[]>([]);
   const [open, setOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentItem, setCurrentItem] = useState<Item | null>(null);
+  const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
   const { shop_name } = useParams();
   const location = useLocation();
-  const { storeId, storeName } = location.state;
-  const [allCategories, setAllCategories] = useState<Category[]>([]);
 
-  console.log(shop_name)
+  const { storeId, storeName } = location.state || {};
+  const [allCategories, setAllCategories] = useState<Category[]>([]);
+  const [userShops, setUserShops] = useState<Shop[]>([]);
+  const logged_user_id = localStorage.getItem("user_id");
 
   useEffect(() => {
     const fetchItems = async () => {
-      const response = await fetch(
-        `http://localhost:5000/products/shop/${storeId}`
-      );
+      const url = ownerView
+        ? `http://localhost:5000/products/manager_owner/${logged_user_id}`
+        : `http://localhost:5000/products/shop/${storeId}`;
+      const response = await fetch(url);
       const data = await response.json();
       if (!data.error) setItems(data.products);
     };
@@ -59,16 +70,29 @@ export function ItemsPage() {
       setAllCategories(data.categories);
     };
 
-    fetchItems().catch((error) =>
-      console.error("Error fetching items:", error)
-    );
+    const fetchUserShops = async () => {
+      const response = await fetch(
+        `http://localhost:5000/shops/manager/${logged_user_id}`
+      );
+      const data = await response.json();
+      setUserShops(data.shops);
+    };
+
+    fetchItems().catch((error) => console.error("Error fetching items:", error));
     fetchCategories().catch((error) =>
       console.error("Error fetching categories:", error)
     );
-  }, [storeId]);
+
+    if (ownerView) {
+      fetchUserShops().catch((error) =>
+        console.error("Error fetching user shops:", error)
+      );
+    }
+  }, [storeId, ownerView]);
 
   const handleEditClick = (item: Item) => {
     setCurrentItem(item);
+    setSelectedShop(userShops.find(shop => shop.name === item.shop_name) || null);
     setIsEditing(true);
     setOpen(true);
   };
@@ -76,6 +100,7 @@ export function ItemsPage() {
   const handleClose = () => {
     setOpen(false);
     setCurrentItem(null);
+    setSelectedShop(null);
     setIsEditing(false);
   };
 
@@ -108,6 +133,19 @@ export function ItemsPage() {
 
   const handleSave = async () => {
     if (currentItem) {
+      const shopId = ownerView ? selectedShop?.id : storeId;
+      if (!shopId) {
+        Swal.fire({
+          icon: "error",
+          title: "Error!",
+          text: "Shop is required.",
+          customClass: {
+            container: "swal-dialog-custom",
+          },
+        });
+        return;
+      }
+
       const url = isEditing
         ? `http://localhost:5000/products/${currentItem.id}`
         : `http://localhost:5000/products`;
@@ -121,7 +159,7 @@ export function ItemsPage() {
         body: JSON.stringify({
           name: currentItem.name,
           description: currentItem.description,
-          shop_id: storeId,
+          shop_id: shopId,
           price: currentItem.price,
           amount: currentItem.amount,
           maximum_discount: currentItem.maximum_discount,
@@ -200,17 +238,28 @@ export function ItemsPage() {
     }
   };
 
+  const handleShopChange = (event: any, value: Shop | null) => {
+    setSelectedShop(value);
+    if (currentItem && value) {
+      setCurrentItem({
+        ...currentItem,
+        shop_name: value.name,
+      });
+    }
+  };
+
   const handleAddClick = () => {
     setCurrentItem({
       id: 0,
       name: "",
       description: "",
-      shop_name: storeName,
+      shop_name: storeName || "",
       price: 0,
       amount: 0,
       maximum_discount: 0,
       categories: [],
     });
+    setSelectedShop(null);
     setIsEditing(false);
     setOpen(true);
   };
@@ -246,7 +295,9 @@ export function ItemsPage() {
   return (
     <div className="container">
       <h2 className="items-header">
-        <span style={{ color: "#39cccc" }}>Items - {storeName}</span>
+        <span style={{ color: "#39cccc" }}>
+          {ownerView ? "Items" : `Items - ${storeName}`}
+        </span>
       </h2>
       <Button
         variant="contained"
@@ -300,16 +351,28 @@ export function ItemsPage() {
             value={currentItem?.description || ""}
             onChange={handleChange}
           />
-          <TextField
-            margin="dense"
-            name="shop_name"
-            label="Shop Name"
-            type="text"
-            fullWidth
-            disabled
-            value={currentItem?.shop_name || storeName}
-            onChange={handleChange}
-          />
+          {ownerView ? (
+            <Autocomplete
+              options={userShops}
+              getOptionLabel={(option) => option.name}
+              value={selectedShop}
+              onChange={handleShopChange}
+              renderInput={(params) => (
+                <TextField {...params} label="Shop Name" fullWidth />
+              )}
+            />
+          ) : (
+            <TextField
+              margin="dense"
+              name="shop_name"
+              label="Shop Name"
+              type="text"
+              fullWidth
+              disabled
+              value={currentItem?.shop_name || storeName || ""}
+              onChange={handleChange}
+            />
+          )}
           <TextField
             margin="dense"
             name="price"

@@ -115,6 +115,30 @@ def get_shops_by_manager(user_id):
     return jsonify(shops=shop_list), 200
 
 
+@bp.route("/owner/<int:user_id>", methods=["GET"])
+def get_stores_by_owner_id(user_id):
+    db = get_db()
+    cursor = db.cursor()
+    
+    cursor.execute("""
+        SELECT DISTINCT s.id, s.name, s.description
+        FROM shops s
+        LEFT JOIN managers m ON s.id = m.shop_id
+        WHERE s.owner_id = ?
+    """, (user_id,))
+    
+    stores = cursor.fetchall()
+    store_list = [
+        {
+            "id": store["id"],
+            "name": store["name"],
+            "description": store["description"]
+        }
+        for store in stores
+    ]
+    return jsonify(stores=store_list), 200
+
+
 @bp.route("/my-stores", methods=["GET"])
 @jwt_required()
 def get_my_stores():
@@ -141,6 +165,10 @@ def get_my_stores():
         for store in stores
     ]
     return jsonify(stores=store_list), 200
+
+
+
+
 # Create new shop route
 @bp.route("/new", methods=["POST"])
 def create_new_shop():

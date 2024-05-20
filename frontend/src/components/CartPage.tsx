@@ -33,6 +33,7 @@ interface CartItem {
   discount: number;
   originalPrice: number;
   discountedPrice?: number;
+  shop_id?: number; // Add shop_id as optional
 }
 
 const CartPage = () => {
@@ -225,10 +226,23 @@ const CartPage = () => {
         if (!token) {
           throw new Error("Please log in to confirm purchase.");
         }
-  
+
+        // Fetch shop_id for each cart item
+        const updatedCart = await Promise.all(
+          cart.map(async (item) => {
+            const response = await fetch(`http://localhost:5000/shops/getidbyname/${item.shop}`);
+            if (response.ok) {
+              const data = await response.json();
+              item.shop_id = data.id; // Assign shop_id to item
+            } else {
+              throw new Error("Failed to fetch shop ID.");
+            }
+            return item;
+          })
+        );
 
         const responses = await Promise.all(
-          cart.map((item) => {
+          updatedCart.map((item) => {
             const postData = {
               product_id: item.product_id,
               shop_id: item.shop_id, 
@@ -262,7 +276,6 @@ const CartPage = () => {
         setDiscounts([]);
         localStorage.removeItem("cart");
 
-  
         Swal.fire({
           icon: "success",
           title: "Purchase Completed Successfully",
@@ -296,7 +309,6 @@ const CartPage = () => {
     }
   };
   
-
   return (
     <Container
       style={{

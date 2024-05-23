@@ -1,10 +1,10 @@
 from flask import Blueprint, Flask, request, jsonify
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required,get_jwt_identity
+from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required, get_jwt_identity
 
 from db import close_db, get_db
-bp=Blueprint("managersRoutes", __name__, url_prefix="/managers")
 
+bp = Blueprint("managersRoutes", __name__, url_prefix="/managers")
 
 @bp.route("/", methods=["GET"])
 def get_managers():
@@ -12,6 +12,7 @@ def get_managers():
     cursor = db.cursor()
     cursor.execute("SELECT id, manager_id, shop_id FROM managers")
     managers = cursor.fetchall()
+    close_db()
     manager_list = [
         {
             "id": manager["id"],
@@ -22,7 +23,6 @@ def get_managers():
     ]
     return jsonify(managers=manager_list), 200
 
-
 # Get manager by ID route
 @bp.route("/<int:manager_id>", methods=["GET"])
 def get_manager_by_id(manager_id):
@@ -32,6 +32,7 @@ def get_manager_by_id(manager_id):
         "SELECT id, manager_id, shop_id FROM managers WHERE id = ?", (manager_id,)
     )
     manager = cursor.fetchone()
+    close_db()
     if manager is None:
         return jsonify({"error": "Manager not found"}), 404
     else:
@@ -45,7 +46,7 @@ def get_manager_by_id(manager_id):
             ),
             200,
         )
-        
+
 # Get all managers of a specific shop by shop name
 @bp.route("/shop_name/<string:shop_name>", methods=["GET"])
 def get_managers_by_shop_name(shop_name):
@@ -62,6 +63,7 @@ def get_managers_by_shop_name(shop_name):
         (shop_name,)
     )
     managers = cursor.fetchall()
+    close_db()
     if not managers:
         return jsonify({"error": "No managers found for this shop name"}), 404
 
@@ -78,10 +80,6 @@ def get_managers_by_shop_name(shop_name):
     ]
     return jsonify(managers=manager_list), 200
 
-
-
-      
-        
 @bp.route("/shop/<int:shop_id>", methods=["GET"])
 def get_managers_by_shop(shop_id):
     db = get_db()
@@ -97,6 +95,7 @@ def get_managers_by_shop(shop_id):
         (shop_id,)
     )
     managers = cursor.fetchall()
+    close_db()
     if not managers:
         return jsonify({"error": "No managers found for this shop"}), 404
 
@@ -123,6 +122,7 @@ def get_managers_by_owner(user_id):
     shop_ids = [row["id"] for row in cursor.fetchall()]
     
     if not shop_ids:
+        close_db()
         return jsonify({"error": "No shops found for this owner"}), 404
     
     # Get all managers for the shops owned by the user
@@ -136,6 +136,7 @@ def get_managers_by_owner(user_id):
     cursor.execute(query, shop_ids)
     
     managers = cursor.fetchall()
+    close_db()
     
     manager_list = [
         {
@@ -150,7 +151,6 @@ def get_managers_by_owner(user_id):
     ]
     
     return jsonify(managers=manager_list), 200
-
 
 # Create new manager route
 @bp.route("", methods=["POST"])
@@ -172,6 +172,7 @@ def create_new_manager():
     cursor.execute("SELECT id FROM shops WHERE id = ?", (shop_id,))
     existing_shop = cursor.fetchone()
     if existing_manager is None or existing_shop is None:
+        close_db()
         return jsonify({"error": "Manager or shop not found"}), 404
 
     # Insert the new manager into the database
@@ -180,9 +181,9 @@ def create_new_manager():
         (manager_id, shop_id),
     )
     db.commit()
+    close_db()
 
     return jsonify({"message": "Manager created successfully"}), 201
-
 
 # Update manager by ID route
 @bp.route("/<int:manager_id>", methods=["PATCH"])
@@ -194,6 +195,7 @@ def update_manager_by_id(manager_id):
     cursor.execute("SELECT id FROM managers WHERE id = ?", (manager_id,))
     existing_manager = cursor.fetchone()
     if existing_manager is None:
+        close_db()
         return jsonify({"error": "Manager not found"}), 404
     else:
         # Update manager data
@@ -202,8 +204,8 @@ def update_manager_by_id(manager_id):
             (data.get("manager_id"), data.get("shop_id"), manager_id),
         )
         db.commit()
+        close_db()
         return jsonify({"message": "Manager updated successfully"}), 200
-
 
 # Delete manager by ID route
 @bp.route("/<int:manager_id>", methods=["DELETE"])
@@ -214,11 +216,140 @@ def delete_manager_by_id(manager_id):
     cursor.execute("SELECT id FROM managers WHERE id = ?", (manager_id,))
     existing_manager = cursor.fetchone()
     if existing_manager is None:
+        close_db()
         return jsonify({"error": "Manager not found"}), 404
     else:
         cursor.execute("DELETE FROM managers WHERE id = ?", (manager_id,))
         db.commit()
+        close_db()
         return jsonify({"message": "Manager deleted successfully"}), 200
 
-    # Get all products route
+# Get all products route
+@bp.route("/products", methods=["GET"])
+def get_all_products():
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT id, name, description, price, shop_id FROM products")
+    products = cursor.fetchall()
+    close_db()
+    product_list = [
+        {
+            "id": product["id"],
+            "name": product["name"],
+            "description": product["description"],
+            "price": product["price"],
+            "shop_id": product["shop_id"]
+        }
+        for product in products
+    ]
+    return jsonify(products=product_list), 200
 
+# Get product by ID route
+@bp.route("/products/<int:product_id>", methods=["GET"])
+def get_product_by_id(product_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute(
+        "SELECT id, name, description, price, shop_id FROM products WHERE id = ?", (product_id,)
+    )
+    product = cursor.fetchone()
+    close_db()
+    if product is None:
+        return jsonify({"error": "Product not found"}), 404
+    else:
+        return (
+            jsonify(
+                {
+                    "id": product["id"],
+                    "name": product["name"],
+                    "description": product["description"],
+                    "price": product["price"],
+                    "shop_id": product["shop_id"],
+                }
+            ),
+            200,
+        )
+
+# Create new product route
+@bp.route("/products", methods=["POST"])
+def create_new_product():
+    data = request.get_json()
+    name = data.get("name")
+    description = data.get("description")
+    price = data.get("price")
+    shop_id = data.get("shop_id")
+
+    # Validate input data
+    if not all([name, description, price, shop_id]):
+        return jsonify({"error": "Incomplete product data"}), 400
+
+    db = get_db()
+    cursor = db.cursor()
+
+    # Check if the shop exists
+    cursor.execute("SELECT id FROM shops WHERE id = ?", (shop_id,))
+    existing_shop = cursor.fetchone()
+    if existing_shop is None:
+        close_db()
+        return jsonify({"error": "Shop not found"}), 404
+
+    # Insert the new product into the database
+    cursor.execute(
+        "INSERT INTO products (name, description, price, shop_id) VALUES (?, ?, ?, ?)",
+        (name, description, price, shop_id),
+    )
+    db.commit()
+    close_db()
+
+    return jsonify({"message": "Product created successfully"}), 201
+
+# Update product by ID route
+@bp.route("/products/<int:product_id>", methods=["PATCH"])
+def update_product_by_id(product_id):
+    data = request.get_json()
+    db = get_db()
+    cursor = db.cursor()
+    # Check if the product exists
+    cursor.execute("SELECT id FROM products WHERE id = ?", (product_id,))
+    existing_product = cursor.fetchone()
+    if existing_product is None:
+        close_db()
+        return jsonify({"error": "Product not found"}), 404
+    else:
+        # Update product data
+        cursor.execute(
+            "UPDATE products SET name = ?, description = ?, price = ?, shop_id = ? WHERE id = ?",
+            (data.get("name"), data.get("description"), data.get("price"), data.get("shop_id"), product_id),
+        )
+        db.commit()
+        close_db()
+        return jsonify({"message": "Product updated successfully"}), 200
+
+# Delete product by ID route
+@bp.route("/products/<int:product_id>", methods=["DELETE"])
+def delete_product_by_id(product_id):
+    db = get_db()
+    cursor = db.cursor()
+    # Check if the product exists
+    cursor.execute("SELECT id FROM products WHERE id = ?", (product_id,))
+    existing_product = cursor.fetchone()
+    if existing_product is None:
+        close_db()
+        return jsonify({"error": "Product not found"}), 404
+    else:
+        cursor.execute("DELETE FROM products WHERE id = ?", (product_id,))
+        db.commit()
+        close_db()
+        return jsonify({"message": "Product deleted successfully"}), 200
+
+# JWTManager and Flask app initialization
+app = Flask(__name__)
+app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key'
+jwt = JWTManager(app)
+CORS(app)
+
+# Register Blueprints
+app.register_blueprint(bp)
+
+if __name__ == "__main__":
+    app.run(debug=True)

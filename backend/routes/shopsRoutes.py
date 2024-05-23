@@ -3,6 +3,11 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required, get_jwt_identity
 
 from db import close_db, get_db
+
+app = Flask(__name__)
+CORS(app)
+jwt = JWTManager(app)
+
 bp = Blueprint("shopsRoutes", __name__, url_prefix="/shops")
 
 # Get all shops route
@@ -21,6 +26,7 @@ def get_shops():
         GROUP BY s.id
     """)
     shops = cursor.fetchall()
+    close_db()
     shop_list = [
         {
             "id": shop["id"],
@@ -34,14 +40,11 @@ def get_shops():
     ]
     return jsonify(shops=shop_list), 200
 
-
 @bp.route("/getidbyname/<string:shop_name>", methods=["GET"])
 def get_shop_id_by_name(shop_name):
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("""
-        SELECT id FROM shops WHERE name = ?
-    """, (shop_name,))
+    cursor.execute("SELECT id FROM shops WHERE name = ?", (shop_name,))
     shop = cursor.fetchone()
     close_db()
     if shop is None:
@@ -49,16 +52,13 @@ def get_shop_id_by_name(shop_name):
     else:
         return jsonify({"id": shop["id"]}), 200
 
-
-
-
 # Get shop by ID route
 @bp.route("/<int:shop_id>", methods=["GET"])
 def get_shop_by_id(shop_id):
     db = get_db()
     cursor = db.cursor()
     cursor.execute("""
-  SELECT s.id, s.name, s.description, s.owner_id, GROUP_CONCAT(DISTINCT c.category_name) AS categories, 
+        SELECT s.id, s.name, s.description, s.owner_id, GROUP_CONCAT(DISTINCT c.category_name) AS categories, 
                GROUP_CONCAT(DISTINCT m.username) AS managers
         FROM shops s
         LEFT JOIN shops_categories sc ON s.id = sc.shop_id
@@ -69,6 +69,7 @@ def get_shop_by_id(shop_id):
         GROUP BY s.id
     """, (shop_id,))
     shop = cursor.fetchone()
+    close_db()
     if shop is None:
         return jsonify({"error": "Shop not found"}), 404
     else:
@@ -80,15 +81,11 @@ def get_shop_by_id(shop_id):
             "categories": shop["categories"].split(",") if shop["categories"] else [],
             "managers": shop["managers"].split(",") if shop["managers"] else []
         }), 200
-        
-        
-        # Get shop by name route
-        
+
 @bp.route("/manager/<int:user_id>", methods=["GET"])
 def get_shops_by_manager(user_id):
     db = get_db()
     cursor = db.cursor()
-
     cursor.execute("""
         SELECT s.id, s.name, s.description, s.owner_id,
                CASE
@@ -100,8 +97,8 @@ def get_shops_by_manager(user_id):
         WHERE s.owner_id = ? OR m.manager_id = ?
         GROUP BY s.id
     """, (user_id, user_id, user_id))
-
     shops = cursor.fetchall()
+    close_db()
     shop_list = [
         {
             "id": shop["id"],
@@ -114,20 +111,18 @@ def get_shops_by_manager(user_id):
     ]
     return jsonify(shops=shop_list), 200
 
-
 @bp.route("/owner/<int:user_id>", methods=["GET"])
 def get_stores_by_owner_id(user_id):
     db = get_db()
     cursor = db.cursor()
-    
     cursor.execute("""
         SELECT DISTINCT s.id, s.name, s.description
         FROM shops s
         LEFT JOIN managers m ON s.id = m.shop_id
         WHERE s.owner_id = ?
     """, (user_id,))
-    
     stores = cursor.fetchall()
+    close_db()
     store_list = [
         {
             "id": store["id"],
@@ -138,24 +133,20 @@ def get_stores_by_owner_id(user_id):
     ]
     return jsonify(stores=store_list), 200
 
-
 @bp.route("/my-stores", methods=["GET"])
 @jwt_required()
 def get_my_stores():
     current_user_id = get_jwt_identity()
-    print("current_user_id")
     db = get_db()
     cursor = db.cursor()
-    
     cursor.execute("""
         SELECT DISTINCT s.id, s.name, s.description
         FROM shops s
         LEFT JOIN managers m ON s.id = m.shop_id
         WHERE s.owner_id = ? OR m.manager_id = ?
     """, (current_user_id, current_user_id))
-    print(current_user_id)
-    
     stores = cursor.fetchall()
+    close_db()
     store_list = [
         {
             "id": store["id"],
@@ -166,13 +157,9 @@ def get_my_stores():
     ]
     return jsonify(stores=store_list), 200
 
-
-
-
 # Create new shop route
 @bp.route("/new", methods=["POST"])
 def create_new_shop():
-    print(request)
     data = request.get_json()
     name = data.get("name")
     description = data.get("description")
@@ -199,7 +186,7 @@ def create_new_shop():
         for category_name in categories:
             cursor.execute("SELECT id FROM categories WHERE category_name = ?", (category_name,))
             category = cursor.fetchone()
-            if category:
+            if (category):
                 category_ids.append(category["id"])
             else:
                 cursor.execute("INSERT INTO categories (category_name) VALUES (?)", (category_name,))
@@ -214,7 +201,7 @@ def create_new_shop():
         for manager_username in managers:
             cursor.execute("SELECT id FROM users WHERE username = ?", (manager_username,))
             manager = cursor.fetchone()
-            if manager:
+            if (manager):
                 manager_ids.append(manager["id"])
 
         # Insert manager IDs into managers table
@@ -222,13 +209,12 @@ def create_new_shop():
             cursor.execute("INSERT INTO managers (manager_id, shop_id) VALUES (?, ?)", (manager_id, shop_id))
 
         db.commit()
+        close_db()
         return jsonify({"message": "Shop created successfully"}), 201
     except db.IntegrityError:
         db.rollback()
+        close_db()
         return jsonify({"error": "Shop name already exists"}), 409
-    finally:
-        cursor.close()
-
 
 # Update shop by ID route
 @bp.route("/<int:shop_id>", methods=["PATCH"])
@@ -240,22 +226,22 @@ def update_shop_by_id(shop_id):
     cursor.execute("SELECT id FROM shops WHERE id = ?", (shop_id,))
     existing_shop = cursor.fetchone()
     if existing_shop is None:
+        close_db()
         return jsonify({"error": "Shop not found"}), 404
     else:
         # Update shop data
         cursor.execute(
-            "UPDATE shops SET name = ?, description = ?, category = ?, owner_id = ? WHERE id = ?",
+            "UPDATE shops SET name = ?, description = ?, owner_id = ? WHERE id = ?",
             (
                 data.get("name"),
                 data.get("description"),
-                data.get("category"),
                 data.get("owner_id"),
                 shop_id,
             ),
         )
         db.commit()
+        close_db()
         return jsonify({"message": "Shop updated successfully"}), 200
-
 
 # Delete shop by ID route
 @bp.route("/<int:shop_id>", methods=["DELETE"])
@@ -266,8 +252,16 @@ def delete_shop_by_id(shop_id):
     cursor.execute("SELECT id FROM shops WHERE id = ?", (shop_id,))
     existing_shop = cursor.fetchone()
     if existing_shop is None:
+        close_db()
         return jsonify({"error": "Shop not found"}), 404
     else:
         cursor.execute("DELETE FROM shops WHERE id = ?", (shop_id,))
         db.commit()
+        close_db()
         return jsonify({"message": "Shop deleted successfully"}), 200
+
+# Register the blueprint
+app.register_blueprint(bp)
+
+if __name__ == '__main__':
+    app.run(debug=True)

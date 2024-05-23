@@ -23,6 +23,7 @@ def get_products():
         GROUP BY p.id
     """)
     products = cursor.fetchall()
+    close_db()
     product_list = [
         {
             "id": product["id"],
@@ -53,6 +54,7 @@ def get_product_by_id(product_id):
         GROUP BY p.id
     """, (product_id,))
     product = cursor.fetchone()
+    close_db()
     if product is None:
         return jsonify({"error": "Product not found"}), 404
     else:
@@ -82,6 +84,7 @@ def get_products_by_category(category_name):
         GROUP BY p.id
     """, (category_name,))
     products = cursor.fetchall()
+    close_db()
     product_list = [
         {
             "id": product["id"],
@@ -112,6 +115,7 @@ def get_products_by_shop_id(shop_id):
         GROUP BY p.id
     """, (shop_id,))
     products = cursor.fetchall()
+    close_db()
     product_list = [
         {
             "id": product["id"],
@@ -142,6 +146,7 @@ def get_products_by_owner_id(owner_id):
         GROUP BY p.id
     """, (owner_id,))
     products = cursor.fetchall()
+    close_db()
     product_list = [
         {
             "id": product["id"],
@@ -190,7 +195,6 @@ def get_products_by_manager_or_owner(user_id):
     ]
     return jsonify(products=product_list), 200
 
-
 @bp.route("", methods=["POST"])
 def create_new_product():
     data = request.get_json()
@@ -213,6 +217,7 @@ def create_new_product():
     cursor.execute("SELECT id FROM shops WHERE id = ?", (shop_id,))
     existing_shop = cursor.fetchone()
     if existing_shop is None:
+        close_db()
         return jsonify({"error": "Shop not found"}), 404
 
     # Insert the new product into the database
@@ -230,8 +235,10 @@ def create_new_product():
         )
 
     db.commit()
+    close_db()
 
     # Fetch the newly created product
+    cursor = db.cursor()
     cursor.execute("""
         SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, GROUP_CONCAT(c.category_name) AS categories
         FROM products p
@@ -242,6 +249,7 @@ def create_new_product():
         GROUP BY p.id
     """, (product_id,))
     new_product = cursor.fetchone()
+    close_db()
 
     product = {
         "id": new_product["id"],
@@ -266,6 +274,7 @@ def update_product_by_id(product_id):
     cursor.execute("SELECT id FROM products WHERE id = ?", (product_id,))
     existing_product = cursor.fetchone()
     if existing_product is None:
+        close_db()
         return jsonify({"error": "Product not found"}), 404
     else:
         # Update product data
@@ -291,6 +300,7 @@ def update_product_by_id(product_id):
             )
 
         db.commit()
+        close_db()
         return jsonify({"message": "Product updated successfully"}), 200
 
 @bp.route("/<int:product_id>", methods=["DELETE"])
@@ -301,11 +311,13 @@ def delete_product_by_id(product_id):
     cursor.execute("SELECT id FROM products WHERE id = ?", (product_id,))
     existing_product = cursor.fetchone()
     if existing_product is None:
+        close_db()
         return jsonify({"error": "Product not found"}), 404
     else:
         cursor.execute("DELETE FROM products WHERE id = ?", (product_id,))
         cursor.execute("DELETE FROM products_categories WHERE product_id = ?", (product_id,))
         db.commit()
+        close_db()
         return jsonify({"message": "Product deleted successfully"}), 200
 
 # Register the blueprint

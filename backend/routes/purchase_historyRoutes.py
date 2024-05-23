@@ -1,9 +1,14 @@
 from flask import Blueprint, Flask, request, jsonify
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required,get_jwt_identity
+from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required, get_jwt_identity
 
 from db import close_db, get_db
-bp=Blueprint("purchase_historyRoutes", __name__, url_prefix="/purchase-history")
+
+app = Flask(__name__)
+CORS(app)
+jwt = JWTManager(app)
+
+bp = Blueprint("purchase_historyRoutes", __name__, url_prefix="/purchase-history")
 
 # Get all purchase history route
 @bp.route("/", methods=["GET"])
@@ -12,6 +17,7 @@ def get_purchase_history():
     cursor = db.cursor()
     cursor.execute("SELECT * FROM purchase_history")
     purchase_history = cursor.fetchall()
+    close_db()
 
     # Convert Row objects to dictionaries
     purchase_history_list = []
@@ -21,7 +27,6 @@ def get_purchase_history():
 
     return jsonify(purchase_history=purchase_history_list), 200
 
-
 # Get purchase history by ID route
 @bp.route("/<int:purchase_id>", methods=["GET"])
 def get_purchase_history_by_id(purchase_id):
@@ -29,6 +34,7 @@ def get_purchase_history_by_id(purchase_id):
     cursor = db.cursor()
     cursor.execute("SELECT * FROM purchase_history WHERE id = ?", (purchase_id,))
     purchase = cursor.fetchone()
+    close_db()
     if purchase is None:
         return jsonify({"error": "Purchase history not found"}), 404
     # Convert Row object to dictionary
@@ -52,6 +58,7 @@ def get_purchase_history_by_user_id(user_id):
     """
     cursor.execute(query, (user_id,))
     user_purchases = cursor.fetchall()
+    close_db()
     purchases_list = [dict(purchase) for purchase in user_purchases]
     return jsonify(purchases_list), 200
 
@@ -72,6 +79,7 @@ def get_purchase_history_by_product_id(product_id):
     """
     cursor.execute(query, (product_id,))
     product_purchases = cursor.fetchall()
+    close_db()
     purchases_list = [dict(purchase) for purchase in product_purchases]
     return jsonify(purchases_list), 200
 
@@ -113,6 +121,7 @@ def get_user_purchases(user_id):
         shop_ids = [row["shop_id"] for row in cursor.fetchall()]
         
         if not shop_ids:
+            close_db()
             return jsonify(purchases=[]), 200
 
         # Get all purchases for the relevant shops
@@ -126,6 +135,7 @@ def get_user_purchases(user_id):
         """.format(','.join('?' for _ in shop_ids)), shop_ids)
         
         purchases = cursor.fetchall()
+        close_db()
         purchase_list = [
             {
                 "id": purchase["id"],
@@ -149,8 +159,8 @@ def get_user_purchases(user_id):
         
         return jsonify(purchases=purchase_list), 200
     except Exception as e:
+        close_db()
         return jsonify({"error": str(e)}), 500
-
 
 # Get all purchase history by shop name
 @bp.route("/shop_name/<string:shop_name>", methods=["GET"])
@@ -169,6 +179,7 @@ def get_purchase_history_by_shop_name(shop_name):
     """
     cursor.execute(query, (shop_name,))
     shop_purchases = cursor.fetchall()
+    close_db()
     purchases_list = [dict(purchase) for purchase in shop_purchases]
     return jsonify(purchases_list), 200
 
@@ -176,7 +187,6 @@ def get_purchase_history_by_shop_name(shop_name):
 @bp.route("", methods=["POST"])
 def create_purchase_history():
     data = request.get_json()
-    print(data)
     db = get_db()
     cursor = db.cursor()
     cursor.execute(
@@ -206,4 +216,11 @@ def delete_purchase_history_by_id(purchase_id):
     cursor = db.cursor()
     cursor.execute("DELETE FROM purchase_history WHERE id = ?", (purchase_id,))
     db.commit()
+    close_db()
     return jsonify({"message": "Purchase history deleted successfully"}), 200
+
+# Register the blueprint
+app.register_blueprint(bp)
+
+if __name__ == '__main__':
+    app.run(debug=True)

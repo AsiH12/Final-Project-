@@ -28,6 +28,7 @@ import { ManagersPage } from "./components/managePage/ManagersPage";
 import { UsersPage } from "./components/userPage/UsersPage";
 import { CreateDiscountPage } from "./components/createDiscount/CreateDiscountPage";
 import CartPage from "./components/CartPage";
+import ErrorNotFound from "./pages/ErrorNotFound";
 
 const BACKEND_URL = "http://127.0.0.1:5000";
 
@@ -59,6 +60,8 @@ const handleRouter = (userToken, setUserToken) => {
           element: <CategoryPage name="LifeStyle" />,
         },
         { path: "/categories/cars", element: <CategoryPage name="Cars" /> },
+        { path: "*", element:< ErrorNotFound/> },
+
       ],
     },
   ]);
@@ -124,6 +127,7 @@ const handleRouter = (userToken, setUserToken) => {
             element: <CreateDiscountPage ownerView={true} />,
           }, // page - list of card of all discounted and edit/remove/create a discount  - HALF DONE
           { path: "/cart", element: <CartPage /> }, // dialog
+          { path: "*", element:< ErrorNotFound/> },
         ],
       },
     ]);

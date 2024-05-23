@@ -31,6 +31,7 @@ export default function RootLayOut() {
   const handleLogout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("username");
+    localStorage.removeItem('user_id');
     navigate("/login");
   };
 
@@ -147,9 +148,7 @@ export default function RootLayOut() {
                     <MenuItem onClick={() => navigate("/orders")}>
                       Orders
                     </MenuItem>
-                    <MenuItem onClick={() => navigate("/revenues")}>
-                      Revenues
-                    </MenuItem>
+
                     <Button onClick={handleLogout}>Log Out</Button>
                   </Menu>
                 </li>

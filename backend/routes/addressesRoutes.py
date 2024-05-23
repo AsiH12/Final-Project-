@@ -1,9 +1,10 @@
 from flask import Blueprint, Flask, request, jsonify
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required,get_jwt_identity
+from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required, get_jwt_identity
 
 from db import close_db, get_db
-bp=Blueprint("addressesRoutes", __name__, url_prefix="/addresses")
+
+bp = Blueprint("addressesRoutes", __name__, url_prefix="/addresses")
 
 # Get all addresses route
 @bp.route("", methods=["GET"])
@@ -42,8 +43,8 @@ def get_address_by_id(address_id):
             "country": address["country"],
             "user_id": address["user_id"]
         }), 200
-        
-        # Get all addresses for a specific user
+
+# Get all addresses for a specific user
 @bp.route("/user/<int:user_id>", methods=["GET"])
 def get_addresses_by_user_id(user_id):
     db = get_db()
@@ -66,7 +67,6 @@ def get_addresses_by_user_id(user_id):
     else:
         return jsonify({"error": "No addresses found for this user"}), 404
 
-
 # Create new address route
 @bp.route("", methods=["POST"])
 def create_new_address():
@@ -87,6 +87,7 @@ def create_new_address():
     cursor.execute("SELECT id FROM users WHERE id = ?", (user_id,))
     existing_user = cursor.fetchone()
     if existing_user is None:
+        close_db()
         return jsonify({"error": "User not found"}), 404
 
     # Insert the new address into the database
@@ -109,6 +110,7 @@ def update_address_by_id(address_id):
     cursor.execute("SELECT id FROM addresses WHERE id = ?", (address_id,))
     existing_address = cursor.fetchone()
     if existing_address is None:
+        close_db()
         return jsonify({"error": "Address not found"}), 404
     else:
         # Update address data
@@ -117,6 +119,7 @@ def update_address_by_id(address_id):
             (data.get("address"), data.get("city"), data.get("country"), data.get("user_id"), address_id)
         )
         db.commit()
+        close_db()
         return jsonify({"message": "Address updated successfully"}), 200
 
 # Delete address by ID route
@@ -128,9 +131,10 @@ def delete_address_by_id(address_id):
     cursor.execute("SELECT id FROM addresses WHERE id = ?", (address_id,))
     existing_address = cursor.fetchone()
     if existing_address is None:
+        close_db()
         return jsonify({"error": "Address not found"}), 404
     else:
         cursor.execute("DELETE FROM addresses WHERE id = ?", (address_id,))
         db.commit()
+        close_db()
         return jsonify({"message": "Address deleted successfully"}), 200
-

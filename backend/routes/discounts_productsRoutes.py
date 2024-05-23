@@ -1,7 +1,7 @@
-from flask import Blueprint, jsonify, request, g
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
-from db import get_db
+from db import get_db, close_db
 
 bp = Blueprint("discounts_productsRoutes", __name__, url_prefix="/discounts/products")
 
@@ -14,6 +14,7 @@ def get_discounts_products():
         cursor = db.cursor()
         cursor.execute("SELECT id, product_id, discount_code, discount, expiration_date, minimum_amount, allow_others FROM discounts_products")
         discounts = cursor.fetchall()
+        close_db()
         print("Discounts fetched successfully:", discounts)  # Debug print
         discounts_list = [{
             "id": discount["id"],
@@ -28,6 +29,7 @@ def get_discounts_products():
         return jsonify(discounts=discounts_list), 200
     except Exception as e:
         print("Error:", e)  # Debug print
+        close_db()
         return jsonify({"error": str(e)}), 500
 
 # Get discount for product by discount code route
@@ -41,6 +43,7 @@ def get_discount_by_code(discount_code):
             (discount_code,)
         )
         discount = cursor.fetchone()
+        close_db()
         if discount is None:
             return jsonify({"error": "Discount not found"}), 404
         else:
@@ -54,6 +57,7 @@ def get_discount_by_code(discount_code):
                 "allow_others": discount["allow_others"]
             }), 200
     except Exception as e:
+        close_db()
         return jsonify({"error": str(e)}), 500
 
 # Get discount for product by ID route
@@ -67,6 +71,7 @@ def get_discount_product_by_id(discount_id):
             (discount_id,)
         )
         discount = cursor.fetchone()
+        close_db()
         if discount is None:
             return jsonify({"error": "Discount for product not found"}), 404
         else:
@@ -80,8 +85,8 @@ def get_discount_product_by_id(discount_id):
                 "allow_others": discount["allow_others"]
             }), 200
     except Exception as e:
+        close_db()
         return jsonify({"error": str(e)}), 500
-
 
 # Get discount for product by product ID route
 @bp.route("/product/<int:product_id>", methods=["GET"])
@@ -94,6 +99,7 @@ def get_discounts_by_product_id(product_id):
             (product_id,)
         )
         discounts = cursor.fetchall()
+        close_db()
         if not discounts:
             return jsonify({"error": "No discounts found for this product"}), 404
         discounts_list = [{
@@ -107,6 +113,7 @@ def get_discounts_by_product_id(product_id):
         } for discount in discounts]
         return jsonify(discounts=discounts_list), 200
     except Exception as e:
+        close_db()
         return jsonify({"error": str(e)}), 500
 
 # Get all product discounts by shop ID route
@@ -125,6 +132,7 @@ def get_discounts_by_shop_id(shop_id):
             (shop_id,)
         )
         discounts = cursor.fetchall()
+        close_db()
         if not discounts:
             return jsonify({"error": "No discounts found for this shop"}), 404
         discounts_list = [{
@@ -138,6 +146,7 @@ def get_discounts_by_shop_id(shop_id):
         } for discount in discounts]
         return jsonify(discounts=discounts_list), 200
     except Exception as e:
+        close_db()
         return jsonify({"error": str(e)}), 500
 
 # Get all product discounts by shop name route
@@ -157,6 +166,7 @@ def get_discounts_by_shop_name(shop_name):
             (shop_name,)
         )
         discounts = cursor.fetchall()
+        close_db()
         if not discounts:
             return jsonify({"error": "No discounts found for this shop"}), 404
         discounts_list = [{
@@ -170,8 +180,9 @@ def get_discounts_by_shop_name(shop_name):
         } for discount in discounts]
         return jsonify(discounts=discounts_list), 200
     except Exception as e:
+        close_db()
         return jsonify({"error": str(e)}), 500
-    
+
 @bp.route("/user/<int:user_id>", methods=["GET"])
 def get_discounts_for_user(user_id):
     try:
@@ -189,6 +200,7 @@ def get_discounts_for_user(user_id):
         shop_ids = [row["shop_id"] for row in cursor.fetchall()]
 
         if not shop_ids:
+            close_db()
             return jsonify(discounts=[]), 200
 
         # Get all discount products for the relevant shops
@@ -200,6 +212,7 @@ def get_discounts_for_user(user_id):
         """.format(','.join('?' for _ in shop_ids)), shop_ids)
 
         discounts = cursor.fetchall()
+        close_db()
         discounts_list = [{
             "id": discount["id"],
             "product_id": discount["product_id"],
@@ -212,8 +225,8 @@ def get_discounts_for_user(user_id):
 
         return jsonify(discounts=discounts_list), 200
     except Exception as e:
+        close_db()
         return jsonify({"error": str(e)}), 500
-
 
 # Check if a discount is applicable for the given cart
 @bp.route("/check-discount", methods=["POST"])
@@ -239,6 +252,7 @@ def check_discount():
         print("Discount details:", discount)  # Debug print
 
         if discount is None:
+            close_db()
             return jsonify({"discount_usable": False}), 200
 
         # Check if at least one product in the cart qualifies for the discount
@@ -251,11 +265,14 @@ def check_discount():
             print("Matching discount for product", product["id"], ":", matching_discount)  # Debug print
 
             if matching_discount and product["price"] * product["amount"] >= matching_discount["minimum_amount"]:
+                close_db()
                 return jsonify({"discount_usable": True}), 200
 
+        close_db()
         return jsonify({"discount_usable": False}), 200
     except Exception as e:
         print("Error:", e)  # Debug print
+        close_db()
         return jsonify({"error": str(e)}), 500
 
 # Create new discount for product route
@@ -282,6 +299,7 @@ def create_discount_product():
         cursor.execute("SELECT id FROM products WHERE id = ?", (product_id,))
         existing_product = cursor.fetchone()
         if existing_product is None:
+            close_db()
             return jsonify({"error": "Product not found"}), 404
 
         # Insert the new discount for product into the database
@@ -290,10 +308,11 @@ def create_discount_product():
             (product_id, discount_code, discount, expiration_date, minimum_amount, allow_others)
         )
         db.commit()
-
+        close_db()
         return jsonify({"message": "Discount for product created successfully"}), 201
     except Exception as e:
         print("Error:", e)  # Debug print
+        close_db()
         return jsonify({"error": str(e)}), 500
 
 # Update discount for product by ID route
@@ -308,6 +327,7 @@ def update_discount_product_by_id(discount_id):
         cursor.execute("SELECT id FROM discounts_products WHERE id = ?", (discount_id,))
         existing_discount = cursor.fetchone()
         if existing_discount is None:
+            close_db()
             return jsonify({"error": "Discount for product not found"}), 404
         else:
             # Update discount for product data
@@ -316,9 +336,11 @@ def update_discount_product_by_id(discount_id):
                 (data.get("product_id"), data.get("discount_code"), data.get("discount"), data.get("expiration_date"), data.get("minimum_amount"), data.get("allow_others"), discount_id)
             )
             db.commit()
+            close_db()
             return jsonify({"message": "Discount for product updated successfully"}), 200
     except Exception as e:
         print("Error:", e)  # Debug print
+        close_db()
         return jsonify({"error": str(e)}), 500
 
 # Delete discount for product by ID route
@@ -332,13 +354,16 @@ def delete_discount_product_by_id(discount_id):
         cursor.execute("SELECT id FROM discounts_products WHERE id = ?", (discount_id,))
         existing_discount = cursor.fetchone()
         if existing_discount is None:
+            close_db()
             return jsonify({"error": "Discount for product not found"}), 404
         else:
             cursor.execute("DELETE FROM discounts_products WHERE id = ?", (discount_id,))
             db.commit()
+            close_db()
             return jsonify({"message": "Discount for product deleted successfully"}), 200
     except Exception as e:
         print("Error:", e)  # Debug print
+        close_db()
         return jsonify({"error": str(e)}), 500
 
 # Function to get current user's ID

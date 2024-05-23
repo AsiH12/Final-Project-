@@ -50,6 +50,7 @@ def apply_discounts(cart, used_discounts, new_discount_code):
         cursor.execute("SELECT price, maximum_discount FROM products WHERE id = ?", (product_id,))
         product = cursor.fetchone()
         if not product:
+            close_db()
             raise ValueError(f"Product with ID {product_id} not found")
 
         original_price = product["price"]
@@ -63,12 +64,14 @@ def apply_discounts(cart, used_discounts, new_discount_code):
 
             if product_discount and product_discount["product_id"] == product_id:
                 if quantity < product_discount["minimum_amount"]:
+                    close_db()
                     raise ValueError(f"Product discount '{discount['code']}' requires a minimum quantity of {product_discount['minimum_amount']}")
                 discount_value = product_discount["discount"]
                 discounted_price *= (1 - min(discount_value, maximum_discount) / 100)
 
             if shop_discount and shop_discount["shop_id"] == shop_id:
                 if quantity < shop_discount["minimum_amount"]:
+                    close_db()
                     raise ValueError(f"Shop discount '{discount['code']}' requires a minimum quantity of {shop_discount['minimum_amount']}")
                 discount_value = shop_discount["discount"]
                 discounted_price *= (1 - min(discount_value, maximum_discount) / 100)

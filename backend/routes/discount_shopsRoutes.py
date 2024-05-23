@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from db import get_db
+from db import get_db, close_db
 
 bp = Blueprint("discount_shopsRoutes", __name__, url_prefix="/discounts")
 CORS(bp)
@@ -15,6 +15,7 @@ def get_all_discounts_shops():
         cursor = db.cursor()
         cursor.execute("SELECT id, shop_id, discount_code, discount, expiration_date, minimum_amount, allow_others FROM discounts_shops")
         discounts = cursor.fetchall()
+        close_db()
         discounts_list = [{
             "id": discount["id"],
             "shop_id": discount["shop_id"],
@@ -26,6 +27,7 @@ def get_all_discounts_shops():
         } for discount in discounts]
         return jsonify(discounts=discounts_list), 200
     except Exception as e:
+        close_db()
         return jsonify({"error": str(e)}), 500
 
 # Get discount for shop by discount code route
@@ -38,6 +40,7 @@ def get_discount_shop_by_code(discount_code):
             "SELECT id, shop_id, discount_code, discount, expiration_date, minimum_amount, allow_others FROM discounts_shops WHERE discount_code = ?", (discount_code,)
         )
         discount = cursor.fetchone()
+        close_db()
         if discount is None:
             return jsonify({"error": "Discount not found"}), 404
         else:
@@ -51,6 +54,7 @@ def get_discount_shop_by_code(discount_code):
                 "allow_others": discount["allow_others"]
             }), 200
     except Exception as e:
+        close_db()
         return jsonify({"error": str(e)}), 500
 
 # Get a discount for shop by ID route
@@ -61,6 +65,7 @@ def get_discount_shop_by_id(discount_id):
         cursor = db.cursor()
         cursor.execute("SELECT id, shop_id, discount_code, discount, expiration_date, minimum_amount, allow_others FROM discounts_shops WHERE id = ?", (discount_id,))
         discount = cursor.fetchone()
+        close_db()
         if discount is None:
             return jsonify({"error": "Discount not found"}), 404
         return jsonify({
@@ -73,8 +78,8 @@ def get_discount_shop_by_id(discount_id):
             "allow_others": discount["allow_others"]
         }), 200
     except Exception as e:
+        close_db()
         return jsonify({"error": str(e)}), 500
-
 
 # Get discounts for a specific shop by shop ID
 @bp.route("/shops/by_shop/<int:shop_id>", methods=["GET"])
@@ -87,6 +92,7 @@ def get_discounts_by_shop_id(shop_id):
             (shop_id,)
         )
         discounts = cursor.fetchall()
+        close_db()
         if not discounts:
             return jsonify({"error": "No discounts found for this shop"}), 404
         discounts_list = [{
@@ -100,8 +106,8 @@ def get_discounts_by_shop_id(shop_id):
         } for discount in discounts]
         return jsonify(discounts=discounts_list), 200
     except Exception as e:
+        close_db()
         return jsonify({"error": str(e)}), 500
-
 
 # Get discounts for a specific shop by shop name
 @bp.route("/shops/by_shop_name/<string:shop_name>", methods=["GET"])
@@ -119,6 +125,7 @@ def get_discounts_by_shop_name(shop_name):
             (shop_name,)
         )
         discounts = cursor.fetchall()
+        close_db()
         if not discounts:
             return jsonify({"error": "No discounts found for this shop"}), 404
         discounts_list = [{
@@ -132,10 +139,9 @@ def get_discounts_by_shop_name(shop_name):
         } for discount in discounts]
         return jsonify(discounts=discounts_list), 200
     except Exception as e:
+        close_db()
         return jsonify({"error": str(e)}), 500
-    
-    
-    
+
 @bp.route("/shops/user/<int:user_id>", methods=["GET"])
 def get_shop_discounts_for_user(user_id):
     try:
@@ -153,6 +159,7 @@ def get_shop_discounts_for_user(user_id):
         shop_ids = [row["shop_id"] for row in cursor.fetchall()]
 
         if not shop_ids:
+            close_db()
             return jsonify(discounts=[]), 200
 
         # Get all shop discounts for the relevant shops
@@ -163,6 +170,7 @@ def get_shop_discounts_for_user(user_id):
         """.format(','.join('?' for _ in shop_ids)), shop_ids)
 
         discounts = cursor.fetchall()
+        close_db()
         discounts_list = [{
             "id": discount["id"],
             "shop_id": discount["shop_id"],
@@ -175,8 +183,8 @@ def get_shop_discounts_for_user(user_id):
 
         return jsonify(discounts=discounts_list), 200
     except Exception as e:
+        close_db()
         return jsonify({"error": str(e)}), 500
-
 
 # Create a new discount for shop route
 @bp.route("/shops", methods=["POST"])
@@ -200,9 +208,11 @@ def create_discount_shop():
             cursor = db.cursor()
             cursor.execute("INSERT INTO discounts_shops (shop_id, discount_code, discount, expiration_date, minimum_amount, allow_others) VALUES (?, ?, ?, ?, ?, ?)", (shop_id, discount_code, discount, expiration_date, minimum_amount, allow_others))
             db.commit()
+            close_db()
             return jsonify({"message": "Discount for shop created successfully"}), 201
         return jsonify({"error": "Request must be JSON"}), 400
     except Exception as e:
+        close_db()
         return jsonify({"error": str(e)}), 500
 
 # Update a discount for shop by ID route
@@ -218,9 +228,11 @@ def update_discount_shop(discount_id):
             cursor.execute("SELECT * FROM discounts_shops WHERE id = ?", (discount_id,))
             discount = cursor.fetchone()
             if discount is None:
+                close_db()
                 return jsonify({"error": "Discount not found"}), 404
 
             if discount["shop_id"] != current_user_id:
+                close_db()
                 return jsonify({"error": "You are not authorized to update this discount"}), 403
 
             shop_id = data.get("shop_id", discount["shop_id"])
@@ -232,9 +244,11 @@ def update_discount_shop(discount_id):
 
             cursor.execute("UPDATE discounts_shops SET shop_id = ?, discount_code = ?, discount = ?, expiration_date = ?, minimum_amount = ?, allow_others = ? WHERE id = ?", (shop_id, discount_code, discount_value, expiration_date, minimum_amount, allow_others, discount_id))
             db.commit()
+            close_db()
             return jsonify({"message": "Discount for shop updated successfully"}), 200
         return jsonify({"error": "Request must be JSON"}), 400
     except Exception as e:
+        close_db()
         return jsonify({"error": str(e)}), 500
 
 # Delete a discount for shop by ID route
@@ -248,14 +262,17 @@ def delete_discount_shop(discount_id):
         cursor.execute("SELECT * FROM discounts_shops WHERE id = ?", (discount_id,))
         discount = cursor.fetchone()
         if discount is None:
+            close_db()
             return jsonify({"error": "Discount not found"}), 404
 
         if discount["shop_id"] != current_user_id:
+            close_db()
             return jsonify({"error": "You are not authorized to delete this discount"}), 403
 
         cursor.execute("DELETE FROM discounts_shops WHERE id = ?", (discount_id,))
         db.commit()
+        close_db()
         return jsonify({"message": "Discount for shop deleted successfully"}), 200
     except Exception as e:
+        close_db()
         return jsonify({"error": str(e)}), 500
-

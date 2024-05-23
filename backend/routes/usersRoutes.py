@@ -3,7 +3,13 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required, get_jwt_identity
 
 from db import close_db, get_db
+
+app = Flask(__name__)
+CORS(app)
+jwt = JWTManager(app)
+
 bp = Blueprint("usersRoutes", __name__, url_prefix="/users")
+
 
 # Login route
 @bp.route("/login", methods=["POST"])
@@ -28,15 +34,15 @@ def logout():
     # You might want to implement token invalidation or blacklist here
     return jsonify({"message": "Successfully logged out"}), 200
 
-@bp.route("/me")
+# Protected route to get current user information
+@bp.route("/me", methods=["GET"])
+@jwt_required()
 def get_me():
-    # Print the headers
-    print(request.headers)
-    
+    current_user_id = get_jwt_identity()
     db = get_db()
     cursor = db.cursor()
     cursor.execute(
-        "SELECT id, username, role, email, age FROM users WHERE id = ?", (1,)
+        "SELECT id, username, role, email, age FROM users WHERE id = ?", (current_user_id,)
     )
     user = cursor.fetchone()
     if user is None:
@@ -54,6 +60,7 @@ def get_me():
             ),
             200,
         )
+        
 # Get all users route
 @bp.route("/", methods=["GET"])
 def get_users():
@@ -61,6 +68,7 @@ def get_users():
     cursor = db.cursor()
     cursor.execute("SELECT id, username, role, email, age, password FROM users")
     users = cursor.fetchall()
+    close_db()
     user_list = [
         {
             "id": user["id"],
@@ -98,6 +106,7 @@ def create_new_user():
     )
     existing_user = cursor.fetchone()
     if existing_user:
+        close_db()
         return jsonify({"error": "Username or email already exists"}), 400
 
     # Insert the new user into the database
@@ -106,6 +115,7 @@ def create_new_user():
         (username, password, role, email, age),
     )
     db.commit()
+    close_db()
 
     return jsonify({"message": "User created successfully"}), 201
 
@@ -118,6 +128,7 @@ def get_user_by_id(user_id):
         "SELECT id, username, role, email, age FROM users WHERE id = ?", (user_id,)
     )
     user = cursor.fetchone()
+    close_db()
     if user is None:
         return jsonify({"error": "User not found"}), 404
     else:
@@ -134,6 +145,7 @@ def get_user_by_id(user_id):
             200,
         )
 
+# Get available users by shop ID route
 @bp.route("/shop/<int:shop_id>", methods=["GET"])
 def get_available_users(shop_id):
     db = get_db()
@@ -152,9 +164,11 @@ def get_available_users(shop_id):
     """, (shop_id, shop_id))
 
     users = cursor.fetchall()
+    close_db()
     user_list = [{"id": user["id"], "username": user["username"], "email": user["email"]} for user in users]
     return jsonify(users=user_list), 200
-# Get available users by shop name
+
+# Get available users by shop name route
 @bp.route("/shop_name/<string:shop_name>", methods=["GET"])
 def get_available_users_by_shop_name(shop_name):
     db = get_db()
@@ -177,9 +191,9 @@ def get_available_users_by_shop_name(shop_name):
     cursor.execute(query, (shop_name, shop_name))
 
     users = cursor.fetchall()
+    close_db()
     user_list = [{"id": user["id"], "username": user["username"], "email": user["email"]} for user in users]
     return jsonify(users=user_list), 200
-
 
 # Delete user by ID route
 @bp.route("/<int:user_id>", methods=["DELETE"])
@@ -190,10 +204,12 @@ def delete_user_by_id(user_id):
     cursor.execute("SELECT id FROM users WHERE id = ?", (user_id,))
     existing_user = cursor.fetchone()
     if existing_user is None:
+        close_db()
         return jsonify({"error": "User not found"}), 404
     else:
         cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
         db.commit()
+        close_db()
         return jsonify({"message": "User deleted successfully"}), 200
 
 # Update user by ID route
@@ -206,6 +222,7 @@ def update_user_by_id(user_id):
     cursor.execute("SELECT id FROM users WHERE id = ?", (user_id,))
     existing_user = cursor.fetchone()
     if existing_user is None:
+        close_db()
         return jsonify({"error": "User not found"}), 404
     else:
         # Update user data
@@ -220,6 +237,7 @@ def update_user_by_id(user_id):
             ),
         )
         db.commit()
+        close_db()
         return jsonify({"message": "User updated successfully"}), 200
 
 # Reset password route
@@ -233,11 +251,11 @@ def reset_password(user_id):
     db = get_db()
     cursor = db.cursor()
 
-
-     # Check if the user exists
+    # Check if the user exists
     cursor.execute("SELECT id FROM users WHERE id = ?", (user_id,))
     existing_user = cursor.fetchone()
     if existing_user is None:
+        close_db()
         return jsonify({"error": "User not found"}), 404
 
     # Update user's password
@@ -245,5 +263,12 @@ def reset_password(user_id):
         "UPDATE users SET password = ? WHERE id = ?", (new_password, user_id)
     )
     db.commit()
+    close_db()
 
     return jsonify({"message": "Password reset successfully"}), 200
+
+# Register the blueprint
+app.register_blueprint(bp)
+
+if __name__ == '__main__':
+    app.run(debug=True)

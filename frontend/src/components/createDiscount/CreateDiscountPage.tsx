@@ -24,7 +24,8 @@ import "./CreateDiscountPage.css";
 export function CreateDiscountPage({ ownerView }) {
   const location = useLocation();
   const { shop_name } = useParams();
-  const { storeId } = location.state;
+  const logged_user_id = localStorage.getItem("user_id");
+  const storeId = ownerView ? null : location.state?.storeId;
   const [allowOthers, setAllowOthers] = useState<boolean>(false);
   const [openShopDialog, setOpenShopDialog] = useState<boolean>(false);
   const [openProductDialog, setOpenProductDialog] = useState<boolean>(false);
@@ -34,24 +35,21 @@ export function CreateDiscountPage({ ownerView }) {
   const [products, setProducts] = useState<any[]>([]);
   const [selectedShop, setSelectedShop] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
-  const logged_user_id = localStorage.getItem("user_id");
 
   const discountCodeRef = useRef<HTMLInputElement>(null);
   const expirationDateRef = useRef<HTMLInputElement>(null);
   const minimumAmountRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetchShopDiscounts();
-    fetchProductDiscounts();
     if (ownerView) {
-      fetchOwnerProductDiscounts();
       fetchOwnerShopDiscounts();
+      fetchOwnerProductDiscounts();
       fetchUserShops();
     } else {
       fetchShopDiscounts();
       fetchProductDiscounts();
     }
-  }, []);
+  }, [ownerView]);
 
   const fetchShopDiscounts = async () => {
     try {
@@ -109,48 +107,83 @@ export function CreateDiscountPage({ ownerView }) {
     setShops(data.discounts);
   };
 
-  const fetchProductsByShop = async (shopName) => {
+  const fetchProductsByShop = async (shopId) => {
     const response = await fetch(
-      `http://localhost:5000/discounts/products/by_shop_name/${shopName}`
+      `http://localhost:5000/discounts/products/by_shop/${shopId}`
     );
     const data = await response.json();
     setProducts(data.discounts);
   };
 
-  const handleCreateDiscountShop = () => {
+  const handleCreateDiscountShop = async () => {
     const discountCode = discountCodeRef.current?.value || "";
     const expirationDate = expirationDateRef.current?.value || "";
     const minimumAmount = minimumAmountRef.current?.value || "";
 
-    // Send the data to the server or handle as needed
-    console.log("Discount Code:", discountCode);
-    console.log("Expiration Date:", expirationDate);
-    console.log("Minimum Amount:", minimumAmount);
-    console.log("Allow Others:", allowOthers);
+    try {
+      const response = await fetch("http://localhost:5000/discounts/shops", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          shop_id: selectedShop,
+          discount_code: discountCode,
+          expiration_date: expirationDate,
+          minimum_amount: minimumAmount,
+          allow_others: allowOthers,
+        }),
+      });
 
-    // Close the dialog
-    setOpenShopDialog(false);
+      if (response.ok) {
+        Swal.fire("Success", "Discount created successfully", "success");
+        fetchShopDiscounts();
+        setOpenShopDialog(false);
+      } else {
+        Swal.fire("Error", "Failed to create discount", "error");
+      }
+    } catch (error) {
+      console.error("Error creating shop discount:", error);
+      Swal.fire("Error", "An error occurred while creating the discount", "error");
+    }
   };
 
-  const handleCreateDiscountProduct = () => {
+  const handleCreateDiscountProduct = async () => {
     const discountCode = discountCodeRef.current?.value || "";
     const expirationDate = expirationDateRef.current?.value || "";
     const minimumAmount = minimumAmountRef.current?.value || "";
 
-    // Send the data to the server or handle as needed
-    console.log("Discount Code:", discountCode);
-    console.log("Expiration Date:", expirationDate);
-    console.log("Minimum Amount:", minimumAmount);
-    console.log("Allow Others:", allowOthers);
+    try {
+      const response = await fetch("http://localhost:5000/discounts/products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          product_id: selectedProduct,
+          discount_code: discountCode,
+          expiration_date: expirationDate,
+          minimum_amount: minimumAmount,
+          allow_others: allowOthers,
+        }),
+      });
 
-    // Close the dialog
-    setOpenProductDialog(false);
+      if (response.ok) {
+        Swal.fire("Success", "Discount created successfully", "success");
+        fetchProductDiscounts();
+        setOpenProductDialog(false);
+      } else {
+        Swal.fire("Error", "Failed to create discount", "error");
+      }
+    } catch (error) {
+      console.error("Error creating product discount:", error);
+      Swal.fire("Error", "An error occurred while creating the discount", "error");
+    }
   };
 
   const handleEdit = async (id: number, isProductDiscount: boolean) => {
     const discountType = isProductDiscount ? "products" : "shops";
     try {
-      console.log(`Edit discount with id: ${id}`);
       const response = await fetch(
         `http://localhost:5000/discounts/${discountType}/${id}`,
         {
@@ -166,25 +199,23 @@ export function CreateDiscountPage({ ownerView }) {
       const data = await response.json();
       if (response.ok) {
         Swal.fire("Success", "Discount updated successfully", "success");
-        fetchShopDiscounts();
-        fetchProductDiscounts();
+        if (isProductDiscount) {
+          fetchProductDiscounts();
+        } else {
+          fetchShopDiscounts();
+        }
       } else {
         Swal.fire("Error", data.error || "Failed to update discount", "error");
       }
     } catch (error) {
       console.error(`Error editing ${discountType} discount:`, error);
-      Swal.fire(
-        "Error",
-        "An error occurred while updating the discount",
-        "error"
-      );
+      Swal.fire("Error", "An error occurred while updating the discount", "error");
     }
   };
 
   const handleDelete = async (id: number, isProductDiscount: boolean) => {
     const discountType = isProductDiscount ? "products" : "shops";
     try {
-      console.log(`Delete discount with id: ${id}`);
       const response = await fetch(
         `http://localhost:5000/discounts/${discountType}/${id}`,
         {
@@ -194,18 +225,17 @@ export function CreateDiscountPage({ ownerView }) {
       const data = await response.json();
       if (response.ok) {
         Swal.fire("Success", "Discount deleted successfully", "success");
-        fetchShopDiscounts();
-        fetchProductDiscounts();
+        if (isProductDiscount) {
+          fetchProductDiscounts();
+        } else {
+          fetchShopDiscounts();
+        }
       } else {
         Swal.fire("Error", data.error || "Failed to delete discount", "error");
       }
     } catch (error) {
       console.error(`Error deleting ${discountType} discount:`, error);
-      Swal.fire(
-        "Error",
-        "An error occurred while deleting the discount",
-        "error"
-      );
+      Swal.fire("Error", "An error occurred while deleting the discount", "error");
     }
   };
 
@@ -262,9 +292,6 @@ export function CreateDiscountPage({ ownerView }) {
       <h2 className="manage-store-header">
         {ownerView ? "Discounts-Shops" : `Discounts-Shops - ${shop_name}`}
       </h2>
-      <h2 className="manage-store-header">
-        {ownerView ? "Discounts-Products" : `Discounts-Products - ${shop_name}`}
-      </h2>
       <Button
         variant="contained"
         color="primary"
@@ -272,13 +299,28 @@ export function CreateDiscountPage({ ownerView }) {
       >
         Create Shop Discount
       </Button>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={() => setOpenProductDialog(true)}
+      <Box
+        className="discounts-table"
+        sx={{
+          backgroundColor: "white",
+          borderRadius: "44px",
+          boxShadow: "10px 8px 4px 0px #00000040",
+          width: "800px",
+          height: "600px",
+          padding: "40px",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
       >
-        Create Product Discount
-      </Button>
+        <DataGrid
+          rows={shopDiscounts}
+          columns={shopDiscountColumns}
+          pageSize={5}
+          rowsPerPageOptions={[5]}
+          checkboxSelection
+        />
+      </Box>
       <Dialog open={openShopDialog} onClose={() => setOpenShopDialog(false)}>
         <DialogTitle>Create New Shop Discount</DialogTitle>
         <Divider />
@@ -297,7 +339,10 @@ export function CreateDiscountPage({ ownerView }) {
                 <InputLabel>Shop</InputLabel>
                 <Select
                   value={selectedShop}
-                  onChange={(e) => setSelectedShop(e.target.value as string)}
+                  onChange={(e) => {
+                    setSelectedShop(e.target.value as string);
+                    fetchProductsByShop(e.target.value);
+                  }}
                   displayEmpty
                   fullWidth
                 >
@@ -370,10 +415,40 @@ export function CreateDiscountPage({ ownerView }) {
           </Button>
         </DialogActions>
       </Dialog>
-      <Dialog
-        open={openProductDialog}
-        onClose={() => setOpenProductDialog(false)}
+
+      <h2 className="manage-store-header">
+        {ownerView ? "Discounts-Products" : `Discounts-Products - ${shop_name}`}
+      </h2>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => setOpenProductDialog(true)}
       >
+        Create Product Discount
+      </Button>
+      <Box
+        className="discounts-table"
+        sx={{
+          backgroundColor: "white",
+          borderRadius: "44px",
+          boxShadow: "10px 8px 4px 0px #00000040",
+          width: "800px",
+          height: "600px",
+          padding: "40px",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <DataGrid
+          rows={productDiscounts}
+          columns={productDiscountColumns}
+          pageSize={5}
+          rowsPerPageOptions={[5]}
+          checkboxSelection
+        />
+      </Box>
+      <Dialog open={openProductDialog} onClose={() => setOpenProductDialog(false)}>
         <DialogTitle>Create New Product Discount</DialogTitle>
         <Divider />
         <DialogContent>
@@ -391,7 +466,9 @@ export function CreateDiscountPage({ ownerView }) {
                 <InputLabel>Product</InputLabel>
                 <Select
                   value={selectedProduct}
-                  onChange={(e) => setSelectedProduct(e.target.value as string)}
+                  onChange={(e) =>
+                    setSelectedProduct(e.target.value as string)
+                  }
                   displayEmpty
                   fullWidth
                   disabled={!selectedShop}
@@ -472,36 +549,6 @@ export function CreateDiscountPage({ ownerView }) {
           </Button>
         </DialogActions>
       </Dialog>
-      <div className="discount-tables">
-        <div className="table-section">
-          <Typography variant="h6" gutterBottom>
-            Shop Discount
-          </Typography>
-          <div style={{ height: 400, width: "100%" }}>
-            <DataGrid
-              rows={shopDiscounts}
-              columns={shopDiscountColumns}
-              pageSize={5}
-              rowsPerPageOptions={[5]}
-              checkboxSelection
-            />
-          </div>
-        </div>
-        <div className="table-section">
-          <Typography variant="h6" gutterBottom>
-            Product Discount
-          </Typography>
-          <div style={{ height: 400, width: "100%" }}>
-            <DataGrid
-              rows={productDiscounts}
-              columns={productDiscountColumns}
-              pageSize={5}
-              rowsPerPageOptions={[5]}
-              checkboxSelection
-            />
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

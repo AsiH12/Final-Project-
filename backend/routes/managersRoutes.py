@@ -112,10 +112,12 @@ def get_managers_by_shop(shop_id):
     ]
     return jsonify(managers=manager_list), 200
 
-@bp.route("/owner/<int:user_id>", methods=["GET"])
-def get_managers_by_owner(user_id):
+@bp.route("/owner", methods=["GET"])
+@jwt_required
+def get_managers_by_owner():
     db = get_db()
     cursor = db.cursor()
+    user_id = get_jwt_identity()
     
     # Get all shop ids owned by the user
     cursor.execute("SELECT id FROM shops WHERE owner_id = ?", (user_id,))

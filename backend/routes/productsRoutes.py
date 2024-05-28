@@ -1,16 +1,14 @@
-from flask import Blueprint, Flask, request, jsonify
+from flask import Blueprint, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required, get_jwt_identity
 
 from db import close_db, get_db
 
-app = Flask(__name__)
-CORS(app)
-jwt = JWTManager(app)
+
 
 bp = Blueprint("productsRoutes", __name__, url_prefix="/products")
 
-@bp.route("/", methods=["GET"])
+@bp.route("/", methods=["GET"], endpoint='products_get_all')
 def get_products():
     db = get_db()
     cursor = db.cursor()
@@ -40,7 +38,7 @@ def get_products():
     ]
     return jsonify(products=product_list), 200
 
-@bp.route("/<int:product_id>", methods=["GET"])
+@bp.route("/<int:product_id>", methods=["GET"], endpoint='products_get_by_id')
 def get_product_by_id(product_id):
     db = get_db()
     cursor = db.cursor()
@@ -70,7 +68,7 @@ def get_product_by_id(product_id):
             "categories": product["categories"].split(",") if product["categories"] else []
         }), 200
 
-@bp.route("/category/<category_name>", methods=["GET"])
+@bp.route("/category/<category_name>", methods=["GET"], endpoint='products_get_by_category')
 def get_products_by_category(category_name):
     db = get_db()
     cursor = db.cursor()
@@ -101,7 +99,7 @@ def get_products_by_category(category_name):
     ]
     return jsonify(products=product_list), 200
 
-@bp.route("/shop/<int:shop_id>", methods=["GET"])
+@bp.route("/shop/<int:shop_id>", methods=["GET"], endpoint='products_get_by_shop_id')
 def get_products_by_shop_id(shop_id):
     db = get_db()
     cursor = db.cursor()
@@ -132,7 +130,8 @@ def get_products_by_shop_id(shop_id):
     ]
     return jsonify(products=product_list), 200
 
-@bp.route("/owner/<int:owner_id>", methods=["GET"])
+@bp.route("/owner/<int:owner_id>", methods=["GET"], endpoint='products_get_by_owner_id')
+@jwt_required()
 def get_products_by_owner_id(owner_id):
     db = get_db()
     cursor = db.cursor()
@@ -163,8 +162,10 @@ def get_products_by_owner_id(owner_id):
     ]
     return jsonify(products=product_list), 200
 
-@bp.route("/manager_owner/<int:user_id>", methods=["GET"])
-def get_products_by_manager_or_owner(user_id):
+@bp.route("/manager_owner", methods=["GET"], endpoint='products_get_by_manager_or_owner')
+@jwt_required()
+def get_products_by_manager_or_owner():
+    user_id = get_jwt_identity()
     db = get_db()
     cursor = db.cursor()
     cursor.execute("""
@@ -195,7 +196,8 @@ def get_products_by_manager_or_owner(user_id):
     ]
     return jsonify(products=product_list), 200
 
-@bp.route("", methods=["POST"])
+@bp.route("", methods=["POST"], endpoint='products_create')
+@jwt_required()
 def create_new_product():
     data = request.get_json()
     name = data.get("name")
@@ -206,28 +208,24 @@ def create_new_product():
     maximum_discount = data.get("maximum_discount")
     categories = data.get("categories")
 
-    # Validate input data
     if not all([name, shop_id, price, amount, categories, maximum_discount]):
         return jsonify({"error": "Incomplete product data"}), 400
 
     db = get_db()
     cursor = db.cursor()
 
-    # Check if the shop exists
     cursor.execute("SELECT id FROM shops WHERE id = ?", (shop_id,))
     existing_shop = cursor.fetchone()
     if existing_shop is None:
         close_db()
         return jsonify({"error": "Shop not found"}), 404
 
-    # Insert the new product into the database
     cursor.execute(
         "INSERT INTO products (name, description, shop_id, price, amount, maximum_discount) VALUES (?, ?, ?, ?, ?, ?)",
         (name, description, shop_id, price, amount, maximum_discount),
     )
     product_id = cursor.lastrowid
 
-    # Insert product categories
     for category_id in categories:
         cursor.execute(
             "INSERT INTO products_categories (product_id, category_id) VALUES (?, ?)",
@@ -237,7 +235,6 @@ def create_new_product():
     db.commit()
     close_db()
 
-    # Fetch the newly created product
     cursor = db.cursor()
     cursor.execute("""
         SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, GROUP_CONCAT(c.category_name) AS categories
@@ -265,19 +262,18 @@ def create_new_product():
 
     return jsonify(product), 201
 
-@bp.route("/<int:product_id>", methods=["PATCH"])
+@bp.route("/<int:product_id>", methods=["PATCH"], endpoint='products_update_by_id')
+@jwt_required()
 def update_product_by_id(product_id):
     data = request.get_json()
     db = get_db()
     cursor = db.cursor()
-    # Check if the product exists
     cursor.execute("SELECT id FROM products WHERE id = ?", (product_id,))
     existing_product = cursor.fetchone()
     if existing_product is None:
         close_db()
         return jsonify({"error": "Product not found"}), 404
     else:
-        # Update product data
         cursor.execute(
             "UPDATE products SET name = ?, description = ?, shop_id = ?, price = ?, amount = ?, maximum_discount = ? WHERE id = ?",
             (
@@ -291,7 +287,6 @@ def update_product_by_id(product_id):
             ),
         )
 
-        # Update product categories
         cursor.execute("DELETE FROM products_categories WHERE product_id = ?", (product_id,))
         for category_id in data.get("categories", []):
             cursor.execute(
@@ -303,11 +298,11 @@ def update_product_by_id(product_id):
         close_db()
         return jsonify({"message": "Product updated successfully"}), 200
 
-@bp.route("/<int:product_id>", methods=["DELETE"])
+@bp.route("/<int:product_id>", methods=["DELETE"], endpoint='products_delete_by_id')
+@jwt_required()
 def delete_product_by_id(product_id):
     db = get_db()
     cursor = db.cursor()
-    # Check if the product exists
     cursor.execute("SELECT id FROM products WHERE id = ?", (product_id,))
     existing_product = cursor.fetchone()
     if existing_product is None:
@@ -319,9 +314,3 @@ def delete_product_by_id(product_id):
         db.commit()
         close_db()
         return jsonify({"message": "Product deleted successfully"}), 200
-
-# Register the blueprint
-app.register_blueprint(bp)
-
-if __name__ == '__main__':
-    app.run(debug=True)

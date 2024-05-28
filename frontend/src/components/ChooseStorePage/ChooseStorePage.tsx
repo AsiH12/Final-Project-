@@ -1,7 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Card, CardContent, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Button } from '@mui/material';
-import './ChooseStorePage.css';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Button,
+} from "@mui/material";
+import "./ChooseStorePage.css";
+import { useNavigate } from "react-router-dom";
 
 interface ChooseStorePageProps {
   onStoreSelect: (storeName: string) => void;
@@ -11,6 +21,7 @@ export function ChooseStorePage({ onStoreSelect }: ChooseStorePageProps) {
   const [stores, setStores] = useState([]);
   const [selectedStore, setSelectedStore] = useState(null);
   const [open, setOpen] = useState(false);
+  const token = localStorage.getItem("access_token");
 
   const user_id = localStorage.getItem("user_id");
 
@@ -19,15 +30,21 @@ export function ChooseStorePage({ onStoreSelect }: ChooseStorePageProps) {
   useEffect(() => {
     const fetchStores = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/shops/manager/${user_id}`);
+        const response = await fetch("http://127.0.0.1:5000/shops/manager", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Send JWT token
+          },
+        });
         if (!response.ok) {
-          throw new Error('Network response was not ok');
+          throw new Error("Network response was not ok");
         }
         const data = await response.json();
-        console.log('Fetched stores:', data.shops);
+        console.log("Fetched stores:", data.shops);
         setStores(data.shops);
       } catch (error) {
-        console.error('Error fetching stores:', error);
+        console.error("Error fetching stores:", error);
       }
     };
 
@@ -45,24 +62,31 @@ export function ChooseStorePage({ onStoreSelect }: ChooseStorePageProps) {
   };
 
   const handleNavigation = (path) => {
-    navigate(`${path}/${selectedStore.name}`, { state: { storeId: selectedStore.id, storeName: selectedStore.name, role: selectedStore.role, owner: selectedStore.owner_id } });
+    navigate(`${path}/${selectedStore.name}`, {
+      state: {
+        storeId: selectedStore.id,
+        storeName: selectedStore.name,
+        role: selectedStore.role,
+        owner: selectedStore.owner_id,
+      },
+    });
   };
 
   return (
     <div className="container">
-      <h2 className="manage-store-header" style={{ color: '#39cccc' }}>
+      <h2 className="manage-store-header" style={{ color: "#39cccc" }}>
         Manage Store
       </h2>
-      <h2 className="choose-store-header" style={{ color: '#39cccc' }}>
+      <h2 className="choose-store-header" style={{ color: "#39cccc" }}>
         Choose Store:
       </h2>
       <Box
         className="store-list"
         sx={{
-          display: 'flex',
-          gap: '20px',
-          justifyContent: 'center',
-          flexWrap: 'wrap',
+          display: "flex",
+          gap: "20px",
+          justifyContent: "center",
+          flexWrap: "wrap",
         }}
       >
         {stores && stores.length > 0 ? (
@@ -74,18 +98,18 @@ export function ChooseStorePage({ onStoreSelect }: ChooseStorePageProps) {
               sx={{
                 minWidth: 300,
                 height: 200,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                borderRadius: '10px',
-                cursor: 'pointer',
-                '&:hover': {
-                  backgroundColor: '#f0f0f0',
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: "10px",
+                cursor: "pointer",
+                "&:hover": {
+                  backgroundColor: "#f0f0f0",
                 },
               }}
             >
-              <CardContent sx={{ textAlign: 'center' }}>
+              <CardContent sx={{ textAlign: "center" }}>
                 <Typography variant="h5" component="div">
                   {store.name}
                 </Typography>
@@ -105,19 +129,19 @@ export function ChooseStorePage({ onStoreSelect }: ChooseStorePageProps) {
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Manage {selectedStore?.name}</DialogTitle>
         <DialogContent>
-          <Button onClick={() => handleNavigation('/items')} color="primary">
+          <Button onClick={() => handleNavigation("/items")} color="primary">
             Manage Items
           </Button>
-          <Button onClick={() => handleNavigation('/managers')} color="primary">
+          <Button onClick={() => handleNavigation("/managers")} color="primary">
             Manage Managers
           </Button>
-          <Button onClick={() => handleNavigation('/discount')} color="primary">
+          <Button onClick={() => handleNavigation("/discount")} color="primary">
             Manage Discounts
           </Button>
-          <Button onClick={() => handleNavigation('/orders')} color="primary">
+          <Button onClick={() => handleNavigation("/orders")} color="primary">
             Orders
           </Button>
-          <Button onClick={() => handleNavigation('/revenues')} color="primary">
+          <Button onClick={() => handleNavigation("/revenues")} color="primary">
             Revenues
           </Button>
         </DialogContent>

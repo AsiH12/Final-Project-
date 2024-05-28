@@ -31,7 +31,7 @@ export default function RootLayOut() {
   const handleLogout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("username");
-    localStorage.removeItem('user_id');
+    localStorage.removeItem("user_id");
     navigate("/login");
   };
 
@@ -39,7 +39,10 @@ export default function RootLayOut() {
     try {
       const response = await fetch(`http://127.0.0.1:5000/shops/new`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(data),
       });
 

@@ -29,13 +29,21 @@ export function PurchaseHistoryPage() {
   const [filterModel, setFilterModel] = useState({
     items: [],
   });
+  const token = localStorage.getItem("access_token");
 
   useEffect(() => {
     const fetchPurchaseHistory = async () => {
       const userId = localStorage.getItem("user_id");
       try {
         const response = await fetch(
-          `http://localhost:5000/purchase-history/user/${userId}`
+          `http://localhost:5000/purchase-history/user`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`, // Send JWT token
+            },
+          }
         );
         if (!response.ok) throw new Error("Network response was not ok");
         const data = await response.json();

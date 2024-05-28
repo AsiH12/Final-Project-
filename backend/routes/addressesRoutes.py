@@ -1,13 +1,12 @@
-from flask import Blueprint, Flask, request, jsonify
-from flask_cors import CORS
-from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required, get_jwt_identity
-
-from db import close_db, get_db
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from db import get_db, close_db
 
 bp = Blueprint("addressesRoutes", __name__, url_prefix="/addresses")
 
 # Get all addresses route
-@bp.route("", methods=["GET"])
+@bp.route("", methods=["GET"], endpoint='addresses_get_all')
+@jwt_required()
 def get_addresses():
     db = get_db()
     cursor = db.cursor()
@@ -24,12 +23,14 @@ def get_addresses():
     return jsonify(addresses=address_list), 200
 
 # Get address by ID route
-@bp.route("/<int:address_id>", methods=["GET"])
+@bp.route("/<int:address_id>", methods=["GET"], endpoint='addresses_get_by_id')
+@jwt_required()
 def get_address_by_id(address_id):
     db = get_db()
     cursor = db.cursor()
     cursor.execute(
-        "SELECT id, address, city, country, user_id FROM addresses WHERE id = ?", (address_id,)
+        "SELECT id, address, city, country, user_id FROM addresses WHERE id = ?", (
+            address_id,)
     )
     address = cursor.fetchone()
     close_db()
@@ -45,8 +46,10 @@ def get_address_by_id(address_id):
         }), 200
 
 # Get all addresses for a specific user
-@bp.route("/user/<int:user_id>", methods=["GET"])
-def get_addresses_by_user_id(user_id):
+@bp.route("/user", methods=["GET"], endpoint='addresses_get_by_user_id')
+@jwt_required()
+def get_addresses_by_user_id():
+    user_id = get_jwt_identity()
     db = get_db()
     cursor = db.cursor()
     cursor.execute(
@@ -68,7 +71,8 @@ def get_addresses_by_user_id(user_id):
         return jsonify({"error": "No addresses found for this user"}), 404
 
 # Create new address route
-@bp.route("", methods=["POST"])
+@bp.route("", methods=["POST"], endpoint='addresses_create')
+@jwt_required()
 def create_new_address():
     data = request.get_json()
     address = data.get("address")
@@ -101,7 +105,8 @@ def create_new_address():
     return jsonify({"message": "Address created successfully"}), 201
 
 # Update address by ID route
-@bp.route("/<int:address_id>", methods=["PATCH"])
+@bp.route("/<int:address_id>", methods=["PATCH"], endpoint='addresses_update_by_id')
+@jwt_required()
 def update_address_by_id(address_id):
     data = request.get_json()
     db = get_db()
@@ -123,7 +128,8 @@ def update_address_by_id(address_id):
         return jsonify({"message": "Address updated successfully"}), 200
 
 # Delete address by ID route
-@bp.route("/<int:address_id>", methods=["DELETE"])
+@bp.route("/<int:address_id>", methods=["DELETE"], endpoint='addresses_delete_by_id')
+@jwt_required()
 def delete_address_by_id(address_id):
     db = get_db()
     cursor = db.cursor()

@@ -1,10 +1,11 @@
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required
 from db import get_db, close_db
 
 bp = Blueprint("categoryRoutes", __name__, url_prefix="/categories")
 
 # Get all categories
-@bp.route("/", methods=["GET"])
+@bp.route("/", methods=["GET"], endpoint='categories_get_all')
 def get_all_categories():
     db = get_db()
     cursor = db.cursor()
@@ -15,7 +16,7 @@ def get_all_categories():
     return jsonify(categories=category_list), 200
 
 # Get category by ID
-@bp.route("/<int:category_id>", methods=["GET"])
+@bp.route("/<int:category_id>", methods=["GET"], endpoint='categories_get_by_id')
 def get_category_by_id(category_id):
     db = get_db()
     cursor = db.cursor()
@@ -28,7 +29,8 @@ def get_category_by_id(category_id):
         return jsonify({"id": category["id"], "name": category["category_name"]}), 200
 
 # Create new category
-@bp.route("/", methods=["POST"])
+@bp.route("/", methods=["POST"], endpoint='categories_create')
+@jwt_required()
 def create_category():
     data = request.get_json()
     category_name = data.get("category_name")
@@ -48,7 +50,8 @@ def create_category():
         return jsonify({"error": "Category already exists"}), 409
 
 # Update category by ID
-@bp.route("/<int:category_id>", methods=["PATCH"])
+@bp.route("/<int:category_id>", methods=["PATCH"], endpoint='categories_update_by_id')
+@jwt_required()
 def update_category(category_id):
     data = request.get_json()
     new_category_name = data.get("category_name")
@@ -74,7 +77,8 @@ def update_category(category_id):
         return jsonify({"error": "Category name already exists"}), 409
 
 # Delete category by ID
-@bp.route("/<int:category_id>", methods=["DELETE"])
+@bp.route("/<int:category_id>", methods=["DELETE"], endpoint='categories_delete_by_id')
+@jwt_required()
 def delete_category(category_id):
     db = get_db()
     cursor = db.cursor()

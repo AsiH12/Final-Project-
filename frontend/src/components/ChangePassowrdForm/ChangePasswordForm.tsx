@@ -57,11 +57,12 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/users/reset-password/${userId}`,
+        `http://localhost:5000/users/reset-password`,
         {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Send JWT token
           },
           body: JSON.stringify({ new_password: newPassword }),
         }

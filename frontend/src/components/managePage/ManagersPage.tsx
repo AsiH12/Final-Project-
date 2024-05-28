@@ -53,20 +53,31 @@ export function ManagersPage({ ownerView }) {
     owner: null,
   };
   const logged_user_id = localStorage.getItem("user_id");
-
+  const token = localStorage.getItem("access_token");
   const fetchManagers = async () => {
     const url = ownerView
-      ? `http://localhost:5000/managers/owner/${logged_user_id}`
+      ? `http://localhost:5000/managers/owner`
       : `http://localhost:5000/managers/shop_name/${shop_name}`;
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Send JWT token
+      },
+    });
+
     const data = await response.json();
     if (!data.error) setManagers(data.managers);
   };
 
   const fetchUserShops = async () => {
-    const response = await fetch(
-      `http://localhost:5000/shops/manager/${logged_user_id}`
-    );
+    const response = await fetch("http://localhost:5000/shops/manager", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Send JWT token
+      },
+    });
     const data = await response.json();
     setShops(data.shops);
   };
@@ -86,6 +97,10 @@ export function ManagersPage({ ownerView }) {
   const handleDeleteClick = async (id: number) => {
     const response = await fetch(`http://localhost:5000/managers/${id}`, {
       method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Send JWT token
+      },
     });
     if (response.ok) {
       setManagers((prevManagers) =>
@@ -119,8 +134,12 @@ export function ManagersPage({ ownerView }) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Send JWT token
         },
-        body: JSON.stringify({ manager_id: selectedUser, shop_id: selectedShop }),
+        body: JSON.stringify({
+          manager_id: selectedUser,
+          shop_id: selectedShop,
+        }),
       });
       if (response.ok) {
         await fetchManagers();
@@ -151,7 +170,13 @@ export function ManagersPage({ ownerView }) {
 
   const fetchUsers = async (shopName) => {
     const url = `http://localhost:5000/users/shop_name/${shopName}`;
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Send JWT token
+      },
+    });
     const data = await response.json();
     if (!data.error) return data.users || [];
   };
@@ -166,7 +191,7 @@ export function ManagersPage({ ownerView }) {
   const handleShopChange = async (event) => {
     const shopId = event.target.value;
     setSelectedShop(shopId);
-    const shopName = shops.find(shop => shop.id === shopId)?.name;
+    const shopName = shops.find((shop) => shop.id === shopId)?.name;
     if (shopName) {
       const availableUsers = await fetchUsers(shopName);
       setUsers(availableUsers);

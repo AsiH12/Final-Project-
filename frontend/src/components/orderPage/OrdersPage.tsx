@@ -42,13 +42,20 @@ export function OrdersPage({ ownerView }) {
   const { shop_name } = useParams();
   const location = useLocation();
   const logged_user_id = localStorage.getItem("user_id");
+  const token = localStorage.getItem("access_token");
 
   useEffect(() => {
     const fetchOrders = async () => {
       const url = ownerView
-        ? `http://localhost:5000/purchase-history/manager_owner/${logged_user_id}`
+        ? `http://localhost:5000/purchase-history/manager_owner`
         : `http://localhost:5000/purchase-history/shop_name/${shop_name}`;
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Send JWT token
+        },
+      });
       const data = await response.json();
       if (!data.error) setOrders(data.purchases);
     };
@@ -63,6 +70,10 @@ export function OrdersPage({ ownerView }) {
       `http://localhost:5000/purchase-history/${id}`,
       {
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Send JWT token
+        },
       }
     );
     if (response.ok) {

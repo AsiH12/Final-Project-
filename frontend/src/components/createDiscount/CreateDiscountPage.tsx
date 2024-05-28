@@ -49,6 +49,7 @@ export function CreateDiscountPage({ ownerView }) {
   const [allowOthers, setAllowOthers] = useState<boolean>(false);
   const [openEditDialog, setOpenEditDialog] = useState<boolean>(false);
   const [editDiscount, setEditDiscount] = useState<any>(null);
+  const token = localStorage.getItem("access_token");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -69,7 +70,14 @@ export function CreateDiscountPage({ ownerView }) {
   const fetchShopDiscounts = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/discounts/shops/by_shop_name/${shop_name}`
+        `http://localhost:5000/discounts/shops/by_shop_name/${shop_name}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Send JWT token
+          },
+        }
       );
       const data = await response.json();
       if (!data.error) setShopDiscounts(data.discounts);
@@ -81,7 +89,14 @@ export function CreateDiscountPage({ ownerView }) {
   const fetchProductDiscounts = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/discounts/products/by_shop_name/${shop_name}`
+        `http://localhost:5000/discounts/products/by_shop_name/${shop_name}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Send JWT token
+          },
+        }
       );
       const data = await response.json();
       if (!data.error) setProductDiscounts(data.discounts);
@@ -93,7 +108,14 @@ export function CreateDiscountPage({ ownerView }) {
   const fetchOwnerShopDiscounts = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/discounts/shops/user/${logged_user_id}`
+        `http://localhost:5000/discounts/shops/user`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Send JWT token
+          },
+        }
       );
       const data = await response.json();
       if (!data.error) setShopDiscounts(data.discounts);
@@ -105,7 +127,14 @@ export function CreateDiscountPage({ ownerView }) {
   const fetchOwnerProductDiscounts = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/discounts/products/user/${logged_user_id}`
+        "http://localhost:5000/discounts/products/user",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Send JWT token
+          },
+        }
       );
       const data = await response.json();
       if (!data.error) setProductDiscounts(data.discounts);
@@ -115,17 +144,21 @@ export function CreateDiscountPage({ ownerView }) {
   };
 
   const fetchUserShops = async () => {
-    const response = await fetch(
-      `http://localhost:5000/shops/manager/${logged_user_id}`
-    );
+    const response = await fetch("http://localhost:5000/shops/manager", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Send JWT token
+      },
+    });
     const data = await response.json();
     setShops(data.shops);
   };
 
-  const fetchProductsByShop = async () => {
+  const fetchProductsByShop = async (shopId: string) => {
     console.log(selectedShop);
     const response = await fetch(
-      `http://localhost:5000/products/shop/${selectedShop}`
+      `http://localhost:5000/products/shop/${shopId}`
     );
     const data = await response.json();
     console.log(data.products);
@@ -153,7 +186,7 @@ export function CreateDiscountPage({ ownerView }) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer " + localStorage.getItem("access_token"),
+          Authorization: `Bearer ${token}`, // Send JWT token
         },
         body: JSON.stringify({
           shop_id: selectedShop,
@@ -214,7 +247,7 @@ export function CreateDiscountPage({ ownerView }) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer " + localStorage.getItem("access_token"),
+          Authorization: `Bearer ${token}`, // Send JWT token
         },
         body: JSON.stringify({
           product_id: selectedProduct,
@@ -273,7 +306,7 @@ export function CreateDiscountPage({ ownerView }) {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            Authorization: "Bearer " + localStorage.getItem("access_token"),
+            Authorization: `Bearer ${token}`, // Send JWT token
           },
           body: JSON.stringify(editDiscount),
         }
@@ -341,7 +374,7 @@ export function CreateDiscountPage({ ownerView }) {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
-            Authorization: "Bearer " + localStorage.getItem("access_token"),
+            Authorization: `Bearer ${token}`, // Send JWT token
           },
         }
       );
@@ -398,7 +431,7 @@ export function CreateDiscountPage({ ownerView }) {
       field: "categories",
       headerName: "Categories",
       width: 200,
-      valueFormatter: (params) => (params || []).join(", "),
+      valueFormatter: (params) => (params.value || []).join(", "),
     },
     { field: "discount_code", headerName: "Discount Code", width: 150 },
     { field: "discount", headerName: "Discount", width: 150 },
@@ -435,7 +468,7 @@ export function CreateDiscountPage({ ownerView }) {
       field: "categories",
       headerName: "Categories",
       width: 200,
-      valueFormatter: (params) => (params || []).join(", "),
+      valueFormatter: (params) => (params.value || []).join(", "),
     },
     { field: "discount_code", headerName: "Discount Code", width: 150 },
     { field: "discount", headerName: "Discount", width: 150 },
@@ -673,8 +706,9 @@ export function CreateDiscountPage({ ownerView }) {
                   <Select
                     value={selectedShop}
                     onChange={async (e) => {
-                      setSelectedShop(e.target.value as string);
-                      await fetchProductsByShop();
+                      const shopId = e.target.value as string;
+                      setSelectedShop(shopId);
+                      await fetchProductsByShop(shopId);
                     }}
                     displayEmpty
                     fullWidth
@@ -749,6 +783,19 @@ export function CreateDiscountPage({ ownerView }) {
             />
             <TextField
               sx={{ width: "400px", background: "white" }}
+              id="discount"
+              label="Discount (1-100)"
+              type="number"
+              inputProps={{ min: 1, max: 100 }}
+              variant="outlined"
+              value={discount}
+              onChange={(e) => setDiscount(Number(e.target.value))}
+              className="input-container"
+              fullWidth
+              margin="normal"
+            />
+            <TextField
+              sx={{ width: "400px", background: "white" }}
               id="expirationDate"
               label="Expiration Date"
               variant="outlined"
@@ -770,6 +817,18 @@ export function CreateDiscountPage({ ownerView }) {
               className="input-container"
               fullWidth
               margin="normal"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={allowOthers}
+                  onChange={(e) => setAllowOthers(e.target.checked)}
+                  color="primary"
+                />
+              }
+              label="Allow Others"
+              className="input-container"
+              sx={{ marginTop: 2 }}
             />
           </Box>
         </DialogContent>

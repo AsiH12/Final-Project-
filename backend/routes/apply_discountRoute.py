@@ -1,9 +1,11 @@
 from flask import Blueprint, jsonify, request
 from datetime import datetime
+
+from flask_jwt_extended import jwt_required
 from db import get_db, close_db
 
 bp = Blueprint("apply_discounts_route", __name__, url_prefix="/apply-discounts")
-
+@jwt_required
 def get_shop_id_by_name(cursor, shop_name):
     cursor.execute("SELECT id FROM shops WHERE name = ?", (shop_name,))
     shop = cursor.fetchone()
@@ -95,6 +97,8 @@ def apply_discounts(cart, used_discounts, new_discount_code):
     }
 
 @bp.route("", methods=["POST"])
+@jwt_required
+
 def apply_discounts_route():
     data = request.get_json()
     cart = data.get("cart")

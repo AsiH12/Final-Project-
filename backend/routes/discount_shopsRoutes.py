@@ -7,6 +7,8 @@ bp = Blueprint("discount_shopsRoutes", __name__, url_prefix="/discounts")
 CORS(bp)
 
 # Get all discounts for shops route
+
+
 @bp.route("/shops", methods=["GET"])
 def get_all_discounts_shops():
     try:
@@ -41,6 +43,8 @@ def get_all_discounts_shops():
         return jsonify({"error": str(e)}), 500
 
 # Get discount for shop by discount code route
+
+
 @bp.route("/shops/<string:discount_code>", methods=["GET"])
 def get_discount_shop_by_code(discount_code):
     try:
@@ -78,6 +82,8 @@ def get_discount_shop_by_code(discount_code):
         return jsonify({"error": str(e)}), 500
 
 # Get a discount for shop by ID route
+
+
 @bp.route("/shops/<int:discount_id>", methods=["GET"])
 def get_discount_shop_by_id(discount_id):
     try:
@@ -114,6 +120,8 @@ def get_discount_shop_by_id(discount_id):
         return jsonify({"error": str(e)}), 500
 
 # Get discounts for a specific shop by shop ID
+
+
 @bp.route("/shops/by_shop/<int:shop_id>", methods=["GET"])
 def get_discounts_by_shop_id(shop_id):
     try:
@@ -151,6 +159,8 @@ def get_discounts_by_shop_id(shop_id):
         return jsonify({"error": str(e)}), 500
 
 # Get discounts for a specific shop by shop name
+
+
 @bp.route("/shops/by_shop_name/<string:shop_name>", methods=["GET"])
 def get_discounts_by_shop_name(shop_name):
     try:
@@ -187,8 +197,12 @@ def get_discounts_by_shop_name(shop_name):
         close_db()
         return jsonify({"error": str(e)}), 500
 
-@bp.route("/shops/user/<int:user_id>", methods=["GET"])
-def get_shop_discounts_for_user(user_id):
+
+@bp.route("/shops/user", methods=["GET"])
+@jwt_required
+def get_shop_discounts_for_user():
+    user_id = get_jwt_identity()
+
     try:
         db = get_db()
         cursor = db.cursor()
@@ -239,6 +253,7 @@ def get_shop_discounts_for_user(user_id):
         close_db()
         return jsonify({"error": str(e)}), 500
 
+
 @bp.route("/shops", methods=["POST"])
 @jwt_required()
 def create_discount_shop():
@@ -260,7 +275,7 @@ def create_discount_shop():
 
             db = get_db()
             cursor = db.cursor()
-            
+
             # Verify user is manager or owner of the shop
             cursor.execute("""
                 SELECT s.id
@@ -273,7 +288,8 @@ def create_discount_shop():
             if not shop:
                 return jsonify({"error": "User is not authorized to create a discount for this shop"}), 403
 
-            cursor.execute("INSERT INTO discounts_shops (shop_id, discount_code, discount, expiration_date, minimum_amount, allow_others) VALUES (?, ?, ?, ?, ?, ?)", (shop_id, discount_code, discount, expiration_date, minimum_amount, allow_others))
+            cursor.execute("INSERT INTO discounts_shops (shop_id, discount_code, discount, expiration_date, minimum_amount, allow_others) VALUES (?, ?, ?, ?, ?, ?)",
+                           (shop_id, discount_code, discount, expiration_date, minimum_amount, allow_others))
             db.commit()
             close_db()
             return jsonify({"message": "Discount for shop created successfully"}), 201
@@ -284,6 +300,8 @@ def create_discount_shop():
         return jsonify({"error": str(e)}), 500
 
 # Update a discount for shop by ID route
+
+
 @bp.route("/shops/<int:discount_id>", methods=["PATCH"])
 @jwt_required()
 def update_discount_shop(discount_id):
@@ -324,19 +342,24 @@ def update_discount_shop(discount_id):
             shops = cursor.fetchall()
 
             # Check if the user is authorized to update the discount
-            authorized = any(shop["id"] == discount["shop_id"] for shop in shops)
+            authorized = any(shop["id"] == discount["shop_id"]
+                             for shop in shops)
             if not authorized:
                 close_db()
                 return jsonify({"error": "You are not authorized to update this discount"}), 403
 
             shop_id = data.get("shop_id", discount["shop_id"])
-            discount_code = data.get("discount_code", discount["discount_code"])
+            discount_code = data.get(
+                "discount_code", discount["discount_code"])
             discount_value = data.get("discount", discount["discount"])
-            expiration_date = data.get("expiration_date", discount["expiration_date"])
-            minimum_amount = data.get("minimum_amount", discount["minimum_amount"])
+            expiration_date = data.get(
+                "expiration_date", discount["expiration_date"])
+            minimum_amount = data.get(
+                "minimum_amount", discount["minimum_amount"])
             allow_others = data.get("allow_others", discount["allow_others"])
 
-            cursor.execute("UPDATE discounts_shops SET shop_id = ?, discount_code = ?, discount = ?, expiration_date = ?, minimum_amount = ?, allow_others = ? WHERE id = ?", (shop_id, discount_code, discount_value, expiration_date, minimum_amount, allow_others, discount_id))
+            cursor.execute("UPDATE discounts_shops SET shop_id = ?, discount_code = ?, discount = ?, expiration_date = ?, minimum_amount = ?, allow_others = ? WHERE id = ?",
+                           (shop_id, discount_code, discount_value, expiration_date, minimum_amount, allow_others, discount_id))
             db.commit()
             cursor.execute("""
                 SELECT ds.id, ds.shop_id, s.name as shop_name, ds.discount_code, ds.discount, ds.expiration_date, ds.minimum_amount, ds.allow_others,
@@ -368,6 +391,8 @@ def update_discount_shop(discount_id):
         return jsonify({"error": str(e)}), 500
 
 # Delete a discount for shop by ID route
+
+
 @bp.route("/shops/<int:discount_id>", methods=["DELETE"])
 @jwt_required()
 def delete_discount_shop(discount_id):
@@ -414,7 +439,8 @@ def delete_discount_shop(discount_id):
             return jsonify({"error": "You are not authorized to delete this discount"}), 403
 
         # Delete the discount
-        cursor.execute("DELETE FROM discounts_shops WHERE id = ?", (discount_id,))
+        cursor.execute(
+            "DELETE FROM discounts_shops WHERE id = ?", (discount_id,))
         db.commit()
         close_db()
         return jsonify({"message": "Discount for shop deleted successfully"}), 200

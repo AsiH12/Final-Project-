@@ -53,13 +53,20 @@ export function ItemsPage({ ownerView }) {
   const [allCategories, setAllCategories] = useState<Category[]>([]);
   const [userShops, setUserShops] = useState<Shop[]>([]);
   const logged_user_id = localStorage.getItem("user_id");
+  const token = localStorage.getItem("access_token");
 
   useEffect(() => {
     const fetchItems = async () => {
       const url = ownerView
-        ? `http://localhost:5000/products/manager_owner/${logged_user_id}`
+        ? `http://localhost:5000/products/manager_owner`
         : `http://localhost:5000/products/shop/${storeId}`;
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Send JWT token
+        },
+      });
       const data = await response.json();
       if (!data.error) setItems(data.products);
     };
@@ -71,14 +78,20 @@ export function ItemsPage({ ownerView }) {
     };
 
     const fetchUserShops = async () => {
-      const response = await fetch(
-        `http://localhost:5000/shops/manager/${logged_user_id}`
-      );
+      const response = await fetch("http://localhost:5000/shops/manager", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Send JWT token
+        },
+      });
       const data = await response.json();
       setUserShops(data.shops);
     };
 
-    fetchItems().catch((error) => console.error("Error fetching items:", error));
+    fetchItems().catch((error) =>
+      console.error("Error fetching items:", error)
+    );
     fetchCategories().catch((error) =>
       console.error("Error fetching categories:", error)
     );
@@ -92,7 +105,9 @@ export function ItemsPage({ ownerView }) {
 
   const handleEditClick = (item: Item) => {
     setCurrentItem(item);
-    setSelectedShop(userShops.find(shop => shop.name === item.shop_name) || null);
+    setSelectedShop(
+      userShops.find((shop) => shop.name === item.shop_name) || null
+    );
     setIsEditing(true);
     setOpen(true);
   };
@@ -107,6 +122,10 @@ export function ItemsPage({ ownerView }) {
   const handleDeleteClick = async (id: number) => {
     const response = await fetch(`http://localhost:5000/products/${id}`, {
       method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Send JWT token
+      },
     });
     if (response.ok) {
       setItems((prevItems) => prevItems.filter((item) => item.id !== id));
@@ -155,6 +174,7 @@ export function ItemsPage({ ownerView }) {
         method,
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Send JWT token
         },
         body: JSON.stringify({
           name: currentItem.name,

@@ -30,6 +30,7 @@ interface CartItem {
   shop: string;
   price: number;
   amount: number;
+  max_amount?: number;
   discount: number;
   originalPrice: number;
   discountedPrice?: number;
@@ -45,6 +46,7 @@ const CartPage = () => {
   const [selectedAddress, setSelectedAddress] = useState("");
   const [addresses, setAddresses] = useState([]);
   const loggedUserId = localStorage.getItem("user_id");
+  const token = localStorage.getItem("access_token");
 
   const { cartCount, updateCount } = useCartCount(); // Use the context
   const total = cart.reduce(
@@ -62,14 +64,26 @@ const CartPage = () => {
       setCart(JSON.parse(savedCart));
     }
   }, []);
-
   useEffect(() => {
-    // Fetch addresses from the server
-    fetch(`http://localhost:5000/addresses/user/${loggedUserId}`)
-      .then((response) => response.json())
-      .then((data) => setAddresses(data.addresses))
-      .catch((error) => console.error("Error fetching addresses:", error));
-  }, []);
+    const fetchAddresses = async () => {
+      // Fetch addresses from the server
+      try {
+        const response = await fetch(`http://localhost:5000/addresses/user`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Send JWT token
+          },
+        });
+        const data = await response.json(); // Await the response.json() call
+        setAddresses(data.addresses);
+      } catch (error) {
+        console.error("Error fetching addresses:", error);
+      }
+    };
+
+    fetchAddresses();
+  }, [token]); // Add token as a dependency to ensure it is defined
 
   useEffect(() => {
     // Retrieve cart data from localStorage
@@ -90,14 +104,17 @@ const CartPage = () => {
     console.log(updatedCart);
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
+    updateCount();
   };
 
   // Update item quantity in cart
   const updateAmount = (product_id: number, amount: number) => {
     setCart((currentCart) =>
       currentCart.map((item) => {
-        if (item.product_id === product_id) {
+        console.log(item);
+        if (item.product_id === product_id && amount <= item.max_amount) {
           let newAmount = amount;
+          updateCount();
           return { ...item, amount: newAmount };
         }
         return item;
@@ -113,7 +130,7 @@ const CartPage = () => {
 
     try {
       // Fetch updated cart data with discounts applied
-      const token = localStorage.getItem("access_token");
+
       if (!token) {
         throw new Error("Please log in to apply discounts.");
       }
@@ -230,7 +247,9 @@ const CartPage = () => {
         // Fetch shop_id for each cart item
         const updatedCart = await Promise.all(
           cart.map(async (item) => {
-            const response = await fetch(`http://localhost:5000/shops/getidbyname/${item.shop}`);
+            const response = await fetch(
+              `http://localhost:5000/shops/getidbyname/${item.shop}`
+            );
             if (response.ok) {
               const data = await response.json();
               item.shop_id = data.id; // Assign shop_id to item
@@ -245,7 +264,7 @@ const CartPage = () => {
           updatedCart.map((item) => {
             const postData = {
               product_id: item.product_id,
-              shop_id: item.shop_id, 
+              shop_id: item.shop_id,
               user_id: parseInt(loggedUserId!),
               quantity: item.amount,
               product_price: item.originalPrice,
@@ -256,7 +275,7 @@ const CartPage = () => {
               shipping_completed: false,
               total_price: displayTotal,
             };
-  
+
             return fetch("http://localhost:5000/purchase-history", {
               method: "POST",
               headers: {
@@ -267,7 +286,7 @@ const CartPage = () => {
             });
           })
         );
-  
+
         const failed = responses.some((response) => !response.ok);
         if (failed) {
           throw new Error("Failed to record some items in purchase history.");
@@ -275,6 +294,7 @@ const CartPage = () => {
 
         setDiscounts([]);
         localStorage.removeItem("cart");
+        updateCount();
 
         Swal.fire({
           icon: "success",
@@ -308,7 +328,7 @@ const CartPage = () => {
       });
     }
   };
-  
+
   return (
     <Container
       style={{

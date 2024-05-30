@@ -12,6 +12,7 @@ interface Product {
   shop_name: string;
   price: number;
   categories: string[];
+  amonut: number;
 }
 
 export default function CategoryPage({ name }) {
@@ -54,6 +55,7 @@ export default function CategoryPage({ name }) {
             shop={product.shop_name}
             price={product.price}
             categories={product.categories}
+            amount={product.amount}
           />
         ))}
       </Box>

@@ -9,7 +9,6 @@ import {
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { useCartCount } from '../CartContext';  // Ensure you import useCartCount
 
-
 export default function CardItem({
   id,
   image,
@@ -18,6 +17,7 @@ export default function CardItem({
   shop,
   price,
   categories,
+  amount,
 }) {
   const isLoggedIn = localStorage.getItem("access_token") ? true : false;
   const { cartCount, updateCount } = useCartCount(); // Use the context
@@ -32,6 +32,14 @@ export default function CardItem({
     // If the item is in the cart, set quantity to its amount, otherwise set to 0
     return index !== -1 ? cart[index].amount : 0;
   });
+
+  useEffect(() => {
+    // Ensure the quantity does not exceed the amount
+    if (quantity > amount) {
+      setQuantity(amount);
+    }
+  }, [amount, quantity]);
+
   const handleCartUpdate = () => {
     // Get the current cart from local storage or initialize it to an empty array
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
@@ -58,8 +66,9 @@ export default function CardItem({
           shop: shop,
           image: image,
           amount: quantity,
-          discountedPrice:price,
-          originalPrice:price,
+          max_amount: amount, 
+          discountedPrice: price,
+          originalPrice: price,
         });
       }
       localStorage.setItem("cart", JSON.stringify(cart));
@@ -158,8 +167,16 @@ export default function CardItem({
             <input
               type="number"
               min="0"
-              value={quantity}
-              onChange={(e) => setQuantity(parseInt(e.target.value))}
+              max={amount}
+              value={quantity > amount ? amount : quantity}
+              onChange={(e) => {
+                const newQuantity = parseInt(e.target.value);
+                if (newQuantity > amount) {
+                  setQuantity(amount);
+                } else {
+                  setQuantity(newQuantity);
+                }
+              }}
               style={{ marginRight: "10px", width: "50px" }}
             />
             <Button variant="outlined" onClick={handleCartUpdate}>

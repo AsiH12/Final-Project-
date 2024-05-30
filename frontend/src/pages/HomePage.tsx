@@ -11,6 +11,7 @@ interface Product {
   shop_name: string;
   price: number;
   categories: string[];
+  amount: number;
 }
 
 // Define the interface for the CardItem component's props
@@ -61,6 +62,7 @@ export default function HomePage() {
             shop={product.shop_name}
             price={product.price}
             categories={product.categories}
+            amount={product.amount}
           />
         ))}
       </Box>

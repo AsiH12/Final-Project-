@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { StoreForm } from "../CreateStore";
 import Swal from "sweetalert2";
@@ -14,6 +14,32 @@ export default function RootLayOut() {
   const location = useLocation();
   const isLoggedIn = localStorage.getItem("access_token") ? true : false;
   const { cartCount, updateCount } = useCartCount();
+
+  useEffect(() => {
+    const checkTokenExpiry = () => {
+      const token = localStorage.getItem("access_token");
+      if (token) {
+        const tokenData = JSON.parse(atob(token.split('.')[1]));
+        const expiry = tokenData.exp * 1000; // Convert expiry time to milliseconds
+        if (Date.now() >= expiry) {
+          handleLogout();
+          Swal.fire({
+            icon: "error",
+            title: "Session Expired",
+            text: "Your session has expired. Please log in again.",
+            showConfirmButton: true,
+            customClass: {
+              container: "swal-dialog-custom",
+            },
+          });
+        }
+      }
+    };
+
+    const intervalId = setInterval(checkTokenExpiry, 300000); // Check every 5 minutes
+
+    return () => clearInterval(intervalId); // Clear interval on component unmount
+  }, []);
 
   const handleCreateStore = () => {
     setShowStoreForm(true);
@@ -36,6 +62,7 @@ export default function RootLayOut() {
   };
 
   const handleSubmit = async (data) => {
+    const token = localStorage.getItem("access_token"); // Ensure token is retrieved here
     try {
       const response = await fetch(`http://127.0.0.1:5000/shops/new`, {
         method: "POST",

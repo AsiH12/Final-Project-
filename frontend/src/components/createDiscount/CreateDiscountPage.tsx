@@ -300,6 +300,9 @@ export function CreateDiscountPage({ ownerView }) {
   const handleUpdateDiscount = async () => {
     const discountType = editDiscount.isProduct ? "products" : "shops";
     try {
+      console.log("Updating discount with ID:", editDiscount.id);
+      console.log("Discount data:", editDiscount);
+      
       const response = await fetch(
         `http://localhost:5000/discounts/${discountType}/${editDiscount.id}`,
         {
@@ -312,6 +315,7 @@ export function CreateDiscountPage({ ownerView }) {
         }
       );
       const data = await response.json();
+      
       if (response.ok) {
         if (editDiscount.isProduct) {
           if (ownerView) {
@@ -344,6 +348,7 @@ export function CreateDiscountPage({ ownerView }) {
         });
       }
     } catch (error) {
+      console.error("Error updating discount:", error);
       Swal.fire({
         icon: "error",
         title: "An error occurred while updating the discount",
@@ -353,17 +358,16 @@ export function CreateDiscountPage({ ownerView }) {
       });
     }
   };
+  
 
   const handleEdit = (row, isProduct) => {
-    console.log(row);
-    if (isProduct) {
-      setEditDiscount(row);
-    } else {
-      setEditDiscount(row);
-    }
-
+    console.log("Editing row:", row);
+    console.log("Is product discount:", isProduct);
+    
+    setEditDiscount({ ...row, isProduct });
     setOpenEditDialog(true);
   };
+  
 
   const handleDelete = async (id: number, isProductDiscount: boolean) => {
     const discountType = isProductDiscount ? "products" : "shops";
@@ -431,7 +435,7 @@ export function CreateDiscountPage({ ownerView }) {
       field: "categories",
       headerName: "Categories",
       width: 200,
-      valueFormatter: (params) => (params.value || []).join(", "),
+      valueFormatter: (params) => params.value,
     },
     { field: "discount_code", headerName: "Discount Code", width: 150 },
     { field: "discount", headerName: "Discount", width: 150 },
@@ -468,7 +472,7 @@ export function CreateDiscountPage({ ownerView }) {
       field: "categories",
       headerName: "Categories",
       width: 200,
-      valueFormatter: (params) => (params.value || []).join(", "),
+      valueFormatter: (params) => params.value,
     },
     { field: "discount_code", headerName: "Discount Code", width: 150 },
     { field: "discount", headerName: "Discount", width: 150 },

@@ -4,11 +4,8 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from db import get_db, close_db
 
 bp = Blueprint("discount_shopsRoutes", __name__, url_prefix="/discounts")
-CORS(bp)
 
 # Get all discounts for shops route
-
-
 @bp.route("/shops", methods=["GET"])
 def get_all_discounts_shops():
     try:
@@ -43,8 +40,6 @@ def get_all_discounts_shops():
         return jsonify({"error": str(e)}), 500
 
 # Get discount for shop by discount code route
-
-
 @bp.route("/shops/<string:discount_code>", methods=["GET"])
 def get_discount_shop_by_code(discount_code):
     try:
@@ -82,8 +77,6 @@ def get_discount_shop_by_code(discount_code):
         return jsonify({"error": str(e)}), 500
 
 # Get a discount for shop by ID route
-
-
 @bp.route("/shops/<int:discount_id>", methods=["GET"])
 def get_discount_shop_by_id(discount_id):
     try:
@@ -120,8 +113,6 @@ def get_discount_shop_by_id(discount_id):
         return jsonify({"error": str(e)}), 500
 
 # Get discounts for a specific shop by shop ID
-
-
 @bp.route("/shops/by_shop/<int:shop_id>", methods=["GET"])
 def get_discounts_by_shop_id(shop_id):
     try:
@@ -159,8 +150,6 @@ def get_discounts_by_shop_id(shop_id):
         return jsonify({"error": str(e)}), 500
 
 # Get discounts for a specific shop by shop name
-
-
 @bp.route("/shops/by_shop_name/<string:shop_name>", methods=["GET"])
 def get_discounts_by_shop_name(shop_name):
     try:
@@ -197,9 +186,9 @@ def get_discounts_by_shop_name(shop_name):
         close_db()
         return jsonify({"error": str(e)}), 500
 
-
+# Get all shop discounts for a user (owner/manager)
 @bp.route("/shops/user", methods=["GET"])
-@jwt_required
+@jwt_required()
 def get_shop_discounts_for_user():
     user_id = get_jwt_identity()
 
@@ -253,7 +242,7 @@ def get_shop_discounts_for_user():
         close_db()
         return jsonify({"error": str(e)}), 500
 
-
+# Create new discount for shop route
 @bp.route("/shops", methods=["POST"])
 @jwt_required()
 def create_discount_shop():
@@ -300,8 +289,6 @@ def create_discount_shop():
         return jsonify({"error": str(e)}), 500
 
 # Update a discount for shop by ID route
-
-
 @bp.route("/shops/<int:discount_id>", methods=["PATCH"])
 @jwt_required()
 def update_discount_shop(discount_id):
@@ -391,8 +378,6 @@ def update_discount_shop(discount_id):
         return jsonify({"error": str(e)}), 500
 
 # Delete a discount for shop by ID route
-
-
 @bp.route("/shops/<int:discount_id>", methods=["DELETE"])
 @jwt_required()
 def delete_discount_shop(discount_id):

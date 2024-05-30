@@ -8,3 +8,13 @@ export type User = {
   };
 
 
+  export type Shop = {
+    id?: number;
+    name: string;
+    description: string;
+    owner_id: number;
+    categories: string[];
+    managers: string[];
+  };
+
+

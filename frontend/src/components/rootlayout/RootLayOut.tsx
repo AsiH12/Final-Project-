@@ -19,7 +19,7 @@ export default function RootLayOut() {
     const checkTokenExpiry = () => {
       const token = localStorage.getItem("access_token");
       if (token) {
-        const tokenData = JSON.parse(atob(token.split('.')[1]));
+        const tokenData = JSON.parse(atob(token.split(".")[1]));
         const expiry = tokenData.exp * 1000; // Convert expiry time to milliseconds
         if (Date.now() >= expiry) {
           handleLogout();
@@ -59,47 +59,6 @@ export default function RootLayOut() {
     localStorage.removeItem("username");
     localStorage.removeItem("user_id");
     navigate("/login");
-  };
-
-  const handleSubmit = async (data) => {
-    const token = localStorage.getItem("access_token"); // Ensure token is retrieved here
-    try {
-      const response = await fetch(`http://127.0.0.1:5000/shops/new`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (response.ok) {
-        // console.log(response)
-        Swal.fire({
-          icon: "success",
-          title: "Shop Created Successfully!",
-          showConfirmButton: false,
-          timer: 2000,
-          customClass: {
-            container: "swal-dialog-custom",
-          },
-        });
-        setShowStoreForm(false);
-      } else {
-        throw new Error("Invalid credentials");
-      }
-    } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Failed to create new shop",
-        showConfirmButton: false,
-        timer: 2000,
-        customClass: {
-          container: "swal-dialog-custom",
-        },
-      });
-      console.error("Error creating a shop: " + error.message);
-    }
   };
 
   return (
@@ -277,7 +236,6 @@ export default function RootLayOut() {
         <StoreForm
           open={showStoreForm}
           onClose={() => setShowStoreForm(false)}
-          onSubmit={handleSubmit}
         />
       )}
     </div>

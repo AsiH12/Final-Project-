@@ -167,7 +167,7 @@ def create_new_shop():
     data = request.get_json()
     name = data.get("name")
     description = data.get("description")
-    owner_id = data.get("owner_id")
+    owner_id = get_jwt_identity()
     categories = data.get("categories", [])
     managers = data.get("managers", [])
 

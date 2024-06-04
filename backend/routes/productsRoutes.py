@@ -233,7 +233,6 @@ def create_new_product():
         )
 
     db.commit()
-    close_db()
 
     cursor = db.cursor()
     cursor.execute("""

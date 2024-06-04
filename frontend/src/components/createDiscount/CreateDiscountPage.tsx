@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   TextField,
@@ -21,6 +21,7 @@ import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Edit, Delete } from "@mui/icons-material";
 import Swal from "sweetalert2";
 import { useLocation, useParams } from "react-router-dom";
+import { useForm, Controller } from "react-hook-form";
 import "./CreateDiscountPage.css";
 
 export function CreateDiscountPage({ ownerView }) {
@@ -42,9 +43,7 @@ export function CreateDiscountPage({ ownerView }) {
     any | null
   >(null);
 
-  const discountCodeRef = useRef<HTMLInputElement>(null);
-  const expirationDateRef = useRef<HTMLInputElement>(null);
-  const minimumAmountRef = useRef<HTMLInputElement>(null);
+  const { control, handleSubmit, formState: { errors }, setValue, reset } = useForm();
   const [discount, setDiscount] = useState<number>(1);
   const [allowOthers, setAllowOthers] = useState<boolean>(false);
   const [openEditDialog, setOpenEditDialog] = useState<boolean>(false);
@@ -165,22 +164,7 @@ export function CreateDiscountPage({ ownerView }) {
     setProducts(data.products);
   };
 
-  const handleCreateDiscountShop = async () => {
-    const discountCode = discountCodeRef.current?.value || "";
-    const expirationDate = expirationDateRef.current?.value || "";
-    const minimumAmount = minimumAmountRef.current?.value || "";
-
-    if (!selectedShop || !discountCode || !expirationDate || !minimumAmount) {
-      Swal.fire({
-        icon: "error",
-        title: "All fields are required",
-        customClass: {
-          container: "swal-dialog-custom",
-        },
-      });
-      return;
-    }
-
+  const handleCreateDiscountShop = async (data: any) => {
     try {
       const response = await fetch("http://localhost:5000/discounts/shops", {
         method: "POST",
@@ -189,11 +173,11 @@ export function CreateDiscountPage({ ownerView }) {
           Authorization: `Bearer ${token}`, // Send JWT token
         },
         body: JSON.stringify({
-          shop_id: selectedShop,
-          discount_code: discountCode,
+          shop_id: data.selectedShop,
+          discount_code: data.discountCode,
           discount: discount,
-          expiration_date: expirationDate,
-          minimum_amount: minimumAmount,
+          expiration_date: data.expirationDate,
+          minimum_amount: data.minimumAmount,
           allow_others: allowOthers,
         }),
       });
@@ -237,11 +221,7 @@ export function CreateDiscountPage({ ownerView }) {
     }
   };
 
-  const handleCreateDiscountProduct = async () => {
-    const discountCode = discountCodeRef.current?.value || "";
-    const expirationDate = expirationDateRef.current?.value || "";
-    const minimumAmount = minimumAmountRef.current?.value || "";
-
+  const handleCreateDiscountProduct = async (data: any) => {
     try {
       const response = await fetch("http://localhost:5000/discounts/products", {
         method: "POST",
@@ -250,11 +230,11 @@ export function CreateDiscountPage({ ownerView }) {
           Authorization: `Bearer ${token}`, // Send JWT token
         },
         body: JSON.stringify({
-          product_id: selectedProduct,
-          discount_code: discountCode,
+          product_id: data.selectedProduct,
+          discount_code: data.discountCode,
           discount: discount,
-          expiration_date: expirationDate,
-          minimum_amount: minimumAmount,
+          expiration_date: data.expirationDate,
+          minimum_amount: data.minimumAmount,
           allow_others: allowOthers,
         }),
       });
@@ -302,7 +282,7 @@ export function CreateDiscountPage({ ownerView }) {
     try {
       console.log("Updating discount with ID:", editDiscount.id);
       console.log("Discount data:", editDiscount);
-      
+
       const response = await fetch(
         `http://localhost:5000/discounts/${discountType}/${editDiscount.id}`,
         {
@@ -315,7 +295,7 @@ export function CreateDiscountPage({ ownerView }) {
         }
       );
       const data = await response.json();
-      
+
       if (response.ok) {
         if (editDiscount.isProduct) {
           if (ownerView) {
@@ -358,16 +338,14 @@ export function CreateDiscountPage({ ownerView }) {
       });
     }
   };
-  
 
   const handleEdit = (row, isProduct) => {
     console.log("Editing row:", row);
     console.log("Is product discount:", isProduct);
-    
+
     setEditDiscount({ ...row, isProduct });
     setOpenEditDialog(true);
   };
-  
 
   const handleDelete = async (id: number, isProductDiscount: boolean) => {
     const discountType = isProductDiscount ? "products" : "shops";
@@ -419,7 +397,7 @@ export function CreateDiscountPage({ ownerView }) {
       console.error(`Error deleting ${discountType} discount:`, error);
       Swal.fire({
         icon: "error",
-        title: "An errro occured while trying to delete discount",
+        title: "An error occurred while trying to delete discount",
         customClass: {
           container: "swal-dialog-custom",
         },
@@ -428,7 +406,6 @@ export function CreateDiscountPage({ ownerView }) {
   };
 
   const productDiscountColumns: GridColDef[] = [
-    // { field: "id", headerName: "ID", width: 90 },
     { field: "shop_name", headerName: "Shop", width: 150 },
     { field: "product_name", headerName: "Product", width: 150 },
     {
@@ -465,8 +442,6 @@ export function CreateDiscountPage({ ownerView }) {
   ];
 
   const shopDiscountColumns: GridColDef[] = [
-    // { field: "id", headerName: "ID", width: 90 },
-    // { field: "shop_id", headerName: "Shop ID", width: 150 },
     { field: "shop_name", headerName: "Shop", width: 150 },
     {
       field: "categories",
@@ -509,7 +484,10 @@ export function CreateDiscountPage({ ownerView }) {
       <Button
         variant="contained"
         color="primary"
-        onClick={() => setOpenShopDialog(true)}
+        onClick={() => {
+          setOpenShopDialog(true);
+          reset();
+        }}
       >
         Create Shop Discount
       </Button>
@@ -537,123 +515,163 @@ export function CreateDiscountPage({ ownerView }) {
       <Dialog open={openShopDialog} onClose={() => setOpenShopDialog(false)}>
         <DialogTitle>Create New Shop Discount</DialogTitle>
         <Divider />
-        <DialogContent>
-          <Box
-            className="create-discount-form"
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            {ownerView ? (
-              <FormControl fullWidth margin="normal">
-                <InputLabel>Shop</InputLabel>
-                <Select
-                  value={selectedShop}
-                  onChange={(e) => {
-                    setSelectedShop(e.target.value as string);
-                  }}
-                  displayEmpty
+        <form onSubmit={handleSubmit(handleCreateDiscountShop)}>
+          <DialogContent>
+            <Box
+              className="create-discount-form"
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              {ownerView ? (
+                <Controller
+                  name="selectedShop"
+                  control={control}
+                  rules={{ required: "required" }}
+                  render={({ field }) => (
+                    <FormControl fullWidth margin="normal" error={!!errors.selectedShop}>
+                      <InputLabel>Shop</InputLabel>
+                      <Select
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          setSelectedShop(e.target.value as string);
+                        }}
+                        displayEmpty
+                        fullWidth
+                      >
+                        <MenuItem value="" disabled>
+                          Select a shop
+                        </MenuItem>
+                        {shops &&
+                          shops.map((shop) => (
+                            <MenuItem key={shop.id} value={shop.id}>
+                              {shop.name}
+                            </MenuItem>
+                          ))}
+                      </Select>
+                      {errors.selectedShop && (
+                        <Typography variant="caption" color="error">
+                          {errors.selectedShop.message}
+                        </Typography>
+                      )}
+                    </FormControl>
+                  )}
+                />
+              ) : (
+                <TextField
+                  sx={{ width: "400px", background: "white" }}
+                  id="shopName"
+                  label="Shop Name"
+                  variant="outlined"
+                  value={shop_name}
+                  disabled
+                  className="input-container"
                   fullWidth
-                >
-                  <MenuItem value="" disabled>
-                    Select a shop
-                  </MenuItem>
-                  {shops &&
-                    shops.map((shop) => (
-                      <MenuItem key={shop.id} value={shop.id}>
-                        {shop.name}
-                      </MenuItem>
-                    ))}
-                </Select>
-              </FormControl>
-            ) : (
+                  margin="normal"
+                />
+              )}
+              <Controller
+                name="discountCode"
+                control={control}
+                rules={{ required: "required" }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    sx={{ width: "400px", background: "white" }}
+                    id="discountCode"
+                    label="Discount Code"
+                    variant="outlined"
+                    className="input-container"
+                    fullWidth
+                    margin="normal"
+                    error={!!errors.discountCode}
+                    helperText={errors.discountCode ? errors.discountCode.message : null}
+                  />
+                )}
+              />
               <TextField
                 sx={{ width: "400px", background: "white" }}
-                id="shopName"
-                label="Shop Name"
+                id="discount"
+                label="Discount (1-100)"
+                type="number"
+                inputProps={{ min: 1, max: 100 }}
                 variant="outlined"
-                value={shop_name}
-                disabled
+                value={discount}
+                onChange={(e) => setDiscount(Number(e.target.value))}
                 className="input-container"
                 fullWidth
                 margin="normal"
               />
-            )}
-            <TextField
-              sx={{ width: "400px", background: "white" }}
-              id="discountCode"
-              label="Discount Code"
-              variant="outlined"
-              inputRef={discountCodeRef}
-              className="input-container"
-              fullWidth
-              margin="normal"
-            />
-            {/* Discount Percentage Input */}
-            <TextField
-              sx={{ width: "400px", background: "white" }}
-              id="discount"
-              label="Discount (1-100)"
-              type="number"
-              inputProps={{ min: 1, max: 100 }}
-              variant="outlined"
-              value={discount}
-              onChange={(e) => setDiscount(Number(e.target.value))}
-              className="input-container"
-              fullWidth
-              margin="normal"
-            />
-            <TextField
-              sx={{ width: "400px", background: "white" }}
-              id="expirationDate"
-              label="Expiration Date"
-              variant="outlined"
-              type="date"
-              InputLabelProps={{
-                shrink: true,
-              }}
-              inputRef={expirationDateRef}
-              className="input-container"
-              fullWidth
-              margin="normal"
-            />
-            <TextField
-              sx={{ width: "400px", background: "white" }}
-              id="minimumAmount"
-              label="Minimum Amount"
-              variant="outlined"
-              inputRef={minimumAmountRef}
-              className="input-container"
-              fullWidth
-              margin="normal"
-            />
-            {/* Allow Others Checkbox */}
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={allowOthers}
-                  onChange={(e) => setAllowOthers(e.target.checked)}
-                  color="primary"
-                />
-              }
-              label="Allow Others"
-              className="input-container"
-              sx={{ marginTop: 2 }}
-            />
-          </Box>
-        </DialogContent>
-        <Divider />
-        <DialogActions>
-          <Button onClick={() => setOpenShopDialog(false)} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handleCreateDiscountShop} color="primary">
-            Create
-          </Button>
-        </DialogActions>
+              <Controller
+                name="expirationDate"
+                control={control}
+                rules={{ required: "required" }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    sx={{ width: "400px", background: "white" }}
+                    id="expirationDate"
+                    label="Expiration Date"
+                    variant="outlined"
+                    type="date"
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    className="input-container"
+                    fullWidth
+                    margin="normal"
+                    error={!!errors.expirationDate}
+                    helperText={errors.expirationDate ? errors.expirationDate.message : null}
+                  />
+                )}
+              />
+              <Controller
+                name="minimumAmount"
+                control={control}
+                rules={{ required: "required" }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    sx={{ width: "400px", background: "white" }}
+                    id="minimumAmount"
+                    label="Minimum Amount"
+                    variant="outlined"
+                    className="input-container"
+                    fullWidth
+                    margin="normal"
+                    error={!!errors.minimumAmount}
+                    helperText={errors.minimumAmount ? errors.minimumAmount.message : null}
+                  />
+                )}
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={allowOthers}
+                    onChange={(e) => setAllowOthers(e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label="Allow Others"
+                className="input-container"
+                sx={{ marginTop: 2 }}
+              />
+            </Box>
+          </DialogContent>
+          <Divider />
+          <DialogActions>
+            <Button onClick={() => setOpenShopDialog(false)} color="primary">
+              Cancel
+            </Button>
+            <Button type="submit" color="primary">
+              Create
+            </Button>
+          </DialogActions>
+        </form>
       </Dialog>
 
       <h2 className="manage-store-header">
@@ -662,7 +680,10 @@ export function CreateDiscountPage({ ownerView }) {
       <Button
         variant="contained"
         color="primary"
-        onClick={() => setOpenProductDialog(true)}
+        onClick={() => {
+          setOpenProductDialog(true);
+          reset();
+        }}
       >
         Create Product Discount
       </Button>
@@ -693,158 +714,221 @@ export function CreateDiscountPage({ ownerView }) {
       >
         <DialogTitle>Create New Product Discount</DialogTitle>
         <Divider />
-        <DialogContent>
-          <Box
-            className="create-discount-form"
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            {ownerView ? (
-              <>
-                <FormControl fullWidth margin="normal">
-                  <InputLabel>Shop</InputLabel>
-                  <Select
-                    value={selectedShop}
-                    onChange={async (e) => {
-                      const shopId = e.target.value as string;
-                      setSelectedShop(shopId);
-                      await fetchProductsByShop(shopId);
-                    }}
-                    displayEmpty
+        <form onSubmit={handleSubmit(handleCreateDiscountProduct)}>
+          <DialogContent>
+            <Box
+              className="create-discount-form"
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              {ownerView ? (
+                <>
+                  <Controller
+                    name="selectedShop"
+                    control={control}
+                    rules={{ required: "required" }}
+                    render={({ field }) => (
+                      <FormControl fullWidth margin="normal" error={!!errors.selectedShop}>
+                        <InputLabel>Shop</InputLabel>
+                        <Select
+                          {...field}
+                          onChange={async (e) => {
+                            const shopId = e.target.value as string;
+                            field.onChange(e);
+                            setSelectedShop(shopId);
+                            await fetchProductsByShop(shopId);
+                          }}
+                          displayEmpty
+                          fullWidth
+                        >
+                          <MenuItem value="" disabled>
+                            Select a shop
+                          </MenuItem>
+                          {shops &&
+                            shops.map((shop) => (
+                              <MenuItem key={shop.id} value={shop.id}>
+                                {shop.name}
+                              </MenuItem>
+                            ))}
+                        </Select>
+                        {errors.selectedShop && (
+                          <Typography variant="caption" color="error">
+                            {errors.selectedShop.message}
+                          </Typography>
+                        )}
+                      </FormControl>
+                    )}
+                  />
+                  <Controller
+                    name="selectedProduct"
+                    control={control}
+                    rules={{ required: "required" }}
+                    render={({ field }) => (
+                      <FormControl fullWidth margin="normal" error={!!errors.selectedProduct}>
+                        <InputLabel>Product</InputLabel>
+                        <Select
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            setSelectedProduct(e.target.value as string);
+                          }}
+                          displayEmpty
+                          fullWidth
+                          disabled={!selectedShop}
+                        >
+                          <MenuItem value="" disabled>
+                            Select a product
+                          </MenuItem>
+                          {products &&
+                            products.map((product) => (
+                              <MenuItem key={product.id} value={product.id}>
+                                {product.name}
+                              </MenuItem>
+                            ))}
+                        </Select>
+                        {errors.selectedProduct && (
+                          <Typography variant="caption" color="error">
+                            {errors.selectedProduct.message}
+                          </Typography>
+                        )}
+                      </FormControl>
+                    )}
+                  />
+                </>
+              ) : (
+                <Controller
+                  name="selectedProduct"
+                  control={control}
+                  rules={{ required: "required" }}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      sx={{ width: "400px", background: "white" }}
+                      id="productName"
+                      label="Product Name"
+                      variant="outlined"
+                      select
+                      className="input-container"
+                      fullWidth
+                      margin="normal"
+                      error={!!errors.selectedProduct}
+                      helperText={errors.selectedProduct ? errors.selectedProduct.message : null}
+                    >
+                      <MenuItem value="" disabled>
+                        Select a product
+                      </MenuItem>
+                      {products &&
+                        products.map((product) => (
+                          <MenuItem key={product.id} value={product.id}>
+                            {product.name}
+                          </MenuItem>
+                        ))}
+                    </TextField>
+                  )}
+                />
+              )}
+              <Controller
+                name="discountCode"
+                control={control}
+                rules={{ required: "required" }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    sx={{ width: "400px", background: "white" }}
+                    id="discountCode"
+                    label="Discount Code"
+                    variant="outlined"
+                    className="input-container"
                     fullWidth
-                  >
-                    <MenuItem value="" disabled>
-                      Select a shop
-                    </MenuItem>
-                    {shops &&
-                      shops.map((shop) => (
-                        <MenuItem key={shop.id} value={shop.id}>
-                          {shop.name}
-                        </MenuItem>
-                      ))}
-                  </Select>
-                </FormControl>
-                <FormControl fullWidth margin="normal">
-                  <InputLabel>Product</InputLabel>
-                  <Select
-                    value={selectedProduct}
-                    onChange={(e) =>
-                      setSelectedProduct(e.target.value as string)
-                    }
-                    displayEmpty
-                    fullWidth
-                    disabled={!selectedShop}
-                  >
-                    <MenuItem value="" disabled>
-                      Select a product
-                    </MenuItem>
-                    {products &&
-                      products.map((product) => (
-                        <MenuItem key={product.id} value={product.id}>
-                          {product.name}
-                        </MenuItem>
-                      ))}
-                  </Select>
-                </FormControl>
-              </>
-            ) : (
+                    margin="normal"
+                    error={!!errors.discountCode}
+                    helperText={errors.discountCode ? errors.discountCode.message : null}
+                  />
+                )}
+              />
               <TextField
                 sx={{ width: "400px", background: "white" }}
-                id="productName"
-                label="Product Name"
+                id="discount"
+                label="Discount (1-100)"
+                type="number"
+                inputProps={{ min: 1, max: 100 }}
                 variant="outlined"
-                select
-                value={selectedProduct}
-                onChange={(e) => setSelectedProduct(e.target.value as string)}
+                value={discount}
+                onChange={(e) => setDiscount(Number(e.target.value))}
                 className="input-container"
                 fullWidth
                 margin="normal"
-              >
-                <MenuItem value="" disabled>
-                  Select a product
-                </MenuItem>
-                {products &&
-                  products.map((product) => (
-                    <MenuItem key={product.id} value={product.id}>
-                      {product.name}
-                    </MenuItem>
-                  ))}
-              </TextField>
-            )}
-            <TextField
-              sx={{ width: "400px", background: "white" }}
-              id="discountCode"
-              label="Discount Code"
-              variant="outlined"
-              inputRef={discountCodeRef}
-              className="input-container"
-              fullWidth
-              margin="normal"
-            />
-            <TextField
-              sx={{ width: "400px", background: "white" }}
-              id="discount"
-              label="Discount (1-100)"
-              type="number"
-              inputProps={{ min: 1, max: 100 }}
-              variant="outlined"
-              value={discount}
-              onChange={(e) => setDiscount(Number(e.target.value))}
-              className="input-container"
-              fullWidth
-              margin="normal"
-            />
-            <TextField
-              sx={{ width: "400px", background: "white" }}
-              id="expirationDate"
-              label="Expiration Date"
-              variant="outlined"
-              type="date"
-              InputLabelProps={{
-                shrink: true,
-              }}
-              inputRef={expirationDateRef}
-              className="input-container"
-              fullWidth
-              margin="normal"
-            />
-            <TextField
-              sx={{ width: "400px", background: "white" }}
-              id="minimumAmount"
-              label="Minimum Amount"
-              variant="outlined"
-              inputRef={minimumAmountRef}
-              className="input-container"
-              fullWidth
-              margin="normal"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={allowOthers}
-                  onChange={(e) => setAllowOthers(e.target.checked)}
-                  color="primary"
-                />
-              }
-              label="Allow Others"
-              className="input-container"
-              sx={{ marginTop: 2 }}
-            />
-          </Box>
-        </DialogContent>
-        <Divider />
-        <DialogActions>
-          <Button onClick={() => setOpenProductDialog(false)} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handleCreateDiscountProduct} color="primary">
-            Create
-          </Button>
-        </DialogActions>
+              />
+              <Controller
+                name="expirationDate"
+                control={control}
+                rules={{ required: "required" }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    sx={{ width: "400px", background: "white" }}
+                    id="expirationDate"
+                    label="Expiration Date"
+                    variant="outlined"
+                    type="date"
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    className="input-container"
+                    fullWidth
+                    margin="normal"
+                    error={!!errors.expirationDate}
+                    helperText={errors.expirationDate ? errors.expirationDate.message : null}
+                  />
+                )}
+              />
+              <Controller
+                name="minimumAmount"
+                control={control}
+                rules={{ required: "required" }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    sx={{ width: "400px", background: "white" }}
+                    id="minimumAmount"
+                    label="Minimum Amount"
+                    variant="outlined"
+                    className="input-container"
+                    fullWidth
+                    margin="normal"
+                    error={!!errors.minimumAmount}
+                    helperText={errors.minimumAmount ? errors.minimumAmount.message : null}
+                  />
+                )}
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={allowOthers}
+                    onChange={(e) => setAllowOthers(e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label="Allow Others"
+                className="input-container"
+                sx={{ marginTop: 2 }}
+              />
+            </Box>
+          </DialogContent>
+          <Divider />
+          <DialogActions>
+            <Button onClick={() => setOpenProductDialog(false)} color="primary">
+              Cancel
+            </Button>
+            <Button type="submit" color="primary">
+              Create
+            </Button>
+          </DialogActions>
+        </form>
       </Dialog>
       <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)}>
         <DialogTitle>Edit Discount</DialogTitle>

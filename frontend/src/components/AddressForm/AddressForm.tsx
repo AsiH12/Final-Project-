@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   TextField,
@@ -13,6 +13,7 @@ import { DataGrid, GridColDef, GridActionsCellItem } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Swal from "sweetalert2";
+import { useForm, Controller } from "react-hook-form";
 import "./AddressForm.css";
 
 interface AddressFormProps {
@@ -28,9 +29,7 @@ interface AddressFormData {
 }
 
 export function AddressForm({ onSaveAddress }: AddressFormProps) {
-  const addressRef = useRef<HTMLInputElement>(null);
-  const cityRef = useRef<HTMLInputElement>(null);
-  const countryRef = useRef<HTMLInputElement>(null);
+  const { control, handleSubmit, formState: { errors } } = useForm<AddressFormData>();
   const [open, setOpen] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [addresses, setAddresses] = useState<AddressFormData[]>([]);
@@ -48,7 +47,7 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
         throw new Error("Please log in to get addresses.");
       }
 
-      const response = await fetch("http://127.0.0.1:5000/addresses", {
+      const response = await fetch("http://localhost:5000/addresses", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -65,23 +64,10 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
     );
   }, []);
 
-  const handleSaveAddress = async () => {
-    const address = addressRef.current?.value || "";
-    const city = cityRef.current?.value || "";
-    const country = countryRef.current?.value || "";
-    const user_id = 1;
-
-    const data = {
-      id: currentAddress?.id || 0,
-      address,
-      city,
-      country,
-      user_id,
-    };
-
+  const handleSaveAddress = async (data: AddressFormData) => {
     try {
       const response = await fetch(
-        `http://127.0.0.1:5000/addresses${
+        `http://localhost:5000/addresses${
           isEditing ? `/${currentAddress?.id}` : ""
         }`,
         {
@@ -123,7 +109,7 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
   };
 
   const handleDeleteClick = async (id: number) => {
-    const response = await fetch(`http://127.0.0.1:5000/addresses/${id}`, {
+    const response = await fetch(`http://localhost:5000/addresses/${id}`, {
       method: "DELETE",
     });
 
@@ -208,62 +194,91 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>{isEditing ? "Edit Address" : "Add Address"}</DialogTitle>
         <Divider />
-        <DialogContent>
-          <Box
-            className="address-form"
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <TextField
-              sx={{ width: "400px", background: "white" }}
-              id="address"
-              label="Address"
-              variant="outlined"
-              inputRef={addressRef}
-              fullWidth
-              margin="normal"
-              defaultValue={currentAddress?.address || ""}
-            />
-            <TextField
-              sx={{ width: "400px", background: "white" }}
-              id="city"
-              label="City"
-              variant="outlined"
-              inputRef={cityRef}
-              fullWidth
-              margin="normal"
-              defaultValue={currentAddress?.city || ""}
-            />
-            <TextField
-              sx={{ width: "400px", background: "white" }}
-              id="country"
-              label="Country"
-              variant="outlined"
-              inputRef={countryRef}
-              fullWidth
-              margin="normal"
-              defaultValue={currentAddress?.country || ""}
-            />
-          </Box>
-        </DialogContent>
-        <Divider />
-        <DialogActions>
-          <Button onClick={handleClose} color="primary">
-            Cancel
-          </Button>
-          {isEditing && (
-            <Button onClick={handleDialogDelete} color="secondary">
-              Delete
+        <form onSubmit={handleSubmit(handleSaveAddress)}>
+          <DialogContent>
+            <Box
+              className="address-form"
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Controller
+                name="address"
+                control={control}
+                defaultValue={currentAddress?.address || ""}
+                rules={{ required: "required" }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    sx={{ width: "400px", background: "white" }}
+                    id="address"
+                    label="Address"
+                    variant="outlined"
+                    fullWidth
+                    margin="normal"
+                    error={!!errors.address}
+                    helperText={errors.address ? errors.address.message : null}
+                  />
+                )}
+              />
+              <Controller
+                name="city"
+                control={control}
+                defaultValue={currentAddress?.city || ""}
+                rules={{ required: "required" }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    sx={{ width: "400px", background: "white" }}
+                    id="city"
+                    label="City"
+                    variant="outlined"
+                    fullWidth
+                    margin="normal"
+                    error={!!errors.city}
+                    helperText={errors.city ? errors.city.message : null}
+                  />
+                )}
+              />
+              <Controller
+                name="country"
+                control={control}
+                defaultValue={currentAddress?.country || ""}
+                rules={{ required: "required" }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    sx={{ width: "400px", background: "white" }}
+                    id="country"
+                    label="Country"
+                    variant="outlined"
+                    fullWidth
+                    margin="normal"
+                    error={!!errors.country}
+                    helperText={errors.country ? errors.country.message : null}
+                  />
+                )}
+              />
+            </Box>
+          </DialogContent>
+          <Divider />
+          <DialogActions>
+            <Button onClick={handleClose} color="primary">
+              Cancel
             </Button>
-          )}
-          <Button onClick={handleSaveAddress} color="primary">
-            Save Address
-          </Button>
-        </DialogActions>
+            {isEditing && (
+              <Button onClick={handleDialogDelete} color="secondary">
+                Delete
+              </Button>
+            )}
+            <Button type="submit" color="primary">
+              Save Address
+            </Button>
+          </DialogActions>
+        </form>
       </Dialog>
     </div>
   );

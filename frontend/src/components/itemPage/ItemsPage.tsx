@@ -40,13 +40,13 @@ interface Shop {
   role: string;
 }
 
-export function ItemsPage({ ownerView }) {
+export function ItemsPage({ ownerView }: { ownerView: boolean }) {
   const [items, setItems] = useState<Item[]>([]);
   const [open, setOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentItem, setCurrentItem] = useState<Item | null>(null);
   const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
-  const { shop_name } = useParams();
+  const { shop_name } = useParams<{ shop_name: string }>();
   const location = useLocation();
 
   const { storeId, storeName } = location.state || {};
@@ -157,7 +157,7 @@ export function ItemsPage({ ownerView }) {
         Swal.fire({
           icon: "error",
           title: "Error!",
-          text: "Shop is required.",
+          text: "required.",
           customClass: {
             container: "swal-dialog-custom",
           },
@@ -198,37 +198,24 @@ export function ItemsPage({ ownerView }) {
               item.id === currentItem.id ? currentItem : item
             )
           );
-          Swal.fire({
-            icon: "success",
-            title: "Updated!",
-            text: "Item has been updated successfully.",
-            customClass: {
-              container: "swal-dialog-custom",
-            },
-          });
         } else {
           const newItem = await response.json();
           setItems((prevItems) => [...prevItems, newItem]);
-          Swal.fire({
-            icon: "success",
-            title: "Created!",
-            text: "Item has been created successfully.",
-            customClass: {
-              container: "swal-dialog-custom",
-            },
-          });
         }
-        handleClose();
-      } else {
-        console.error("Error saving item");
         Swal.fire({
-          icon: "error",
-          title: "Error!",
-          text: "Error saving item.",
+          icon: "success",
+          title: isEditing ? "Edited!" : "Created!",
+          text:
+            "Item has been " +
+            (isEditing ? "edited" : "created") +
+            " successfully.",
           customClass: {
             container: "swal-dialog-custom",
           },
         });
+        handleClose();
+      } else {
+        console.error("Error saving item");
       }
     }
   };
@@ -359,6 +346,7 @@ export function ItemsPage({ ownerView }) {
             label="Name"
             type="text"
             fullWidth
+            required
             value={currentItem?.name || ""}
             onChange={handleChange}
           />
@@ -368,6 +356,7 @@ export function ItemsPage({ ownerView }) {
             label="Description"
             type="text"
             fullWidth
+            required
             value={currentItem?.description || ""}
             onChange={handleChange}
           />
@@ -378,7 +367,7 @@ export function ItemsPage({ ownerView }) {
               value={selectedShop}
               onChange={handleShopChange}
               renderInput={(params) => (
-                <TextField {...params} label="Shop Name" fullWidth />
+                <TextField {...params} label="Shop Name" fullWidth required />
               )}
             />
           ) : (
@@ -399,6 +388,7 @@ export function ItemsPage({ ownerView }) {
             label="Price"
             type="number"
             fullWidth
+            required
             value={currentItem?.price || ""}
             onChange={handleChange}
           />
@@ -408,6 +398,7 @@ export function ItemsPage({ ownerView }) {
             label="Amount"
             type="number"
             fullWidth
+            required
             value={currentItem?.amount || ""}
             onChange={handleChange}
           />
@@ -424,9 +415,13 @@ export function ItemsPage({ ownerView }) {
             multiple
             options={allCategories}
             getOptionLabel={(option) => option.name}
-            value={allCategories.filter((category) =>
-              currentItem?.categories.includes(category.name)
-            )}
+            value={
+              currentItem
+                ? allCategories.filter((category) =>
+                    currentItem.categories.includes(category.name)
+                  )
+                : []
+            }
             onChange={handleCategoryChange}
             renderTags={(value: Category[], getTagProps) =>
               value.map((option, index) => (
@@ -443,6 +438,7 @@ export function ItemsPage({ ownerView }) {
                 variant="outlined"
                 label="Categories"
                 placeholder="Select categories"
+                required
               />
             )}
           />
@@ -456,7 +452,16 @@ export function ItemsPage({ ownerView }) {
               Delete
             </Button>
           )}
-          <Button onClick={handleSave} color="primary">
+          <Button
+            onClick={handleSave}
+            color="primary"
+            disabled={
+              !currentItem?.name ||
+              !currentItem?.description ||
+              !currentItem?.price ||
+              !currentItem?.amount
+            }
+          >
             Save
           </Button>
         </DialogActions>

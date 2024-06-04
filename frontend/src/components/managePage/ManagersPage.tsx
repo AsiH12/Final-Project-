@@ -10,12 +10,14 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  TextField,
 } from "@mui/material";
 import { DataGrid, GridColDef, GridActionsCellItem } from "@mui/x-data-grid";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Swal from "sweetalert2";
 import "./ManagersPage.css";
 import { useLocation, useParams } from "react-router-dom";
+import { useForm, Controller } from "react-hook-form";
 
 interface Manager {
   id: number;
@@ -38,15 +40,13 @@ interface Shop {
   role: string;
 }
 
-export function ManagersPage({ ownerView }) {
+export function ManagersPage({ ownerView }: { ownerView: boolean }) {
   const [managers, setManagers] = useState<Manager[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [shops, setShops] = useState<Shop[]>([]);
   const [open, setOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<string | null>(null);
-  const [selectedShop, setSelectedShop] = useState<string | null>(null);
   const location = useLocation();
-  const { shop_name } = useParams();
+  const { shop_name } = useParams<{ shop_name: string }>();
   const { storeId, role, owner } = location.state || {
     storeId: null,
     role: null,
@@ -54,6 +54,15 @@ export function ManagersPage({ ownerView }) {
   };
   const logged_user_id = localStorage.getItem("user_id");
   const token = localStorage.getItem("access_token");
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    reset,
+  } = useForm();
+
   const fetchManagers = async () => {
     const url = ownerView
       ? `http://localhost:5000/managers/owner`
@@ -127,8 +136,7 @@ export function ManagersPage({ ownerView }) {
     }
   };
 
-  const handleAddManager = async () => {
-    if (!selectedUser || !selectedShop) return;
+  const handleAddManager = async (data: { selectedUser: string; selectedShop: string }) => {
     try {
       const response = await fetch(`http://localhost:5000/managers`, {
         method: "POST",
@@ -137,12 +145,14 @@ export function ManagersPage({ ownerView }) {
           Authorization: `Bearer ${token}`, // Send JWT token
         },
         body: JSON.stringify({
-          manager_id: selectedUser,
-          shop_id: selectedShop,
+          manager_id: data.selectedUser,
+          shop_id: data.selectedShop,
         }),
       });
       if (response.ok) {
         await fetchManagers();
+        setOpen(false);
+        reset();
         Swal.fire({
           icon: "success",
           title: "Added!",
@@ -151,7 +161,6 @@ export function ManagersPage({ ownerView }) {
             container: "swal-dialog-custom",
           },
         });
-        setOpen(false);
       } else {
         console.error("Error adding manager");
         Swal.fire({
@@ -168,7 +177,7 @@ export function ManagersPage({ ownerView }) {
     }
   };
 
-  const fetchUsers = async (shopName) => {
+  const fetchUsers = async (shopName: string) => {
     const url = `http://localhost:5000/users/shop_name/${shopName}`;
     const response = await fetch(url, {
       method: "GET",
@@ -188,10 +197,10 @@ export function ManagersPage({ ownerView }) {
     setOpen(true);
   };
 
-  const handleShopChange = async (event) => {
-    const shopId = event.target.value;
-    setSelectedShop(shopId);
-    const shopName = shops.find((shop) => shop.id === shopId)?.name;
+  const handleShopChange = async (event: React.ChangeEvent<{ value: unknown }>) => {
+    const shopId = event.target.value as string;
+    setValue("selectedShop", shopId);
+    const shopName = shops.find((shop) => shop.id === parseInt(shopId))?.name;
     if (shopName) {
       const availableUsers = await fetchUsers(shopName);
       setUsers(availableUsers);
@@ -200,6 +209,7 @@ export function ManagersPage({ ownerView }) {
 
   const handleClose = () => {
     setOpen(false);
+    reset();
   };
 
   const columns: GridColDef[] = [
@@ -233,13 +243,14 @@ export function ManagersPage({ ownerView }) {
         <DialogTitle>Add Manager</DialogTitle>
         <DialogContent>
           {ownerView && (
-            <FormControl fullWidth>
+            <FormControl fullWidth margin="normal">
               <InputLabel>Shop</InputLabel>
               <Select
-                value={selectedShop}
+                {...register("selectedShop", { required: "required" })}
                 onChange={handleShopChange}
                 displayEmpty
                 fullWidth
+                error={!!errors.selectedShop}
               >
                 <MenuItem value="" disabled>
                   Select a shop
@@ -250,16 +261,18 @@ export function ManagersPage({ ownerView }) {
                   </MenuItem>
                 ))}
               </Select>
+              {errors.selectedShop && (
+                <p className="error-text">{errors.selectedShop.message}</p>
+              )}
             </FormControl>
           )}
-          <FormControl fullWidth>
+          <FormControl fullWidth margin="normal">
             <InputLabel>User</InputLabel>
             <Select
-              value={selectedUser}
-              onChange={(e) => setSelectedUser(e.target.value as string)}
+              {...register("selectedUser", { required: "required" })}
               displayEmpty
               fullWidth
-              disabled={!selectedShop}
+              error={!!errors.selectedUser}
             >
               <MenuItem value="" disabled>
                 Select a user
@@ -270,13 +283,16 @@ export function ManagersPage({ ownerView }) {
                 </MenuItem>
               ))}
             </Select>
+            {errors.selectedUser && (
+              <p className="error-text">{errors.selectedUser.message}</p>
+            )}
           </FormControl>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} color="primary">
             Back
           </Button>
-          <Button onClick={handleAddManager} color="primary">
+          <Button onClick={handleSubmit(handleAddManager)} color="primary">
             Add
           </Button>
         </DialogActions>

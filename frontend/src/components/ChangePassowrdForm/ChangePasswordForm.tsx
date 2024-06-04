@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   TextField,
@@ -12,6 +12,7 @@ import {
 import Swal from "sweetalert2";
 import "./ChangePasswordForm.css";
 import { useNavigate } from "react-router-dom";
+import { useForm, Controller } from "react-hook-form";
 
 interface ChangePasswordFormProps {
   onSubmit: (data: PasswordFormData) => void;
@@ -24,9 +25,7 @@ interface PasswordFormData {
 }
 
 export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
-  const oldPasswordRef = useRef<HTMLInputElement>(null);
-  const newPasswordRef = useRef<HTMLInputElement>(null);
-  const confirmPasswordRef = useRef<HTMLInputElement>(null);
+  const { control, handleSubmit, formState: { errors }, watch } = useForm<PasswordFormData>();
   const [open, setOpen] = useState<boolean>(false);
   const [userId, setUserId] = useState<number | null>(null);
   const navigate = useNavigate();
@@ -38,12 +37,8 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
     }
   }, []);
 
-  const handleSubmit = async () => {
-    const oldPassword = oldPasswordRef.current?.value || "";
-    const newPassword = newPasswordRef.current?.value || "";
-    const confirmPassword = confirmPasswordRef.current?.value || "";
-
-    if (newPassword !== confirmPassword) {
+  const handlePasswordChange = async (formData: PasswordFormData) => {
+    if (formData.newPassword !== formData.confirmPassword) {
       Swal.fire({
         position: "center",
         icon: "error",
@@ -62,9 +57,9 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // Send JWT token
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           },
-          body: JSON.stringify({ new_password: newPassword }),
+          body: JSON.stringify({ new_password: formData.newPassword }),
         }
       );
 
@@ -87,9 +82,9 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
 
         setTimeout(() => {
           handleLogout();
-        }, 3000); // Redirect after 3 seconds to allow the user to see the success message
+        }, 3000);
 
-        setOpen(false); // Close the dialog after submitting
+        setOpen(false);
       } else {
         const errorData = await response.json();
         Swal.fire({
@@ -119,7 +114,7 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
         variant="contained"
         color="primary"
         onClick={() => setOpen(true)}
-        disabled={!userId} // Disable button if userId is not set
+        disabled={!userId}
       >
         Change Password
       </Button>
@@ -136,35 +131,62 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
               alignItems: "center",
             }}
           >
-            <TextField
-              sx={{ width: "400px", background: "white" }}
-              id="oldPassword"
-              label="Old Password"
-              type="password"
-              variant="outlined"
-              inputRef={oldPasswordRef}
-              fullWidth
-              margin="normal"
+            <Controller
+              name="oldPassword"
+              control={control}
+              rules={{ required: "required" }}
+              render={({ field }) => (
+                <TextField
+                  sx={{ width: "400px", background: "white" }}
+                  id="oldPassword"
+                  label="Old Password"
+                  type="password"
+                  variant="outlined"
+                  fullWidth
+                  margin="normal"
+                  error={!!errors.oldPassword}
+                  helperText={errors.oldPassword ? errors.oldPassword.message : null}
+                  {...field}
+                />
+              )}
             />
-            <TextField
-              sx={{ width: "400px", background: "white" }}
-              id="newPassword"
-              label="New Password"
-              type="password"
-              variant="outlined"
-              inputRef={newPasswordRef}
-              fullWidth
-              margin="normal"
+            <Controller
+              name="newPassword"
+              control={control}
+              rules={{ required: "required" }}
+              render={({ field }) => (
+                <TextField
+                  sx={{ width: "400px", background: "white" }}
+                  id="newPassword"
+                  label="New Password"
+                  type="password"
+                  variant="outlined"
+                  fullWidth
+                  margin="normal"
+                  error={!!errors.newPassword}
+                  helperText={errors.newPassword ? errors.newPassword.message : null}
+                  {...field}
+                />
+              )}
             />
-            <TextField
-              sx={{ width: "400px", background: "white" }}
-              id="confirmPassword"
-              label="Confirm Password"
-              type="password"
-              variant="outlined"
-              inputRef={confirmPasswordRef}
-              fullWidth
-              margin="normal"
+            <Controller
+              name="confirmPassword"
+              control={control}
+              rules={{ required: "required" }}
+              render={({ field }) => (
+                <TextField
+                  sx={{ width: "400px", background: "white" }}
+                  id="confirmPassword"
+                  label="Confirm Password"
+                  type="password"
+                  variant="outlined"
+                  fullWidth
+                  margin="normal"
+                  error={!!errors.confirmPassword}
+                  helperText={errors.confirmPassword ? errors.confirmPassword.message : null}
+                  {...field}
+                />
+              )}
             />
           </Box>
         </DialogContent>
@@ -173,7 +195,7 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
           <Button onClick={() => setOpen(false)} color="primary">
             Cancel
           </Button>
-          <Button onClick={handleSubmit} color="primary">
+          <Button onClick={handleSubmit(handlePasswordChange)} color="primary">
             Submit
           </Button>
         </DialogActions>

@@ -11,22 +11,14 @@ import {
   Autocomplete,
   Chip,
 } from "@mui/material";
-import { useForm } from "react-hook-form";
-import { Shop } from "../utils/types";
-import "./StoreForm.css";
+import { useForm, Controller } from "react-hook-form";
 import Swal from "sweetalert2";
+import { User, Shop } from "../../utils/types"; // Adjust the import path as necessary
+import { Navigate, useNavigate } from "react-router-dom";
 
 interface StoreFormProps {
   open: boolean;
   onClose: () => void;
-}
-
-interface StoreFormData {
-  storeName: string;
-  description: string;
-  categories: string[];
-  ownerId: number;
-  managers: string[];
 }
 
 interface Category {
@@ -42,33 +34,65 @@ export function StoreForm({ open, onClose }: StoreFormProps) {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedManagers, setSelectedManagers] = useState<string[]>([]);
   const [managers, setManagers] = useState<Manager[]>([]);
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const {
+    control,
     register,
     handleSubmit,
     formState: { errors },
-    watch,
   } = useForm<Shop>();
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/categories")
-      .then((response) => response.json())
-      .then((data) => setCategories(data.categories))
-      .catch((error) => console.error("Error fetching categories:", error));
+    fetch("http://localhost:5000/categories")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Categories fetched:", data);
+        setCategories(
+          data.categories.map((category: any) => ({ name: category.name }))
+        );
+      })
+      .catch((error) => {
+        console.error("Error fetching categories:", error);
+        alert(`Error fetching categories: ${error.message}`);
+      });
   }, []);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/users")
-      .then((response) => response.json())
-      .then((data) => setManagers(data.users))
-      .catch((error) => console.error("Error fetching managers:", error));
+    const token = localStorage.getItem("access_token");
+
+    fetch("http://localhost:5000/users", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Managers fetched:", data);
+        setManagers(
+          data.users.map((user: any) => ({ username: user.username }))
+        );
+      })
+      .catch((error) => {
+        console.error("Error fetching managers:", error);
+        alert(`Error fetching managers: ${error.message}`);
+      });
   }, []);
 
-
   const handleCreateStore = async (formData: Shop) => {
-    const token = localStorage.getItem("access_token"); // Ensure token is retrieved here
+    const token = localStorage.getItem("access_token");
     try {
-      const response = await fetch(`http://127.0.0.1:5000/shops/new`, {
+      const response = await fetch(`http://localhost:5000/shops/new`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -78,7 +102,6 @@ export function StoreForm({ open, onClose }: StoreFormProps) {
       });
 
       if (response.ok) {
-        // console.log(response)
         Swal.fire({
           icon: "success",
           title: "Shop Created Successfully!",
@@ -89,6 +112,7 @@ export function StoreForm({ open, onClose }: StoreFormProps) {
           },
         });
         onClose();
+        navigate("/choosestore");
       } else {
         throw new Error("Invalid credentials");
       }
@@ -110,7 +134,7 @@ export function StoreForm({ open, onClose }: StoreFormProps) {
     <Dialog open={open} onClose={onClose}>
       <form onSubmit={handleSubmit(handleCreateStore)}>
         <DialogTitle>Create a Store</DialogTitle>
-        <Divider></Divider>
+        <Divider />
         <DialogContent>
           <Box
             sx={{
@@ -144,88 +168,118 @@ export function StoreForm({ open, onClose }: StoreFormProps) {
               className="input-container"
               fullWidth
               margin="normal"
-              inputProps= {{
-                maxLength: 200
-              }}
+              inputProps={{ maxLength: 200 }}
               error={!!errors.description}
-              helperText={errors.description ? errors.description.message : null}
+              helperText={
+                errors.description ? errors.description.message : null
+              }
               {...register("description", {
                 required: "required",
               })}
               InputProps={{
                 style: { backgroundColor: "white" },
-               
               }}
             />
 
-            <Autocomplete
-              multiple
-              id="categories"
-              fullWidth
-              options={categories.map((category) => category.name)}
-              getOptionLabel={(option) => option}
-              filterSelectedOptions
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip
-                    key={index}
-                    variant="outlined"
-                    label={option}
-                    {...getTagProps({ index })}
-                  />
-                ))
-              }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  variant="outlined"
-                  label="Categories"
-                  placeholder="Select Categories"
+            <Controller
+              name="categories"
+              control={control}
+              rules={{ required: "required" }}
+              render={({ field }) => (
+                <Autocomplete
+                  multiple
+                  id="categories"
                   fullWidth
-                  margin="normal"
+                  options={categories.map((category) => category.name)}
+                  getOptionLabel={(option) => option}
+                  filterSelectedOptions
+                  renderTags={(value, getTagProps) =>
+                    value.map((option, index) => (
+                      <Chip
+                        key={index}
+                        variant="outlined"
+                        label={option}
+                        {...getTagProps({ index })}
+                      />
+                    ))
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      variant="outlined"
+                      label="Categories"
+                      placeholder="Select Categories"
+                      fullWidth
+                      margin="normal"
+                      error={!!errors.categories}
+                      helperText={
+                        errors.categories ? errors.categories.message : null
+                      }
+                    />
+                  )}
+                  {...field}
+                  value={selectedCategories}
+                  onChange={(event, value) => {
+                    setSelectedCategories(value);
+                    field.onChange(value);
+                  }}
                 />
               )}
-              value={selectedCategories}
-              onChange={(event, value) => setSelectedCategories(value)}
             />
-            <Autocomplete
-              id="managers"
-              multiple
-              fullWidth
-              options={managers.map((manager) => manager.username)}
-              getOptionLabel={(option) => option}
-              filterSelectedOptions
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip
-                    key={index}
-                    variant="outlined"
-                    label={option}
-                    {...getTagProps({ index })}
-                  />
-                ))
-              }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  variant="outlined"
-                  label="Managers"
-                  placeholder="Enter Manager IDs"
+
+            <Controller
+              name="managers"
+              control={control}
+              rules={{ required: "required" }}
+              render={({ field }) => (
+                <Autocomplete
+                  id="managers"
+                  multiple
                   fullWidth
-                  margin="normal"
+                  options={managers.map((manager) => manager.username)}
+                  getOptionLabel={(option) => option}
+                  filterSelectedOptions
+                  renderTags={(value, getTagProps) =>
+                    value.map((option, index) => (
+                      <Chip
+                        key={index}
+                        variant="outlined"
+                        label={option}
+                        {...getTagProps({ index })}
+                      />
+                    ))
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      variant="outlined"
+                      label="Managers"
+                      placeholder="Enter Manager IDs"
+                      fullWidth
+                      margin="normal"
+                      error={!!errors.managers}
+                      helperText={
+                        errors.managers ? errors.managers.message : null
+                      }
+                    />
+                  )}
+                  {...field}
+                  value={selectedManagers}
+                  onChange={(event, value) => {
+                    setSelectedManagers(value);
+                    field.onChange(value);
+                  }}
                 />
               )}
-              value={selectedManagers}
-              onChange={(event, value) => setSelectedManagers(value)}
             />
           </Box>
         </DialogContent>
-        <Divider></Divider>
+        <Divider />
         <DialogActions>
           <Button onClick={onClose} color="primary">
             Cancel
           </Button>
-          <Button onClick={handleSubmit} color="primary">
+          <Button type="submit" color="primary">
             Create
           </Button>
         </DialogActions>

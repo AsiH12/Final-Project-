@@ -19,7 +19,7 @@ export default function CategoryPage({ name }) {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    fetch(`http://127.0.0.1:5000/products/category/${name}`)
+    fetch(`http://localhost:5000/products/category/${name}`)
       .then((response) => response.json())
       .then((data) => setProducts(data.products))
       .catch((error) => console.error("Error fetching products:", error));

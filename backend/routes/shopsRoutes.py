@@ -1,12 +1,13 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-
+from flask_cors import cross_origin
 from db import get_db, close_db
 
 bp = Blueprint("shopsRoutes", __name__, url_prefix="/shops")
 
 # Get all shops route
 @bp.route("/", methods=["GET"], endpoint='shops_get_all')
+@cross_origin(origins="http://localhost:5173")
 def get_shops():
     db = get_db()
     cursor = db.cursor()
@@ -37,6 +38,7 @@ def get_shops():
 
 # Get shop ID by name
 @bp.route("/getidbyname/<string:shop_name>", methods=["GET"], endpoint='shops_get_id_by_name')
+@cross_origin(origins="http://localhost:5173")
 def get_shop_id_by_name(shop_name):
     db = get_db()
     cursor = db.cursor()
@@ -50,6 +52,7 @@ def get_shop_id_by_name(shop_name):
 
 # Get shop by ID route
 @bp.route("/<int:shop_id>", methods=["GET"], endpoint='shops_get_by_id')
+@cross_origin(origins="http://localhost:5173")
 def get_shop_by_id(shop_id):
     db = get_db()
     cursor = db.cursor()
@@ -81,6 +84,7 @@ def get_shop_by_id(shop_id):
 # Get shops by manager
 @bp.route("/manager", methods=["GET"], endpoint='shops_get_by_manager')
 @jwt_required()
+@cross_origin(origins="http://localhost:5173")
 def get_shops_by_manager():
     user_id = get_jwt_identity()
     db = get_db()
@@ -113,6 +117,7 @@ def get_shops_by_manager():
 # Get stores by owner ID
 @bp.route("/owner", methods=["GET"], endpoint='shops_get_by_owner')
 @jwt_required()
+@cross_origin(origins="http://localhost:5173")
 def get_stores_by_owner_id():
     user_id = get_jwt_identity()
     db = get_db()
@@ -138,6 +143,7 @@ def get_stores_by_owner_id():
 # Get my stores
 @bp.route("/my-stores", methods=["GET"], endpoint='shops_get_my_stores')
 @jwt_required()
+@cross_origin(origins="http://localhost:5173")
 def get_my_stores():
     current_user_id = get_jwt_identity()
     db = get_db()
@@ -163,6 +169,7 @@ def get_my_stores():
 # Create new shop route
 @bp.route("/new", methods=["POST"], endpoint='shops_create')
 @jwt_required()
+@cross_origin(origins="http://localhost:5173")
 def create_new_shop():
     data = request.get_json()
     name = data.get("name")
@@ -223,6 +230,7 @@ def create_new_shop():
 # Update shop by ID route
 @bp.route("/<int:shop_id>", methods=["PATCH"], endpoint='shops_update')
 @jwt_required()
+@cross_origin(origins="http://localhost:5173")
 def update_shop_by_id(shop_id):
     data = request.get_json()
     db = get_db()
@@ -249,6 +257,7 @@ def update_shop_by_id(shop_id):
 # Delete shop by ID route
 @bp.route("/<int:shop_id>", methods=["DELETE"], endpoint='shops_delete')
 @jwt_required()
+@cross_origin(origins="http://localhost:5173")
 def delete_shop_by_id(shop_id):
     db = get_db()
     cursor = db.cursor()

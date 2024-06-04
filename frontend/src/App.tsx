@@ -30,7 +30,7 @@ import { CreateDiscountPage } from "./components/createDiscount/CreateDiscountPa
 import CartPage from "./components/CartPage";
 import ErrorNotFound from "./pages/ErrorNotFound";
 
-const BACKEND_URL = "http://127.0.0.1:5000";
+const BACKEND_URL = "http://localhost:5000";
 
 const handleRouter = (userToken, setUserToken) => {
   let router;

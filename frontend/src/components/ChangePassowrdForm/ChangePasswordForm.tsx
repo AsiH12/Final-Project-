@@ -8,6 +8,8 @@ import {
   DialogContent,
   DialogActions,
   Divider,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import Swal from "sweetalert2";
 import "./ChangePasswordForm.css";
@@ -27,6 +29,7 @@ interface PasswordFormData {
 export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
   const { control, handleSubmit, formState: { errors }, watch } = useForm<PasswordFormData>();
   const [open, setOpen] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const [userId, setUserId] = useState<number | null>(null);
   const navigate = useNavigate();
 
@@ -140,7 +143,7 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
                   sx={{ width: "400px", background: "white" }}
                   id="oldPassword"
                   label="Old Password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   variant="outlined"
                   fullWidth
                   margin="normal"
@@ -159,7 +162,7 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
                   sx={{ width: "400px", background: "white" }}
                   id="newPassword"
                   label="New Password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   variant="outlined"
                   fullWidth
                   margin="normal"
@@ -178,7 +181,7 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
                   sx={{ width: "400px", background: "white" }}
                   id="confirmPassword"
                   label="Confirm Password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   variant="outlined"
                   fullWidth
                   margin="normal"
@@ -187,6 +190,15 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
                   {...field}
                 />
               )}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={showPassword}
+                  onChange={(e) => setShowPassword(e.target.checked)}
+                />
+              }
+              label="Show Password"
             />
           </Box>
         </DialogContent>

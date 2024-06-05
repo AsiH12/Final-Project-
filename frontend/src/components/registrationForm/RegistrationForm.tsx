@@ -7,6 +7,7 @@ import {
   InputAdornment,
   IconButton,
 } from "@mui/material";
+import Swal from "sweetalert2";
 import { useForm } from "react-hook-form";
 import { User } from "../../utils/types";
 import { useNavigate } from "react-router-dom";
@@ -36,11 +37,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ setUserToken }) => {
   const toggleConfirmPasswordVisibility = () => {
     setShowConfirmPassword(!showConfirmPassword);
   };
+
   const handleRegister = async (formData: User) => {
     try {
       // Create a copy of formData and remove confirmPassword
       const { confirmPassword, ...dataToSend } = formData;
-      console.log(dataToSend);
 
       const response = await fetch(`http://localhost:5000/users/register`, {
         method: "POST",
@@ -49,15 +50,32 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ setUserToken }) => {
       });
 
       if (response.ok) {
-        // Registration successful, you can handle further actions like redirecting
-        alert("Registration successful");
-        navigate("/login");
+        // Registration successful, show SweetAlert and redirect
+        Swal.fire({
+          position: "center",
+          icon: "success",
+          title: "Registration successful",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+        });
+
+        setTimeout(() => {
+          navigate("/login");
+        }, 3000);
       } else {
         const data = await response.json();
         throw new Error(data.error || "Registration failed");
       }
     } catch (error) {
-      alert("Error registering: " + error.message);
+      Swal.fire({
+        position: "center",
+        icon: "error",
+        title: `Error registering: ${error.message}`,
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
     }
   };
 
@@ -158,7 +176,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ setUserToken }) => {
               {...register("confirmPassword", {
                 required: "required",
                 validate: (value) =>
-                  value === password || "אימות הסיסמה אינו תואם את הסיסמה",
+                  value === password || "Confirm password does not match password",
               })}
               InputProps={{
                 style: { backgroundColor: "white" },

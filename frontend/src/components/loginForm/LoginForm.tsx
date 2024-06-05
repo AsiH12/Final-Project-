@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom"; 
 import { useForm } from "react-hook-form";
+import Swal from "sweetalert2"; // Import Swal
 import { User } from "../../utils/types";
 import {
   Box,
@@ -18,14 +19,13 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ setUserToken }: LoginFormProps) {
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
   } = useForm<User>();
 
   const togglePasswordVisibility = () => {
@@ -42,19 +42,26 @@ export function LoginForm({ setUserToken }: LoginFormProps) {
 
       if (response.ok) {
         const data = await response.json();
-        console.log(data);
-        console.log(formData.username);
         localStorage.setItem("access_token", data.access_token);
         localStorage.setItem("user_id", data.user_id);
         localStorage.setItem("username", formData.username);
 
         setUserToken(data.access_token);
-        navigate("/home"); // Navigate to '/home' after successful login
+        navigate("/home");
       } else {
-        throw new Error("Invalid credentials");
+        let errorMessage = "Invalid credentials";
+        const errorData = await response.json();
+        if (errorData.error === "wrong_password") {
+          errorMessage = "Password is incorrect";
+        }
+        throw new Error(errorMessage);
       }
     } catch (error) {
-      alert("Error logging in: " + error.message);
+      Swal.fire({
+        icon: "error",
+        title: "Invalid credentials",
+        text: error.message,
+      });
     }
   };
 
@@ -99,11 +106,6 @@ export function LoginForm({ setUserToken }: LoginFormProps) {
               helperText={errors.password ? errors.password.message : null}
               {...register("password", {
                 required: "required",
-                // pattern: {
-                //   value: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/,
-                //   message:
-                //     "Your password must conatin 1 letter and 1 numerical number,and conatin 6 figures",
-                // },
               })}
               InputProps={{
                 style: { backgroundColor: "white" },

@@ -118,7 +118,7 @@ VALUES
     ('LifeStyle'),
     ('Fashion'),
     ('Tech'),
-    ('Carts');
+    ('cars');
 
 -- Inserting into shops table
 INSERT

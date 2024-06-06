@@ -59,6 +59,7 @@ export function ManagersPage({ ownerView }: { ownerView: boolean }) {
     register,
     handleSubmit,
     formState: { errors },
+    watch,
     setValue,
     reset,
   } = useForm();
@@ -267,6 +268,9 @@ export function ManagersPage({ ownerView }: { ownerView: boolean }) {
     },
   ];
 
+  const formValues = watch(); // Watch all form values
+  const isFormValid = formValues.selectedUser && formValues.selectedShop;
+
   return (
     <div className="container">
       <h2 className="manage-store-header">
@@ -282,7 +286,7 @@ export function ManagersPage({ ownerView }: { ownerView: boolean }) {
             <FormControl fullWidth margin="normal">
               <InputLabel>Shop</InputLabel>
               <Select
-                {...register("selectedShop", { required: "required" })}
+                {...register("selectedShop", { required: "Shop is required" })}
                 onChange={handleShopChange}
                 displayEmpty
                 fullWidth
@@ -305,7 +309,7 @@ export function ManagersPage({ ownerView }: { ownerView: boolean }) {
           <FormControl fullWidth margin="normal">
             <InputLabel>User</InputLabel>
             <Select
-              {...register("selectedUser", { required: "required" })}
+              {...register("selectedUser", { required: "User is required" })}
               displayEmpty
               fullWidth
               error={!!errors.selectedUser}
@@ -328,7 +332,7 @@ export function ManagersPage({ ownerView }: { ownerView: boolean }) {
           <Button onClick={handleClose} color="primary">
             Back
           </Button>
-          <Button onClick={handleSubmit(handleAddManager)} color="primary">
+          <Button onClick={handleSubmit(handleAddManager)} color="primary" disabled={!isFormValid}>
             Add
           </Button>
         </DialogActions>

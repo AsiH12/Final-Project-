@@ -32,8 +32,11 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
   const {
     control,
     handleSubmit,
-    formState: { errors },
-  } = useForm<AddressFormData>();
+    formState: { errors, isValid },
+    watch,
+  } = useForm<AddressFormData>({
+    mode: "onChange", // Validate form on change
+  });
   const [open, setOpen] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [addresses, setAddresses] = useState<AddressFormData[]>([]);
@@ -221,6 +224,9 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
     },
   ];
 
+  const formValues = watch(); // Watch all form values
+  const isFormValid = formValues.address && formValues.city && formValues.country;
+
   return (
     <div className="container">
       <Button variant="contained" color="primary" onClick={() => setOpen(true)}>
@@ -262,7 +268,7 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
                 name="address"
                 control={control}
                 defaultValue={currentAddress?.address || ""}
-                rules={{ required: "required" }}
+                rules={{ required: "Address is required" }}
                 render={({ field }) => (
                   <TextField
                     {...field}
@@ -281,7 +287,7 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
                 name="city"
                 control={control}
                 defaultValue={currentAddress?.city || ""}
-                rules={{ required: "required" }}
+                rules={{ required: "City is required" }}
                 render={({ field }) => (
                   <TextField
                     {...field}
@@ -300,7 +306,7 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
                 name="country"
                 control={control}
                 defaultValue={currentAddress?.country || ""}
-                rules={{ required: "required" }}
+                rules={{ required: "Country is required" }}
                 render={({ field }) => (
                   <TextField
                     {...field}
@@ -327,7 +333,7 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
                 Delete
               </Button>
             )}
-            <Button type="submit" color="primary">
+            <Button type="submit" color="primary" disabled={!isFormValid}>
               Save Address
             </Button>
           </DialogActions>

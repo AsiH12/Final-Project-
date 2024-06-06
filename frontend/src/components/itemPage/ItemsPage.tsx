@@ -157,7 +157,7 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
         Swal.fire({
           icon: "error",
           title: "Error!",
-          text: "required.",
+          text: "Shop ID is required.",
           customClass: {
             container: "swal-dialog-custom",
           },
@@ -502,11 +502,11 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
             disabled={
               !currentItem?.name ||
               !currentItem?.description ||
-              !currentItem?.price ||
-              !currentItem?.categories ||
               !currentItem?.shop_name ||
+              !currentItem?.price ||
+              !currentItem?.amount ||
               !currentItem?.maximum_discount ||
-              !currentItem?.amount
+              !currentItem?.categories.length
             }
           >
             Save

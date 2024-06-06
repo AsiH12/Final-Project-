@@ -188,7 +188,7 @@ const CartPage = () => {
 
       if (!response.ok) {
         const errorMessage = await response.text();
-        throw new Error(`Failed to apply discounts: ${errorMessage}`);
+        throw new Error(`${errorMessage}`);
       }
 
       const data = await response.json();
@@ -317,7 +317,7 @@ const CartPage = () => {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "You have to select an address (you can make if you don't have one",
+        text: "You have to select an address (you can make if you don't have one)",
         customClass: {
           container: "swal-dialog-custom",
         },

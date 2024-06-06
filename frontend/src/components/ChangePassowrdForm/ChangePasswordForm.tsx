@@ -40,6 +40,8 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
     }
   }, []);
 
+  const formValues = watch(); // Watch all form values
+
   const handlePasswordChange = async (formData: PasswordFormData) => {
     if (formData.newPassword !== formData.confirmPassword) {
       Swal.fire({
@@ -122,6 +124,8 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
       });
     }
   };
+
+  const isFormValid = formValues.oldPassword && formValues.newPassword && formValues.confirmPassword;
 
   return (
     <div className="container">
@@ -219,7 +223,7 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
           <Button onClick={() => setOpen(false)} color="primary">
             Cancel
           </Button>
-          <Button onClick={handleSubmit(handlePasswordChange)} color="primary">
+          <Button onClick={handleSubmit(handlePasswordChange)} color="primary" disabled={!isFormValid}>
             Submit
           </Button>
         </DialogActions>

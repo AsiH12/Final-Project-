@@ -22,10 +22,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ setUserToken }) => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
     watch,
-  } = useForm<User>();
+  } = useForm<User>({
+    mode: "onChange", // Validate form on change
+  });
   const password = watch("password");
+  const confirmPassword = watch("confirmPassword");
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -58,6 +61,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ setUserToken }) => {
           showConfirmButton: false,
           timer: 3000,
           timerProgressBar: true,
+          customClass: {
+            container: "swal-dialog-custom",
+          },
         });
 
         setTimeout(() => {
@@ -75,6 +81,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ setUserToken }) => {
         showConfirmButton: false,
         timer: 3000,
         timerProgressBar: true,
+        customClass: {
+          container: "swal-dialog-custom",
+        },
       });
     }
   };
@@ -100,7 +109,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ setUserToken }) => {
               error={!!errors.username}
               helperText={errors.username ? errors.username.message : null}
               {...register("username", {
-                required: "required",
+                required: "Username is required",
               })}
               InputProps={{
                 style: { backgroundColor: "white" },
@@ -118,7 +127,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ setUserToken }) => {
               error={!!errors.email}
               helperText={errors.email ? errors.email.message : null}
               {...register("email", {
-                required: "required",
+                required: "Email is required",
                 pattern: {
                   value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
                   message: "Enter a valid email address",
@@ -139,11 +148,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ setUserToken }) => {
               error={!!errors.password}
               helperText={errors.password ? errors.password.message : null}
               {...register("password", {
-                required: "required",
+                required: "Password is required",
                 pattern: {
                   value: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/,
                   message:
-                    "Your password must conatin 1 letter and 1 numerical number,and conatin 6 figures",
+                    "Your password must contain at least 1 letter, 1 number, and be at least 6 characters long",
                 },
               })}
               InputProps={{
@@ -174,7 +183,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ setUserToken }) => {
                 errors.confirmPassword ? errors.confirmPassword.message : null
               }
               {...register("confirmPassword", {
-                required: "required",
+                required: "Confirm password is required",
                 validate: (value) =>
                   value === password || "Confirm password does not match password",
               })}
@@ -205,7 +214,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ setUserToken }) => {
               error={!!errors.age}
               helperText={errors.age ? errors.age.message : null}
               {...register("age", {
-                required: "required",
+                required: "Age is required",
               })}
               InputProps={{
                 style: { backgroundColor: "white" },
@@ -222,6 +231,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ setUserToken }) => {
               variant="contained"
               color="primary"
               type="submit"
+              disabled={!isValid || password !== confirmPassword} // Disable the button if the form is not valid or passwords do not match
             >
               SIGN UP
             </Button>

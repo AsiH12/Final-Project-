@@ -49,6 +49,9 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
         showConfirmButton: false,
         timer: 3000,
         timerProgressBar: true,
+        customClass: {
+          container: "swal-dialog-custom",
+        },
       });
       return;
     }
@@ -62,7 +65,7 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           },
-          body: JSON.stringify({ new_password: formData.newPassword }),
+          body: JSON.stringify({ old_password: formData.oldPassword, new_password: formData.newPassword }),
         }
       );
 
@@ -74,6 +77,9 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
           showConfirmButton: false,
           timer: 3000,
           timerProgressBar: true,
+          customClass: {
+            container: "swal-dialog-custom",
+          },
         });
 
         const handleLogout = () => {
@@ -97,6 +103,9 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
           showConfirmButton: false,
           timer: 3000,
           timerProgressBar: true,
+          customClass: {
+            container: "swal-dialog-custom",
+          },
         });
       }
     } catch (error) {
@@ -107,6 +116,9 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
         showConfirmButton: false,
         timer: 3000,
         timerProgressBar: true,
+        customClass: {
+          container: "swal-dialog-custom",
+        },
       });
     }
   };
@@ -137,7 +149,7 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
             <Controller
               name="oldPassword"
               control={control}
-              rules={{ required: "required" }}
+              rules={{ required: "Old password is required" }}
               render={({ field }) => (
                 <TextField
                   sx={{ width: "400px", background: "white" }}
@@ -156,7 +168,7 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
             <Controller
               name="newPassword"
               control={control}
-              rules={{ required: "required" }}
+              rules={{ required: "New password is required" }}
               render={({ field }) => (
                 <TextField
                   sx={{ width: "400px", background: "white" }}
@@ -175,7 +187,7 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
             <Controller
               name="confirmPassword"
               control={control}
-              rules={{ required: "required" }}
+              rules={{ required: "Confirm password is required" }}
               render={({ field }) => (
                 <TextField
                   sx={{ width: "400px", background: "white" }}

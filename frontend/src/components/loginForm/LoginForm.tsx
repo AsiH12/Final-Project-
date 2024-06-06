@@ -58,6 +58,9 @@ export function LoginForm({ setUserToken }: LoginFormProps) {
     }
   };
 
+  const formValues = watch(); // Watch all form values
+  const isFormValid = formValues.username && formValues.password;
+
   return (
     <div className="container">
       <Box className="login-form">
@@ -99,11 +102,6 @@ export function LoginForm({ setUserToken }: LoginFormProps) {
               helperText={errors.password ? errors.password.message : null}
               {...register("password", {
                 required: "required",
-                // pattern: {
-                //   value: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/,
-                //   message:
-                //     "Your password must conatin 1 letter and 1 numerical number,and conatin 6 figures",
-                // },
               })}
               InputProps={{
                 style: { backgroundColor: "white" },
@@ -132,6 +130,7 @@ export function LoginForm({ setUserToken }: LoginFormProps) {
               color="primary"
               className="login-button"
               type="submit"
+              disabled={!isFormValid} // Disable the button if the form is not valid
             >
               Login
             </Button>

@@ -5,8 +5,8 @@ from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_req
 from db import close_db, get_db
 
 
-
 bp = Blueprint("productsRoutes", __name__, url_prefix="/products")
+
 
 @bp.route("/", methods=["GET"], endpoint='products_get_all')
 def get_products():
@@ -38,6 +38,7 @@ def get_products():
     ]
     return jsonify(products=product_list), 200
 
+
 @bp.route("/<int:product_id>", methods=["GET"], endpoint='products_get_by_id')
 def get_product_by_id(product_id):
     db = get_db()
@@ -67,6 +68,7 @@ def get_product_by_id(product_id):
             "maximum_discount": product["maximum_discount"],
             "categories": product["categories"].split(",") if product["categories"] else []
         }), 200
+
 
 @bp.route("/category/<category_name>", methods=["GET"], endpoint='products_get_by_category')
 def get_products_by_category(category_name):
@@ -99,6 +101,7 @@ def get_products_by_category(category_name):
     ]
     return jsonify(products=product_list), 200
 
+
 @bp.route("/shop/<int:shop_id>", methods=["GET"], endpoint='products_get_by_shop_id')
 def get_products_by_shop_id(shop_id):
     db = get_db()
@@ -129,6 +132,7 @@ def get_products_by_shop_id(shop_id):
         for product in products
     ]
     return jsonify(products=product_list), 200
+
 
 @bp.route("/owner/<int:owner_id>", methods=["GET"], endpoint='products_get_by_owner_id')
 @jwt_required()
@@ -161,6 +165,7 @@ def get_products_by_owner_id(owner_id):
         for product in products
     ]
     return jsonify(products=product_list), 200
+
 
 @bp.route("/manager_owner", methods=["GET"], endpoint='products_get_by_manager_or_owner')
 @jwt_required()
@@ -195,6 +200,20 @@ def get_products_by_manager_or_owner():
         for product in products
     ]
     return jsonify(products=product_list), 200
+
+
+@bp.route("/getShopId/<int:product_id>", methods=["GET"], endpoint='get_shop_id_by_product_id')
+def get_shop_id_by_product_id(product_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT shop_id FROM products WHERE id = ?", (product_id,))
+    shop_id = cursor.fetchone()
+    close_db()
+    if shop_id is None:
+        return jsonify({"error": "Product not found"}), 404
+    else:
+        return jsonify({"shop_id": shop_id["shop_id"]}), 200
+
 
 @bp.route("", methods=["POST"], endpoint='products_create')
 @jwt_required()
@@ -261,6 +280,7 @@ def create_new_product():
 
     return jsonify(product), 201
 
+
 @bp.route("/<int:product_id>", methods=["PATCH"], endpoint='products_update_by_id')
 @jwt_required()
 def update_product_by_id(product_id):
@@ -286,7 +306,8 @@ def update_product_by_id(product_id):
             ),
         )
 
-        cursor.execute("DELETE FROM products_categories WHERE product_id = ?", (product_id,))
+        cursor.execute(
+            "DELETE FROM products_categories WHERE product_id = ?", (product_id,))
         for category_id in data.get("categories", []):
             cursor.execute(
                 "INSERT INTO products_categories (product_id, category_id) VALUES (?, ?)",
@@ -296,6 +317,7 @@ def update_product_by_id(product_id):
         db.commit()
         close_db()
         return jsonify({"message": "Product updated successfully"}), 200
+
 
 @bp.route("/<int:product_id>", methods=["DELETE"], endpoint='products_delete_by_id')
 @jwt_required()
@@ -309,7 +331,8 @@ def delete_product_by_id(product_id):
         return jsonify({"error": "Product not found"}), 404
     else:
         cursor.execute("DELETE FROM products WHERE id = ?", (product_id,))
-        cursor.execute("DELETE FROM products_categories WHERE product_id = ?", (product_id,))
+        cursor.execute(
+            "DELETE FROM products_categories WHERE product_id = ?", (product_id,))
         db.commit()
         close_db()
         return jsonify({"message": "Product deleted successfully"}), 200

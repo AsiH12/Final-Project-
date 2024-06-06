@@ -191,6 +191,42 @@ export function ManagersPage({ ownerView }: { ownerView: boolean }) {
   };
 
   const handleClickOpen = async () => {
+    // Check if the user owns or manages any shops
+    const response = await fetch("http://localhost:5000/shops/manager", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Send JWT token
+      },
+    });
+
+    if (!response.ok) {
+      // Error fetching user's shops
+      Swal.fire({
+        icon: "error",
+        title: "Error!",
+        text: "Failed to fetch shops. Please try again later.",
+        customClass: {
+          container: "swal-dialog-custom",
+        },
+      });
+      return;
+    }
+
+    const { shops } = await response.json();
+
+    if (!shops || shops.length < 1) {
+      // User doesn't own or manage any shops, show an error message
+      Swal.fire({
+        icon: "error",
+        title: "Error!",
+        text: "You must create a shop before using this feature.",
+        customClass: {
+          container: "swal-dialog-custom",
+        },
+      });
+      return;
+    }
     if (ownerView) {
       await fetchUserShops();
     }

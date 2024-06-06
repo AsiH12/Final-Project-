@@ -43,11 +43,19 @@ export function CreateDiscountPage({ ownerView }) {
     any | null
   >(null);
 
-  const { control, handleSubmit, formState: { errors }, setValue, reset } = useForm();
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    reset,
+  } = useForm();
   const [discount, setDiscount] = useState<number>(1);
   const [allowOthers, setAllowOthers] = useState<boolean>(false);
   const [openEditDialog, setOpenEditDialog] = useState<boolean>(false);
   const [editDiscount, setEditDiscount] = useState<any>(null);
+  const [hasShop, setHasShop] = useState<boolean>(false);
+
   const token = localStorage.getItem("access_token");
 
   useEffect(() => {
@@ -61,10 +69,47 @@ export function CreateDiscountPage({ ownerView }) {
         await fetchShopDiscounts();
         await fetchProductDiscounts();
       }
+      await fetchHasShop();
     };
 
     fetchData();
   }, [ownerView]);
+
+  const fetchHasShop = async () => {
+    try {
+      // Check if the user owns or manages any shops
+      const response = await fetch("http://localhost:5000/shops/manager", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Send JWT token
+        },
+      });
+
+      if (!response.ok) {
+        // Error fetching user's shops
+        Swal.fire({
+          icon: "error",
+          title: "Error!",
+          text: "Failed to fetch shops. Please try again later.",
+          customClass: {
+            container: "swal-dialog-custom",
+          },
+        });
+        return;
+      }
+
+      const { shops } = await response.json();
+
+      if (!shops || shops.length < 1) {
+        setHasShop(false);
+      } else {
+        setHasShop(true);
+      }
+    } catch (error) {
+      console.error("Error fetching shop discounts:", error);
+    }
+  };
 
   const fetchShopDiscounts = async () => {
     try {
@@ -405,6 +450,39 @@ export function CreateDiscountPage({ ownerView }) {
     }
   };
 
+  const handleClickOpenShopDiscount = async () => {
+    if (hasShop) {
+      setOpenShopDialog(true);
+      reset();
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "Error!",
+        text: "You must create a shop before using this feature.",
+        customClass: {
+          container: "swal-dialog-custom",
+        },
+      });
+    }
+  };
+
+  const handleClickOpenProductDiscount = async () => {
+    if (!shops || shops.length < 1) {
+      // User doesn't own or manage any shops, show an error message
+      Swal.fire({
+        icon: "error",
+        title: "Error!",
+        text: "You must create a shop before using this feature.",
+        customClass: {
+          container: "swal-dialog-custom",
+        },
+      });
+      return;
+    }
+    setOpenProductDialog(true);
+    reset();
+  };
+
   const productDiscountColumns: GridColDef[] = [
     { field: "shop_name", headerName: "Shop", width: 150 },
     { field: "product_name", headerName: "Product", width: 150 },
@@ -485,8 +563,7 @@ export function CreateDiscountPage({ ownerView }) {
         variant="contained"
         color="primary"
         onClick={() => {
-          setOpenShopDialog(true);
-          reset();
+          handleClickOpenShopDiscount();
         }}
       >
         Create Shop Discount
@@ -532,7 +609,11 @@ export function CreateDiscountPage({ ownerView }) {
                   control={control}
                   rules={{ required: "required" }}
                   render={({ field }) => (
-                    <FormControl fullWidth margin="normal" error={!!errors.selectedShop}>
+                    <FormControl
+                      fullWidth
+                      margin="normal"
+                      error={!!errors.selectedShop}
+                    >
                       <InputLabel>Shop</InputLabel>
                       <Select
                         {...field}
@@ -589,7 +670,9 @@ export function CreateDiscountPage({ ownerView }) {
                     fullWidth
                     margin="normal"
                     error={!!errors.discountCode}
-                    helperText={errors.discountCode ? errors.discountCode.message : null}
+                    helperText={
+                      errors.discountCode ? errors.discountCode.message : null
+                    }
                   />
                 )}
               />
@@ -625,7 +708,11 @@ export function CreateDiscountPage({ ownerView }) {
                     fullWidth
                     margin="normal"
                     error={!!errors.expirationDate}
-                    helperText={errors.expirationDate ? errors.expirationDate.message : null}
+                    helperText={
+                      errors.expirationDate
+                        ? errors.expirationDate.message
+                        : null
+                    }
                   />
                 )}
               />
@@ -644,7 +731,9 @@ export function CreateDiscountPage({ ownerView }) {
                     fullWidth
                     margin="normal"
                     error={!!errors.minimumAmount}
-                    helperText={errors.minimumAmount ? errors.minimumAmount.message : null}
+                    helperText={
+                      errors.minimumAmount ? errors.minimumAmount.message : null
+                    }
                   />
                 )}
               />
@@ -681,8 +770,7 @@ export function CreateDiscountPage({ ownerView }) {
         variant="contained"
         color="primary"
         onClick={() => {
-          setOpenProductDialog(true);
-          reset();
+          handleClickOpenProductDiscount();
         }}
       >
         Create Product Discount
@@ -732,7 +820,11 @@ export function CreateDiscountPage({ ownerView }) {
                     control={control}
                     rules={{ required: "required" }}
                     render={({ field }) => (
-                      <FormControl fullWidth margin="normal" error={!!errors.selectedShop}>
+                      <FormControl
+                        fullWidth
+                        margin="normal"
+                        error={!!errors.selectedShop}
+                      >
                         <InputLabel>Shop</InputLabel>
                         <Select
                           {...field}
@@ -768,7 +860,11 @@ export function CreateDiscountPage({ ownerView }) {
                     control={control}
                     rules={{ required: "required" }}
                     render={({ field }) => (
-                      <FormControl fullWidth margin="normal" error={!!errors.selectedProduct}>
+                      <FormControl
+                        fullWidth
+                        margin="normal"
+                        error={!!errors.selectedProduct}
+                      >
                         <InputLabel>Product</InputLabel>
                         <Select
                           {...field}
@@ -816,7 +912,11 @@ export function CreateDiscountPage({ ownerView }) {
                       fullWidth
                       margin="normal"
                       error={!!errors.selectedProduct}
-                      helperText={errors.selectedProduct ? errors.selectedProduct.message : null}
+                      helperText={
+                        errors.selectedProduct
+                          ? errors.selectedProduct.message
+                          : null
+                      }
                     >
                       <MenuItem value="" disabled>
                         Select a product
@@ -846,7 +946,9 @@ export function CreateDiscountPage({ ownerView }) {
                     fullWidth
                     margin="normal"
                     error={!!errors.discountCode}
-                    helperText={errors.discountCode ? errors.discountCode.message : null}
+                    helperText={
+                      errors.discountCode ? errors.discountCode.message : null
+                    }
                   />
                 )}
               />
@@ -882,7 +984,11 @@ export function CreateDiscountPage({ ownerView }) {
                     fullWidth
                     margin="normal"
                     error={!!errors.expirationDate}
-                    helperText={errors.expirationDate ? errors.expirationDate.message : null}
+                    helperText={
+                      errors.expirationDate
+                        ? errors.expirationDate.message
+                        : null
+                    }
                   />
                 )}
               />
@@ -901,7 +1007,9 @@ export function CreateDiscountPage({ ownerView }) {
                     fullWidth
                     margin="normal"
                     error={!!errors.minimumAmount}
-                    helperText={errors.minimumAmount ? errors.minimumAmount.message : null}
+                    helperText={
+                      errors.minimumAmount ? errors.minimumAmount.message : null
+                    }
                   />
                 )}
               />

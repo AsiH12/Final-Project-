@@ -255,7 +255,45 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
     }
   };
 
-  const handleAddClick = () => {
+  const handleAddClick = async () => {
+    // Check if the user owns or manages any shops
+    const response = await fetch("http://localhost:5000/shops/manager", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Send JWT token
+      },
+    });
+
+    if (!response.ok) {
+      // Error fetching user's shops
+      Swal.fire({
+        icon: "error",
+        title: "Error!",
+        text: "Failed to fetch shops. Please try again later.",
+        customClass: {
+          container: "swal-dialog-custom",
+        },
+      });
+      return;
+    }
+
+    const { shops } = await response.json();
+
+    if (!shops || shops.length < 1) {
+      // User doesn't own or manage any shops, show an error message
+      Swal.fire({
+        icon: "error",
+        title: "Error!",
+        text: "You must create a shop before using this feature.",
+        customClass: {
+          container: "swal-dialog-custom",
+        },
+      });
+      return;
+    }
+
+    // Proceed with adding a new item
     setCurrentItem({
       id: 0,
       name: "",
@@ -391,7 +429,9 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
             required
             value={currentItem?.price || ""}
             onChange={handleChange}
+            inputProps={{ min: "0" }} // Prevents selection of negative numbers
           />
+
           <TextField
             margin="dense"
             name="amount"
@@ -401,7 +441,9 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
             required
             value={currentItem?.amount || ""}
             onChange={handleChange}
+            inputProps={{ min: "0" }} // Prevents selection of negative numbers
           />
+
           <TextField
             margin="dense"
             name="maximum_discount"
@@ -410,7 +452,9 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
             fullWidth
             value={currentItem?.maximum_discount || ""}
             onChange={handleChange}
+            inputProps={{ min: "0" }} // Prevents selection of negative numbers
           />
+
           <Autocomplete
             multiple
             options={allCategories}
@@ -459,6 +503,9 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
               !currentItem?.name ||
               !currentItem?.description ||
               !currentItem?.price ||
+              !currentItem?.categories ||
+              !currentItem?.shop_name ||
+              !currentItem?.maximum_discount ||
               !currentItem?.amount
             }
           >

@@ -1,25 +1,32 @@
 from flask import Blueprint, jsonify, request
 from datetime import datetime
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from flask_jwt_extended import jwt_required
 from db import get_db, close_db
 
-bp = Blueprint("apply_discounts_route", __name__, url_prefix="/apply-discounts")
-@jwt_required
-def get_shop_id_by_name(cursor, shop_name):
-    cursor.execute("SELECT id FROM shops WHERE name = ?", (shop_name,))
+bp = Blueprint("apply_discounts_route", __name__,
+               url_prefix="/apply-discounts")
+
+
+def get_shop_id_by_product_id(cursor, product_id):
+    cursor.execute("SELECT shop_id FROM products WHERE id = ?", (product_id,))
     shop = cursor.fetchone()
+    print("shop_id: ", shop)
+
     if shop:
-        return shop["id"]
+        return shop["shop_id"]
     else:
-        raise ValueError(f"Shop with name '{shop_name}' not found")
+        raise ValueError(
+            f"Failed to get the shop ID for product ID {product_id}")
+
 
 def apply_discounts(cart, used_discounts, new_discount_code):
     db = get_db()
     cursor = db.cursor()
 
     used_discounts = list(set(used_discounts))
-    all_discounts = list(set(used_discounts + ([new_discount_code] if new_discount_code else [])))
+    all_discounts = list(
+        set(used_discounts + ([new_discount_code] if new_discount_code else [])))
     valid_discounts = []
 
     for discount_code in all_discounts:
@@ -38,7 +45,8 @@ def apply_discounts(cart, used_discounts, new_discount_code):
                 "shop_discount": shop_discount,
             })
         else:
-            raise ValueError(f"Discount code '{discount_code}' is not valid or has expired")
+            raise ValueError(
+                f"Discount code '{discount_code}' is not valid or has expired")
 
     cart_items = []
     original_total_price = 0
@@ -46,10 +54,11 @@ def apply_discounts(cart, used_discounts, new_discount_code):
 
     for item in cart:
         product_id = item.get("product_id")
-        shop_name = item.get("shop")  # Shop name from the cart item
-        shop_id = get_shop_id_by_name(cursor, shop_name)  # Convert shop name to shop ID
+        shop_id = get_shop_id_by_product_id(
+            cursor, product_id)  # Convert shop name to shop ID
         quantity = item.get("amount")
-        cursor.execute("SELECT price, maximum_discount FROM products WHERE id = ?", (product_id,))
+        cursor.execute(
+            "SELECT price, maximum_discount FROM products WHERE id = ?", (product_id,))
         product = cursor.fetchone()
         if not product:
             close_db()
@@ -67,16 +76,20 @@ def apply_discounts(cart, used_discounts, new_discount_code):
             if product_discount and product_discount["product_id"] == product_id:
                 if quantity < product_discount["minimum_amount"]:
                     close_db()
-                    raise ValueError(f"Product discount '{discount['code']}' requires a minimum quantity of {product_discount['minimum_amount']}")
+                    raise ValueError(
+                        f"Product discount '{discount['code']}' requires a minimum quantity of {product_discount['minimum_amount']}")
                 discount_value = product_discount["discount"]
-                discounted_price *= (1 - min(discount_value, maximum_discount) / 100)
+                discounted_price *= (1 - min(discount_value,
+                                     maximum_discount) / 100)
 
             if shop_discount and shop_discount["shop_id"] == shop_id:
                 if quantity < shop_discount["minimum_amount"]:
                     close_db()
-                    raise ValueError(f"Shop discount '{discount['code']}' requires a minimum quantity of {shop_discount['minimum_amount']}")
+                    raise ValueError(
+                        f"Shop discount '{discount['code']}' requires a minimum quantity of {shop_discount['minimum_amount']}")
                 discount_value = shop_discount["discount"]
-                discounted_price *= (1 - min(discount_value, maximum_discount) / 100)
+                discounted_price *= (1 - min(discount_value,
+                                     maximum_discount) / 100)
 
         discounted_total_price += discounted_price * quantity
         cart_items.append({
@@ -90,15 +103,21 @@ def apply_discounts(cart, used_discounts, new_discount_code):
         })
 
     close_db()
-    return {
-        "cartItems": cart_items,
-        "originalTotalPrice": original_total_price,
-        "discountedTotalPrice": discounted_total_price,
-    }
+
+    if (original_total_price == discounted_total_price):
+        raise ValueError(
+            f"Discount Code {new_discount_code} doesn't affect this cart.")
+
+    else:
+        return {
+            "cartItems": cart_items,
+            "originalTotalPrice": original_total_price,
+            "discountedTotalPrice": discounted_total_price,
+        }
+
 
 @bp.route("", methods=["POST"])
-@jwt_required
-
+@jwt_required()
 def apply_discounts_route():
     data = request.get_json()
     cart = data.get("cart")
@@ -115,7 +134,8 @@ def apply_discounts_route():
         return jsonify({"error": "Cannot use the same discount code more than once"}), 400
 
     try:
-        discounted_cart = apply_discounts(cart, used_discounts, new_discount_code)
+        discounted_cart = apply_discounts(
+            cart, used_discounts, new_discount_code)
         return jsonify(discounted_cart), 200
     except ValueError as ve:
         return jsonify({"error": str(ve)}), 400

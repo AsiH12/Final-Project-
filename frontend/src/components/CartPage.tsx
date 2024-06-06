@@ -166,16 +166,12 @@ const CartPage = () => {
     }
   };
 
-  // Function to apply discount
   const applyDiscount = async () => {
     try {
       const token = localStorage.getItem("access_token");
       if (!token) {
         throw new Error("Please log in to apply discounts.");
       }
-      console.log(cart);
-      console.log(discounts);
-      console.log(inputValue);
 
       const response = await fetch("http://localhost:5000/apply-discounts", {
         method: "POST",
@@ -185,22 +181,22 @@ const CartPage = () => {
         },
         body: JSON.stringify({
           cart: cart,
-          used_discounts: discounts, // Pass used discount codes
-          new_discount_code: inputValue, // Pass new discount code
+          used_discounts: discounts,
+          new_discount_code: inputValue,
         }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setCart(data.cartItems); // Update cart
-        setInputValue(""); // Clear input after applying discount
-        setDiscounts([...discounts, inputValue]); // Add new discount code to list
-      } else {
-        const errorMessage = await response.json();
-        throw new Error(errorMessage.error);
+      if (!response.ok) {
+        const errorMessage = await response.text();
+        throw new Error(`Failed to apply discounts: ${errorMessage}`);
       }
+
+      const data = await response.json();
+      setCart(data.cartItems); // Update cart
+      setInputValue(""); // Clear input after applying discount
+      setDiscounts([...discounts, inputValue]); // Add new discount code to list
     } catch (error) {
-      console.log(error);
+      console.error("Error applying discounts:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -248,11 +244,11 @@ const CartPage = () => {
         const updatedCart = await Promise.all(
           cart.map(async (item) => {
             const response = await fetch(
-              `http://localhost:5000/shops/getidbyname/${item.shop}`
+              `http://localhost:5000/products/getShopId/${item.product_id}`
             );
             if (response.ok) {
               const data = await response.json();
-              item.shop_id = data.id; // Assign shop_id to item
+              item.shop_id = data.shop_id; // Assign shop_id to item
             } else {
               throw new Error("Failed to fetch shop ID.");
             }
@@ -321,7 +317,7 @@ const CartPage = () => {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "You have to select an address",
+        text: "You have to select an address (you can make if you don't have one",
         customClass: {
           container: "swal-dialog-custom",
         },
@@ -416,9 +412,14 @@ const CartPage = () => {
           variant="contained"
           color="primary"
           onClick={() => setOpen(true)}
+          disabled={
+            !localStorage.getItem("cart") ||
+            localStorage.getItem("cart") === "[]"
+          }
         >
           Submit Order
         </Button>
+
         <Dialog open={open} onClose={() => setOpen(false)}>
           <div style={{ padding: "1rem" }}>
             <div>

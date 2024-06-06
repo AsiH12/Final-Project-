@@ -78,7 +78,7 @@ def create_new_address():
     address = data.get("address")
     city = data.get("city")
     country = data.get("country")
-    user_id = data.get("user_id")
+    user_id = get_jwt_identity()
 
     # Validate input data
     if not all([address, city, country, user_id]):
@@ -121,7 +121,7 @@ def update_address_by_id(address_id):
         # Update address data
         cursor.execute(
             "UPDATE addresses SET address = ?, city = ?, country = ?, user_id = ? WHERE id = ?",
-            (data.get("address"), data.get("city"), data.get("country"), data.get("user_id"), address_id)
+            (data.get("address"), data.get("city"), data.get("country"), get_jwt_identity(), address_id)
         )
         db.commit()
         close_db()
@@ -131,16 +131,20 @@ def update_address_by_id(address_id):
 @bp.route("/<int:address_id>", methods=["DELETE"], endpoint='addresses_delete_by_id')
 @jwt_required()
 def delete_address_by_id(address_id):
+    user_id = get_jwt_identity()  # Get the user ID from the JWT token
     db = get_db()
     cursor = db.cursor()
-    # Check if the address exists
-    cursor.execute("SELECT id FROM addresses WHERE id = ?", (address_id,))
+    
+    # Check if the address exists and belongs to the user
+    cursor.execute("SELECT id FROM addresses WHERE id = ? AND user_id = ?", (address_id, user_id))
     existing_address = cursor.fetchone()
+    
     if existing_address is None:
         close_db()
-        return jsonify({"error": "Address not found"}), 404
+        return jsonify({"error": "Address not found or doesn't belong to the user"}), 404
     else:
         cursor.execute("DELETE FROM addresses WHERE id = ?", (address_id,))
         db.commit()
         close_db()
         return jsonify({"message": "Address deleted successfully"}), 200
+

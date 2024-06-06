@@ -22,7 +22,6 @@ import { ChooseStorePage } from "./components/ChooseStorePage/ChooseStorePage";
 import { StorePage } from "./components/storePage/StorePage";
 import { ItemsPage } from "./components/itemPage/ItemsPage";
 import { OrdersPage } from "./components/orderPage/OrdersPage";
-import { RevenuesPage } from "./components/revenuesPage/RevenuesPage";
 import { AddManagerPage } from "./components/AddManagerPage/AddManagerPage";
 import { ManagersPage } from "./components/managePage/ManagersPage";
 import { UsersPage } from "./components/userPage/UsersPage";

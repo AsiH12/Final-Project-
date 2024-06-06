@@ -141,9 +141,6 @@ export function ChooseStorePage({ onStoreSelect }: ChooseStorePageProps) {
           <Button onClick={() => handleNavigation("/orders")} color="primary">
             Orders
           </Button>
-          <Button onClick={() => handleNavigation("/revenues")} color="primary">
-            Revenues
-          </Button>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} color="primary">

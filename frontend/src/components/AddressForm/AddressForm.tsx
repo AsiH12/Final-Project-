@@ -29,7 +29,11 @@ interface AddressFormData {
 }
 
 export function AddressForm({ onSaveAddress }: AddressFormProps) {
-  const { control, handleSubmit, formState: { errors } } = useForm<AddressFormData>();
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<AddressFormData>();
   const [open, setOpen] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [addresses, setAddresses] = useState<AddressFormData[]>([]);
@@ -47,7 +51,7 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
         throw new Error("Please log in to get addresses.");
       }
 
-      const response = await fetch("http://localhost:5000/addresses", {
+      const response = await fetch("http://localhost:5000/addresses/user", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -56,7 +60,7 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
       });
 
       const data = await response.json();
-      setAddresses(data.addresses);
+      setAddresses(data.addresses || []);
     };
 
     fetchAddresses().catch((error) =>
@@ -66,6 +70,7 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
 
   const handleSaveAddress = async (data: AddressFormData) => {
     try {
+      console.log(data);
       const response = await fetch(
         `http://localhost:5000/addresses${
           isEditing ? `/${currentAddress?.id}` : ""
@@ -81,19 +86,62 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
       );
 
       if (!response.ok) {
+        if(isEditing){
+          Swal.fire({
+            icon: "error",
+            title: "Error!",
+            text: "Error editing address.",
+            customClass: {
+              container: "swal-dialog-custom",
+            },
+          });
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Error!",
+            text: "Error creating address.",
+            customClass: {
+              container: "swal-dialog-custom",
+            },
+          });
+        }
         throw new Error("Failed to save address");
       }
 
-      const updatedAddress = await response.json();
-
-      if (isEditing) {
-        setAddresses((prevAddresses) =>
-          prevAddresses.map((address) =>
-            address.id === currentAddress?.id ? updatedAddress : address
-          )
-        );
+      if(isEditing){
+        Swal.fire({
+          icon: "success",
+          title: "Edited!",
+          text: "Address has been edited successfully.",
+          customClass: {
+            container: "swal-dialog-custom",
+          },
+        });
       } else {
-        setAddresses((prevAddresses) => [...prevAddresses, updatedAddress]);
+        Swal.fire({
+          icon: "success",
+          title: "Created!",
+          text: "Address has been created successfully.",
+          customClass: {
+            container: "swal-dialog-custom",
+          },
+        });
+      }
+
+
+      try {
+        const response = await fetch("http://localhost:5000/addresses/user", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Send JWT token
+          },
+        });
+
+        const data = await response.json();
+        setAddresses(data.addresses || []);
+      } catch (error) {
+        console.log(error);
       }
 
       setOpen(false);
@@ -107,10 +155,15 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
     setIsEditing(true);
     setOpen(true);
   };
+  
 
   const handleDeleteClick = async (id: number) => {
     const response = await fetch(`http://localhost:5000/addresses/${id}`, {
       method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Send JWT token
+      },
     });
 
     if (response.ok) {

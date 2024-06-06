@@ -57,7 +57,7 @@ export function OrdersPage({ ownerView }) {
         },
       });
       const data = await response.json();
-      if (!data.error) setOrders(data.purchases);
+      if (!data.error) setOrders(data.purchases || []);
     };
 
     fetchOrders().catch((error) =>

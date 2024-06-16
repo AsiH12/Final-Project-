@@ -1,39 +1,59 @@
 import pytest
 import sqlite3
+import os
 
 # Global variable for token
 user3_token = None
+shop_name_test = "testing_shops"
+shop_desc_test = "testing shop..."
+shop_categories_test = [1, 2]
+shop_id_test = None
 
 # Set up the testing environment
 @pytest.fixture(scope="module")
 def test_client():
     import sys
-    import os
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
     from main import app
 
     # Configure the Flask app for testing
     app.config["TESTING"] = True
     app.config["JWT_SECRET_KEY"] = "test_secret_key"
+    app.config["DATABASE"] = os.path.join(os.path.dirname(__file__), '../data.db')
 
     with app.test_client() as testing_client:
         with app.app_context():
-            # Initialize the database
+            # Ensure the database exists
             from db import init_db
             init_db()
 
         yield testing_client
 
-# Test login and save JWT TOKEN for the next tests
+# Test login and signup controllers and save their JWT TOKENS for the next tests
 @pytest.fixture(scope="module", autouse=True)
 def setup_tokens(test_client):
-    global user3_token
+    global user3_token, shop_id_test, shop_name_test, shop_desc_test, shop_categories_test
 
     # Login with user3 and get the token
-    response = test_client.post("/users/login", json={"username": "user3", "password": "1234"})
+    response = test_client.post("/users/login", json={"username": "usehadasdhr3", "password": "a206130940"})
     assert response.status_code == 200
     data = response.get_json()
     user3_token = data["access_token"]
+
+    headers = {"Authorization": f"Bearer {user3_token}"}
+    new_shop_data = {
+        "name": shop_name_test,
+        "description": shop_desc_test,
+        "categories": shop_categories_test
+    }
+    response1 = test_client.post("/shops/new", json=new_shop_data, headers=headers)
+    assert response1.status_code == 201
+
+    response2 = test_client.get(f'/shops/getidbyname/{shop_name_test}')
+    assert response2.status_code == 200
+
+    shop_data = response2.get_json()
+    shop_id_test = shop_data["id"]
 
 # Test getting all shops
 def test_get_shops(test_client):
@@ -45,18 +65,18 @@ def test_get_shops(test_client):
 
 # Test getting shop ID by name
 def test_get_shop_id_by_name(test_client):
-    response = test_client.get("/shops/getidbyname/shop1")
+    response = test_client.get(f"/shops/getidbyname/{shop_name_test}")
     assert response.status_code == 200
     data = response.get_json()
     assert "id" in data
 
 # Test getting shop by ID
 def test_get_shop_by_id(test_client):
-    response = test_client.get("/shops/1")
+    response = test_client.get(f"/shops/{shop_id_test}")
     assert response.status_code == 200
     data = response.get_json()
     assert "id" in data
-    assert data["id"] == 1
+    assert data["id"] == shop_id_test
 
 # Test getting shops by manager
 def test_get_shops_by_manager(test_client):
@@ -85,21 +105,6 @@ def test_get_my_stores(test_client):
     assert "stores" in data
     assert isinstance(data["stores"], list)
 
-# Test creating a new shop
-def test_create_new_shop(test_client):
-    headers = {"Authorization": f"Bearer {user3_token}"}
-    new_shop_data = {
-        "name": "new_shop",
-        "description": "A new shop",
-        "categories": ["LifeStyle"],
-        "managers": ["user4"]
-    }
-    response = test_client.post("/shops/new", json=new_shop_data, headers=headers)
-    assert response.status_code == 201
-    data = response.get_json()
-    assert "message" in data
-    assert data["message"] == "Shop created successfully"
-
 # Test updating a shop by ID
 def test_update_shop_by_id(test_client):
     headers = {"Authorization": f"Bearer {user3_token}"}
@@ -108,7 +113,7 @@ def test_update_shop_by_id(test_client):
         "description": "An updated shop",
         "owner_id": 1
     }
-    response = test_client.patch("/shops/1", json=update_shop_data, headers=headers)
+    response = test_client.patch(f"/shops/{shop_id_test}", json=update_shop_data, headers=headers)
     assert response.status_code == 200
     data = response.get_json()
     assert "message" in data
@@ -117,7 +122,7 @@ def test_update_shop_by_id(test_client):
 # Test deleting a shop by ID
 def test_delete_shop_by_id(test_client):
     headers = {"Authorization": f"Bearer {user3_token}"}
-    response = test_client.delete("/shops/1", headers=headers)
+    response = test_client.delete(f"/shops/{shop_id_test}", headers=headers)
     assert response.status_code == 200
     data = response.get_json()
     assert "message" in data

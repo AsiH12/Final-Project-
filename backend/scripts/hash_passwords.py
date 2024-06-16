@@ -1,25 +1,12 @@
-import sqlite3
 import bcrypt
 
+# Function to hash passwords
 def hash_password(password):
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
-def update_passwords():
-    db = sqlite3.connect('C:/Users/user/Documents/אסי/תכנות/1/backend/data.db')
-    cursor = db.cursor()
-    cursor.execute("SELECT id, password FROM users")
-    users = cursor.fetchall()
-    
-    for user in users:
-        user_id, plain_password = user
-        hashed_password = hash_password(plain_password)
-        cursor.execute(
-            "UPDATE users SET password = ? WHERE id = ?",
-            (hashed_password, user_id)
-        )
-    
-    db.commit()
-    db.close()
+def check_password(hashed_password, password):
+    # Check if the hashed password is in bytes; if not, convert it to bytes
+    if isinstance(hashed_password, str):
+        hashed_password = hashed_password.encode('utf-8')
+    return bcrypt.checkpw(password.encode('utf-8'), hashed_password)
 
-if __name__ == "__main__":
-    update_passwords()

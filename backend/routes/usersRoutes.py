@@ -2,16 +2,9 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
 from db import get_db, close_db
 import bcrypt
+from scripts.hash_passwords import hash_password, check_password
 
 bp = Blueprint("usersRoutes", __name__, url_prefix="/users")
-
-# Helper function to hash passwords
-def hash_password(password):
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
-# Helper function to check hashed passwords
-def check_password(hashed_password, password):
-    return bcrypt.checkpw(password.encode('utf-8'), hashed_password)
 
 # Login route
 @bp.route("/login", methods=["POST"], endpoint='users_login')

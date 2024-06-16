@@ -1,115 +1,139 @@
-import sys
-import os
 import pytest
-import sqlite3
+import os
 
-# Add the parent directory to the Python path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from main import app
-
-# Global variables for tokens and user IDs
+# Global variable for token
 user3_token = None
-new_user_token = None
-new_user_id = None
 
-# Set up the testing environment
+shop_name_test = "testing_products_shop"
+shop_desc_test = "testing shop..."
+shop_categories_test = [1, 2]
+shop_id_test = None
+
+product_name_test = "testing product..."
+product_desc_test = "testing product description..."
+product_price_test = 50
+product_amount_test = 100
+product_maximum_discount_test = 50
+product_categories_test = [1, 2]
+
+product_data = None
+
 @pytest.fixture(scope="module")
 def test_client():
+    import sys
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+    from main import app
+
     # Configure the Flask app for testing
     app.config["TESTING"] = True
     app.config["JWT_SECRET_KEY"] = "test_secret_key"
+    app.config["DATABASE"] = os.path.join(os.path.dirname(__file__), '../data.db')
 
     with app.test_client() as testing_client:
         with app.app_context():
-            # Initialize the database
+            # Ensure the database exists
             from db import init_db
             init_db()
 
         yield testing_client
 
-# Test login and signup controllers and save their JWT TOKENS for the next tests
 @pytest.fixture(scope="module", autouse=True)
 def setup_tokens(test_client):
-    global user3_token, new_user_token, new_user_id
+    global user3_token, shop_id_test, shop_name_test, shop_desc_test, shop_categories_test, product_data
 
     # Login with user3 and get the token
-    response = test_client.post("/users/login", json={"username": "user3", "password": "1234"})
+    response = test_client.post(
+        "/users/login", json={"username": "usehadasdhr3", "password": "a206130940"})
     assert response.status_code == 200
     data = response.get_json()
     user3_token = data["access_token"]
 
-    # Create a new user using user3's token
     headers = {"Authorization": f"Bearer {user3_token}"}
-    new_user_data = {
-        "username": "new_user55",
-        "password": "password123",
-        "email": "new_user55@example.com",
-        "age": 30
+    new_shop_data = {
+        "name": shop_name_test,
+        "description": shop_desc_test,
+        "categories": shop_categories_test
     }
-    response = test_client.post("/users/register", json=new_user_data, headers=headers)
-    assert response.status_code == 201
+    response1 = test_client.post(
+        "/shops/new", json=new_shop_data, headers=headers)
+    assert response1.status_code == 201
 
-    # Login with the new user and get the token
-    response = test_client.post("/users/login", json={"username": "new_user55", "password": "password123"})
-    assert response.status_code == 200
-    data = response.get_json()
-    new_user_token = data["access_token"]
-    new_user_id = data["user_id"]
+    response2 = test_client.get(f'/shops/getidbyname/{shop_name_test}')
+    assert response2.status_code == 200
 
-def test_update_user(test_client):
-    global new_user_token, new_user_id
-    update_user_data = {
-        "username": "updated_user555",
-        "email": "updated_user555@example.com",
-        "age": 35
-    }
+    shop_data = response2.get_json()
+    shop_id_test = shop_data["id"]
 
-    headers = {"Authorization": f"Bearer {new_user_token}"}
-    response = test_client.patch("/users", json=update_user_data, headers=headers)
-    assert response.status_code == 200
-
-    # Check if the user is actually updated in the database
-    db = sqlite3.connect("data.db")
-    cursor = db.cursor()
-    cursor.execute("SELECT * FROM users WHERE id = ?", (new_user_id,))
-    user = cursor.fetchone()
-    db.close()
-
-    assert user is not None
-    assert user[1] == update_user_data["username"]
-    assert user[3] == update_user_data["email"]
-
-def test_reset_password(test_client):
-    global new_user_token, new_user_id
-    reset_password_data = {
-        "new_password": "new_password123"
+    new_product_data = {
+        "name": product_name_test,
+        "description": product_desc_test,
+        "shop_id": shop_id_test,
+        "price": product_price_test,
+        "amount": product_amount_test,
+        "maximum_discount": product_maximum_discount_test,
+        "categories": product_categories_test
     }
 
-    headers = {"Authorization": f"Bearer {new_user_token}"}
-    response = test_client.patch("/users/reset-password", json=reset_password_data, headers=headers)
+    response3 = test_client.post(
+        "/products", json=new_product_data, headers=headers)
+    assert response3.status_code == 201
+
+    product_data = response3.get_json()
+
+def test_get_all_products(test_client):
+    response = test_client.get("/products/")
     assert response.status_code == 200
+    products = response.get_json()["products"]
+    assert len(products) > 0
 
-    # Check if the password is actually updated in the database
-    db = sqlite3.connect("data.db")
-    cursor = db.cursor()
-    cursor.execute("SELECT * FROM users WHERE id = ?", (new_user_id,))
-    user = cursor.fetchone()
-    db.close()
-
-    assert user is not None
-    assert user[2] == reset_password_data["new_password"]
-
-def test_delete_user(test_client):
-    global user3_token, new_user_id
+def test_get_product_by_id(test_client):
     headers = {"Authorization": f"Bearer {user3_token}"}
-    response = test_client.delete(f"/users/{new_user_id}", headers=headers)
+    product_id = product_data["id"]
+    response = test_client.get(f"/products/{product_id}", headers=headers)
+    assert response.status_code == 200
+    product = response.get_json()
+    assert product["id"] == product_id
+
+def test_get_products_by_shop_id(test_client):
+    headers = {"Authorization": f"Bearer {user3_token}"}
+    response = test_client.get(f"/products/shop/{shop_id_test}", headers=headers)
+    assert response.status_code == 200
+    products = response.get_json()["products"]
+    assert len(products) == 1  # Ensure there is only one product in this shop
+
+def test_get_shop_id_by_product_id(test_client):
+    headers = {"Authorization": f"Bearer {user3_token}"}
+    product_id = product_data["id"]
+    response = test_client.get(f"/products/getShopId/{product_id}", headers=headers)
+    assert response.status_code == 200
+    shop_id = response.get_json()["shop_id"]
+    assert shop_id == shop_id_test
+
+def test_update_product(test_client):
+    headers = {"Authorization": f"Bearer {user3_token}"}
+    product_id = product_data["id"]
+    update_data = {
+        "name": "updated product name",
+        "description": "updated product description",
+        "shop_id": shop_id_test,
+        "price": 60,
+        "amount": 150,
+        "maximum_discount": 40,
+        "categories": [1, 3]
+    }
+    response = test_client.patch(f"/products/{product_id}", json=update_data, headers=headers)
+    assert response.status_code == 200
+    updated_response = test_client.get(f"/products/{product_id}", headers=headers)
+    assert updated_response.status_code == 200
+    updated_product = updated_response.get_json()
+    assert updated_product["name"] == update_data["name"]
+    assert updated_product["description"] == update_data["description"]
+
+def test_delete_product_and_shop(test_client):
+    headers = {"Authorization": f"Bearer {user3_token}"}
+    product_id = product_data["id"]
+    response = test_client.delete(f"/products/{product_id}", headers=headers)
     assert response.status_code == 200
 
-    # Check if the user is actually deleted from the database
-    db = sqlite3.connect("data.db")
-    cursor = db.cursor()
-    cursor.execute("SELECT * FROM users WHERE id = ?", (new_user_id,))
-    user = cursor.fetchone()
-    db.close()
-
-    assert user is None
+    response = test_client.delete(f"/shops/{shop_id_test}", headers=headers)
+    assert response.status_code == 200

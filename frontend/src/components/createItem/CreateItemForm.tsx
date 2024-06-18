@@ -1,18 +1,13 @@
 import React, { useRef, useState } from 'react';
 import { Box, TextField, Button, Dialog, DialogTitle, DialogContent, DialogActions, Divider } from '@mui/material';
 import './CreateItemForm.css';
+import { Product } from '../../utils/types';
 
 interface CreateItemFormProps {
-  onCreateItem: (data: ItemFormData) => void;
+  onCreateItem: (data: Product) => void;
 }
 
-interface ItemFormData {
-  itemName: string;
-  description: string;
-  categories: string;
-  price: string;
-  amount: string;
-}
+
 
 export function CreateItemForm({ onCreateItem }: CreateItemFormProps) {
   const itemNameRef = useRef<HTMLInputElement>(null);

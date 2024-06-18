@@ -1,17 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { Box, Button } from "@mui/material";
+import { useState, useEffect } from "react";
+import { Box } from "@mui/material";
 import { DataGrid, GridColDef, GridActionsCellItem } from "@mui/x-data-grid";
-import { useParams, useLocation } from "react-router-dom";
-import EditIcon from "@mui/icons-material/Edit";
+import { useParams } from "react-router-dom";
 import DeleteIcon from "@mui/icons-material/Delete";
-import AddIcon from "@mui/icons-material/Add";
 import Swal from "sweetalert2";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
-import TextField from "@mui/material/TextField";
-import Autocomplete from "@mui/material/Autocomplete";
 import "./OrdersPage.css";
 
 interface Order {
@@ -29,19 +21,13 @@ interface Order {
   total_price: number;
 }
 
-interface Shop {
-  id: number;
-  name: string;
-  description: string;
-  owner_id: number;
-  role: string;
+interface OrdersPageProps {
+  ownerView: boolean;
 }
 
-export function OrdersPage({ ownerView }) {
+export function OrdersPage({ ownerView }: OrdersPageProps) {
   const [orders, setOrders] = useState<Order[]>([]); // State to store orders
-  const { shop_name } = useParams();
-  const location = useLocation();
-  const logged_user_id = localStorage.getItem("user_id");
+  const { shop_name } = useParams<{ shop_name: string }>();
   const token = localStorage.getItem("access_token");
 
   useEffect(() => {
@@ -101,26 +87,21 @@ export function OrdersPage({ ownerView }) {
 
   const columns: GridColDef[] = [
     { field: "id", headerName: "ID", width: 90 },
-    { field: "product_name", headerName: "Product Name", width: 150 },
-    { field: "shop_name", headerName: "Shop Name", width: 150 },
-    { field: "user_name", headerName: "User Name", width: 150 },
-    { field: "quantity", headerName: "Quantity", width: 120 },
-    { field: "product_price", headerName: "Product Price", width: 150 },
-    { field: "purchase_date", headerName: "Purchase Date", width: 150 },
-    { field: "city", headerName: "City", width: 150 },
-    { field: "country", headerName: "Country", width: 150 },
-    { field: "shipping_address", headerName: "Shipping Address", width: 200 },
-    // {
-    //   field: "shipping_completed",
-    //   headerName: "Shipping Completed",
-    //   width: 150,
-    // },
-    { field: "total_price", headerName: "Total Price", width: 150 },
+    { field: "product_name", headerName: "Product Name", flex: 1 },
+    { field: "shop_name", headerName: "Shop Name", flex: 1 },
+    { field: "user_name", headerName: "User Name", flex: 1 },
+    { field: "quantity", headerName: "Quantity", flex: 1 },
+    { field: "product_price", headerName: "Product Price", flex: 1 },
+    { field: "purchase_date", headerName: "Purchase Date", flex: 1 },
+    { field: "city", headerName: "City", flex: 1 },
+    { field: "country", headerName: "Country", flex: 1 },
+    { field: "shipping_address", headerName: "Shipping Address", flex: 1 },
+    { field: "total_price", headerName: "Total Price", flex: 1 },
     {
       field: "actions",
       headerName: "Actions",
       type: "actions",
-      width: 150,
+      flex: 1,
       getActions: (params) => [
         <GridActionsCellItem
           icon={<DeleteIcon />}
@@ -139,17 +120,10 @@ export function OrdersPage({ ownerView }) {
         </span>
       </h2>
       <Box
-        className="orders-table"
         sx={{
-          backgroundColor: "white",
-          borderRadius: "44px",
-          boxShadow: "10px 8px 4px 0px #00000040",
-          width: "1000px",
-          height: "600px",
-          padding: "40px",
           display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
+          height: "80%",
+          width: "100%",
         }}
       >
         <DataGrid

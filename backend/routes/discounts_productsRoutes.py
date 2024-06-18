@@ -2,9 +2,12 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from db import get_db, close_db
 
-bp = Blueprint("discounts_productsRoutes", __name__, url_prefix="/discounts/products")
+bp = Blueprint("discounts_productsRoutes", __name__,
+               url_prefix="/discounts/products")
 
 # Get all discounts for products route
+
+
 @bp.route("/", methods=["GET"], endpoint='discounts_products_get_all')
 @jwt_required()
 def get_discounts_products():
@@ -41,6 +44,8 @@ def get_discounts_products():
         return jsonify({"error": str(e)}), 500
 
 # Get discount for product by discount code route
+
+
 @bp.route("/by-code/<string:discount_code>", methods=["GET"], endpoint='discounts_products_get_by_code')
 @jwt_required()
 def get_discount_by_code(discount_code):
@@ -80,6 +85,8 @@ def get_discount_by_code(discount_code):
         return jsonify({"error": str(e)}), 500
 
 # Get discount for product by ID route
+
+
 @bp.route("/<int:discount_id>", methods=["GET"], endpoint='discounts_products_get_by_id')
 @jwt_required()
 def get_discount_product_by_id(discount_id):
@@ -119,6 +126,8 @@ def get_discount_product_by_id(discount_id):
         return jsonify({"error": str(e)}), 500
 
 # Get discount for product by product ID route
+
+
 @bp.route("/product/<int:product_id>", methods=["GET"], endpoint='discounts_products_get_by_product_id')
 @jwt_required()
 def get_discounts_by_product_id(product_id):
@@ -139,7 +148,7 @@ def get_discounts_by_product_id(product_id):
         discounts = cursor.fetchall()
         close_db()
         if not discounts:
-            return jsonify({"error": "No discounts found for this product"}), 404
+            return jsonify(discounts=[]), 200
         discounts_list = [{
             "id": discount["id"],
             "product_id": discount["product_id"],
@@ -158,6 +167,8 @@ def get_discounts_by_product_id(product_id):
         return jsonify({"error": str(e)}), 500
 
 # Get all product discounts by shop ID route
+
+
 @bp.route("/by_shop/<int:shop_id>", methods=["GET"], endpoint='discounts_products_get_by_shop_id')
 @jwt_required()
 def get_discounts_by_shop_id(shop_id):
@@ -178,7 +189,7 @@ def get_discounts_by_shop_id(shop_id):
         discounts = cursor.fetchall()
         close_db()
         if not discounts:
-            return jsonify({"error": "No discounts found for this shop"}), 404
+            return jsonify(discounts=[]), 200
         discounts_list = [{
             "id": discount["id"],
             "product_id": discount["product_id"],
@@ -197,6 +208,8 @@ def get_discounts_by_shop_id(shop_id):
         return jsonify({"error": str(e)}), 500
 
 # Get all product discounts by shop name route
+
+
 @bp.route("/by_shop_name/<string:shop_name>", methods=["GET"], endpoint='discounts_products_get_by_shop_name')
 @jwt_required()
 def get_discounts_by_shop_name(shop_name):
@@ -217,7 +230,7 @@ def get_discounts_by_shop_name(shop_name):
         discounts = cursor.fetchall()
         close_db()
         if not discounts:
-            return jsonify({"error": "No discounts found for this shop"}), 404
+            return jsonify(discounts=[]), 200
         discounts_list = [{
             "id": discount["id"],
             "product_id": discount["product_id"],
@@ -236,6 +249,8 @@ def get_discounts_by_shop_name(shop_name):
         return jsonify({"error": str(e)}), 500
 
 # Get all product discounts by user ID route
+
+
 @bp.route("/user", methods=["GET"], endpoint='discounts_products_get_by_user_id')
 @jwt_required()
 def get_discounts_for_user():
@@ -292,6 +307,8 @@ def get_discounts_for_user():
         return jsonify({"error": str(e)}), 500
 
 # Create new discount for product route
+
+
 @bp.route("", methods=["POST"], endpoint='discounts_products_create')
 @jwt_required()
 def create_discount_product():
@@ -329,6 +346,8 @@ def create_discount_product():
         return jsonify({"error": str(e)}), 500
 
 # Update discount for product by ID route
+
+
 @bp.route("/<int:discount_id>", methods=["PATCH"], endpoint='discounts_products_update_by_id')
 @jwt_required()
 def update_discount_product_by_id(discount_id):
@@ -356,6 +375,8 @@ def update_discount_product_by_id(discount_id):
         return jsonify({"error": str(e)}), 500
 
 # Delete discount for product by ID route
+
+
 @bp.route("/<int:discount_id>", methods=["DELETE"], endpoint='discounts_products_delete_by_id')
 @jwt_required()
 def delete_discount_product_by_id(discount_id):

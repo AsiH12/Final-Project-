@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   TextField,
@@ -13,16 +13,12 @@ import {
 } from "@mui/material";
 import { useForm, Controller } from "react-hook-form";
 import Swal from "sweetalert2";
-import { User, Shop } from "../../utils/types"; // Adjust the import path as necessary
-import { Navigate, useNavigate } from "react-router-dom";
+import { Category, Shop } from "../utils/types";
+import { useNavigate } from "react-router-dom";
 
 interface StoreFormProps {
   open: boolean;
   onClose: () => void;
-}
-
-interface Category {
-  name: string;
 }
 
 interface Manager {
@@ -54,7 +50,9 @@ export function StoreForm({ open, onClose }: StoreFormProps) {
       .then((data) => {
         console.log("Categories fetched:", data);
         setCategories(
-          data.categories.map((category: any) => ({ name: category.name }))
+          data.categories.map((category: any) => ({
+            category_name: category.category_name,
+          }))
         );
       })
       .catch((error) => {
@@ -66,7 +64,7 @@ export function StoreForm({ open, onClose }: StoreFormProps) {
   useEffect(() => {
     const token = localStorage.getItem("access_token");
 
-    fetch("http://localhost:5000/users", {
+    fetch("http://localhost:5000/users/notme", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -79,6 +77,7 @@ export function StoreForm({ open, onClose }: StoreFormProps) {
       })
       .then((data) => {
         console.log("Managers fetched:", data);
+        console.log(data.users);
         setManagers(
           data.users.map((user: any) => ({ username: user.username }))
         );
@@ -126,7 +125,12 @@ export function StoreForm({ open, onClose }: StoreFormProps) {
           container: "swal-dialog-custom",
         },
       });
-      console.error("Error creating a shop: " + error.message);
+
+      if (error instanceof Error) {
+        console.error("Error creating a shop: " + error.message);
+      } else {
+        console.error("An unknown error occurred");
+      }
     }
   };
 
@@ -190,13 +194,12 @@ export function StoreForm({ open, onClose }: StoreFormProps) {
                   multiple
                   id="categories"
                   fullWidth
-                  options={categories.map((category) => category.name)}
+                  options={categories.map((category) => category.category_name)}
                   getOptionLabel={(option) => option}
                   filterSelectedOptions
                   renderTags={(value, getTagProps) =>
                     value.map((option, index) => (
                       <Chip
-                        key={index}
                         variant="outlined"
                         label={option}
                         {...getTagProps({ index })}
@@ -219,7 +222,7 @@ export function StoreForm({ open, onClose }: StoreFormProps) {
                   )}
                   {...field}
                   value={selectedCategories}
-                  onChange={(event, value) => {
+                  onChange={(_, value) => {
                     setSelectedCategories(value);
                     field.onChange(value);
                   }}
@@ -242,7 +245,6 @@ export function StoreForm({ open, onClose }: StoreFormProps) {
                   renderTags={(value, getTagProps) =>
                     value.map((option, index) => (
                       <Chip
-                        key={index}
                         variant="outlined"
                         label={option}
                         {...getTagProps({ index })}
@@ -265,7 +267,7 @@ export function StoreForm({ open, onClose }: StoreFormProps) {
                   )}
                   {...field}
                   value={selectedManagers}
-                  onChange={(event, value) => {
+                  onChange={(_, value) => {
                     setSelectedManagers(value);
                     field.onChange(value);
                   }}

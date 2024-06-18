@@ -10,37 +10,32 @@ import {
   Divider,
 } from "@mui/material";
 import "./EditItemForm.css";
+import { Product } from "../../utils/types";
 
 interface EditItemFormProps {
-  onSaveItem: (data: ItemFormData) => void;
-}
-
-interface ItemFormData {
-  name: string;
-  description: string;
-  categories: string;
-  price: string;
-  amount: string;
+  onSaveItem: (data: Product) => void;
 }
 
 export function EditItemForm({ onSaveItem }: EditItemFormProps) {
-  const idRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLInputElement>(null);
   const categoriesRef = useRef<HTMLInputElement>(null);
   const priceRef = useRef<HTMLInputElement>(null);
   const amountRef = useRef<HTMLInputElement>(null);
-  const storeIdRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState<boolean>(false);
 
   const handleSaveItem = () => {
     const name = nameRef.current?.value || "";
     const description = descriptionRef.current?.value || "";
-    const categories = categoriesRef.current?.value || "";
-    const price = priceRef.current?.value || "";
-    const amount = amountRef.current?.value || "";
+    const category = categoriesRef.current?.value || "";
+    const price = priceRef.current?.value
+      ? parseFloat(priceRef.current.value)
+      : undefined;
+    const amount = amountRef.current?.value
+      ? parseInt(amountRef.current.value)
+      : undefined;
 
-    onSaveItem({ name, description, categories, price, amount });
+    onSaveItem({ name, description, categories: [category], price, amount });
     setOpen(false); // Close the dialog after saving item
   };
 
@@ -96,6 +91,7 @@ export function EditItemForm({ onSaveItem }: EditItemFormProps) {
               inputRef={priceRef}
               fullWidth
               margin="normal"
+              type="number"
             />
             <TextField
               sx={{ width: "400px", background: "white" }}
@@ -105,6 +101,7 @@ export function EditItemForm({ onSaveItem }: EditItemFormProps) {
               inputRef={amountRef}
               fullWidth
               margin="normal"
+              type="number"
             />
           </Box>
         </DialogContent>

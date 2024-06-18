@@ -1,39 +1,61 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import {
   DataGrid,
+  GridColDef,
   GridToolbarContainer,
   GridToolbarColumnsButton,
   GridToolbarFilterButton,
   GridToolbarExport,
   GridToolbarDensitySelector,
   GridToolbarQuickFilter,
+  GridFilterModel,
 } from "@mui/x-data-grid";
 import "./PurchaseHistoryPage.css";
+
+interface Purchase {
+  id: number;
+  product_name: string;
+  shop_name: string;
+  user_name: string;
+  quantity: number;
+  product_price: number;
+  purchase_date: string;
+  city: string;
+  country: string;
+  shipping_address: string;
+  shipping_completed: boolean;
+  total_price: number;
+}
 
 function CustomToolbar() {
   return (
     <GridToolbarContainer>
-      <GridToolbarColumnsButton />
-      <GridToolbarFilterButton />
-      <GridToolbarExport />
-      <GridToolbarDensitySelector />
-      <GridToolbarQuickFilter />
+      <Box
+        sx={{ display: "flex", justifyContent: "space-between", width: "100%" }}
+      >
+        <Box>
+          <GridToolbarColumnsButton />
+          <GridToolbarFilterButton />
+          <GridToolbarDensitySelector />
+          <GridToolbarExport />
+        </Box>
+        <GridToolbarQuickFilter />
+      </Box>
     </GridToolbarContainer>
   );
 }
 
 export function PurchaseHistoryPage() {
-  const [purchaseHistory, setPurchaseHistory] = useState([]);
+  const [purchaseHistory, setPurchaseHistory] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterModel, setFilterModel] = useState({
+  const [filterModel, setFilterModel] = useState<GridFilterModel>({
     items: [],
   });
   const token = localStorage.getItem("access_token");
 
   useEffect(() => {
     const fetchPurchaseHistory = async () => {
-      const userId = localStorage.getItem("user_id");
       try {
         const response = await fetch(
           `http://localhost:5000/purchase-history/user`,
@@ -57,7 +79,7 @@ export function PurchaseHistoryPage() {
     fetchPurchaseHistory();
   }, []);
 
-  const columns = [
+  const columns: GridColDef[] = [
     { field: "id", headerName: "ID", width: 90, editable: false },
     {
       field: "product_name",
@@ -89,7 +111,6 @@ export function PurchaseHistoryPage() {
       width: 200,
       editable: false,
     },
-    // { field: 'shipping_completed', headerName: 'Shipping Completed', width: 180, editable: false, type: "boolean" },
     {
       field: "total_price",
       headerName: "Total Price",
@@ -100,15 +121,21 @@ export function PurchaseHistoryPage() {
   ];
 
   return (
-    <Box sx={{ height: 400, width: "80%", margin: "auto" }}>
+    <Box
+      sx={{
+        display: "flex",
+        height: "80%",
+        width: "100%",
+      }}
+    >
       {loading ? (
         <CircularProgress />
       ) : (
         <DataGrid
           rows={purchaseHistory}
           columns={columns}
-          components={{
-            Toolbar: CustomToolbar,
+          slots={{
+            toolbar: CustomToolbar,
           }}
           filterModel={filterModel}
           onFilterModelChange={(model) => setFilterModel(model)}

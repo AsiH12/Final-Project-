@@ -6,6 +6,8 @@ from db import get_db, close_db
 bp = Blueprint("discount_shopsRoutes", __name__, url_prefix="/discounts")
 
 # Get all discounts for shops route
+
+
 @bp.route("/shops", methods=["GET"])
 def get_all_discounts_shops():
     try:
@@ -40,6 +42,8 @@ def get_all_discounts_shops():
         return jsonify({"error": str(e)}), 500
 
 # Get discount for shop by discount code route
+
+
 @bp.route("/shops/<string:discount_code>", methods=["GET"])
 def get_discount_shop_by_code(discount_code):
     try:
@@ -77,6 +81,8 @@ def get_discount_shop_by_code(discount_code):
         return jsonify({"error": str(e)}), 500
 
 # Get a discount for shop by ID route
+
+
 @bp.route("/shops/<int:discount_id>", methods=["GET"])
 def get_discount_shop_by_id(discount_id):
     try:
@@ -113,6 +119,8 @@ def get_discount_shop_by_id(discount_id):
         return jsonify({"error": str(e)}), 500
 
 # Get discounts for a specific shop by shop ID
+
+
 @bp.route("/shops/by_shop/<int:shop_id>", methods=["GET"])
 def get_discounts_by_shop_id(shop_id):
     try:
@@ -132,7 +140,8 @@ def get_discounts_by_shop_id(shop_id):
         discounts = cursor.fetchall()
         close_db()
         if not discounts:
-            return jsonify({"error": "No discounts found for this shop"}), 404
+            return jsonify(discounts=[]), 200
+
         discounts_list = [{
             "id": discount["id"],
             "shop_id": discount["shop_id"],
@@ -150,6 +159,8 @@ def get_discounts_by_shop_id(shop_id):
         return jsonify({"error": str(e)}), 500
 
 # Get discounts for a specific shop by shop name
+
+
 @bp.route("/shops/by_shop_name/<string:shop_name>", methods=["GET"])
 def get_discounts_by_shop_name(shop_name):
     try:
@@ -169,7 +180,8 @@ def get_discounts_by_shop_name(shop_name):
         discounts = cursor.fetchall()
         close_db()
         if not discounts:
-            return jsonify({"error": "No discounts found for this shop"}), 404
+            return jsonify(discounts=[]), 200
+
         discounts_list = [{
             "id": discount["id"],
             "shop_id": discount["shop_id"],
@@ -187,6 +199,8 @@ def get_discounts_by_shop_name(shop_name):
         return jsonify({"error": str(e)}), 500
 
 # Get all shop discounts for a user (owner/manager)
+
+
 @bp.route("/shops/user", methods=["GET"])
 @jwt_required()
 def get_shop_discounts_for_user():
@@ -243,6 +257,8 @@ def get_shop_discounts_for_user():
         return jsonify({"error": str(e)}), 500
 
 # Create new discount for shop route
+
+
 @bp.route("/shops", methods=["POST"])
 @jwt_required()
 def create_discount_shop():
@@ -289,6 +305,8 @@ def create_discount_shop():
         return jsonify({"error": str(e)}), 500
 
 # Update a discount for shop by ID route
+
+
 @bp.route("/shops/<int:discount_id>", methods=["PATCH"])
 @jwt_required()
 def update_discount_shop(discount_id):
@@ -378,6 +396,8 @@ def update_discount_shop(discount_id):
         return jsonify({"error": str(e)}), 500
 
 # Delete a discount for shop by ID route
+
+
 @bp.route("/shops/<int:discount_id>", methods=["DELETE"])
 @jwt_required()
 def delete_discount_shop(discount_id):

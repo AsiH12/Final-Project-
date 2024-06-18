@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import { useForm } from "react-hook-form";
 import { User } from "../../utils/types";
@@ -53,7 +53,7 @@ export function LoginForm({ setUserToken }: LoginFormProps) {
       } else {
         throw new Error("Invalid credentials");
       }
-    } catch (error) {
+    } catch (error: any) {
       alert("Error logging in: " + error.message);
     }
   };

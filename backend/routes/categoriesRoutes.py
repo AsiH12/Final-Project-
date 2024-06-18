@@ -16,7 +16,7 @@ def get_all_categories():
     cursor.execute("SELECT * FROM categories")
     categories = cursor.fetchall()
     close_db()
-    category_list = [{"id": category["id"], "name": category["category_name"]}
+    category_list = [{"id": category["id"], "category_name": category["category_name"]}
                      for category in categories]
     return jsonify(categories=category_list), 200
 
@@ -34,7 +34,7 @@ def get_category_by_id(category_id):
     if category is None:
         return jsonify({"error": "Category not found"}), 404
     else:
-        return jsonify({"id": category["id"], "name": category["category_name"]}), 200
+        return jsonify({"id": category["id"], "category_name": category["category_name"]}), 200
 
 # Create new category
 

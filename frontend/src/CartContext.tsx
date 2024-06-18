@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from "react";
 
 const CartContext = createContext();
 
@@ -8,7 +8,7 @@ export const CartProvider = ({ children }) => {
   const updateCartCount = () => {
     const cart = JSON.parse(localStorage.getItem("cart")) || [];
     let totalCount = 0;
-    cart.forEach(item => {
+    cart.forEach((item) => {
       totalCount += item.amount;
     });
     setCartCount(totalCount);

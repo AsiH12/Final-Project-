@@ -26,7 +26,7 @@ nav ul li a {
   text-decoration: none;
   font-size: 2em; /* Increase font size */
   display: inline-block;
-  padding: 20px; 
+  padding: 20px;
 }
 
 nav ul li a:hover {
@@ -50,7 +50,7 @@ nav ul li a:hover {
   position: absolute;
   background-color: #f9f9f9;
   min-width: 120px;
-  box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
   z-index: 1;
 }
 
@@ -69,7 +69,16 @@ nav ul li a:hover {
   display: block;
 }
 
-
 .swal-dialog-custom {
   z-index: 9999 !important; /* Adjust the z-index value as needed */
+}
+
+.outlet-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 13vh); /* Subtract the height of the navbar */
+  margin-top: 13vh;
+  width: 90vw;
+  background-color: red;
 }

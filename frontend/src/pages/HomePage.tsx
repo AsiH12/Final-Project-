@@ -1,38 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import CardItem from '../components/CardItem';
-import { Box } from '@mui/material';
+import { useEffect, useState } from "react";
+import CardItem from "../components/CardItem";
+import { Box } from "@mui/material";
 import img1 from "../images/img1.jpg";
-
-
-// Define the interface for the product object
-interface Product {
-  name: string;
-  description: string;
-  shop_name: string;
-  price: number;
-  categories: string[];
-  amount: number;
-}
-
-// Define the interface for the CardItem component's props
-// interface CardItemProps {
-//   image: string;
-//   name: string;
-//   description: string;
-//   shop: string;
-//   price: number;
-//   categories: string[];
-// }
+import { Product } from "../utils/types";
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    fetch('http://localhost:5000/products')
-      .then(response => response.json())
-      .then(data => setProducts(data.products))
-      .catch(error => console.error('Error fetching products:', error));
-
+    fetch("http://localhost:5000/products")
+      .then((response) => response.json())
+      .then((data) => setProducts(data.products))
+      .catch((error) => console.error("Error fetching products:", error));
   }, []);
 
   return (
@@ -40,29 +19,29 @@ export default function HomePage() {
       <Box
         id="itemsBox"
         style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignContent: 'start',
-          justifyContent: 'center',
-          paddingLeft: '1.5rem',
-          height: '63vh',
-          columnGap: '1.5rem',
-          rowGap: '1.5rem',
-          overflowX: 'hidden',
-          overflowY: 'auto',
+          display: "flex",
+          flexWrap: "wrap",
+          alignContent: "start",
+          justifyContent: "center",
+          paddingLeft: "1.5rem",
+          height: "63vh",
+          columnGap: "1.5rem",
+          rowGap: "1.5rem",
+          overflowX: "hidden",
+          overflowY: "auto",
         }}
       >
         {products.map((product, index) => (
           <CardItem
             key={index}
-            id={product.id}
+            id={product.id?.toString() || ""}
             image={img1} // Replace with actual image URL
-            name={product.name}
-            description={product.description}
-            shop={product.shop_name}
-            price={product.price}
-            categories={product.categories}
-            amount={product.amount}
+            name={product.name || ""}
+            description={product.description || ""}
+            shop={product.shop_name || ""}
+            price={product.price ?? 0}
+            categories={product.categories || []}
+            amount={product.amount ?? 0}
           />
         ))}
       </Box>

@@ -1,4 +1,3 @@
-import React from "react";
 import { ChangePasswordForm } from "../components/ChangePassowrdForm/ChangePasswordForm";
 
 export default function ChangePassword() {

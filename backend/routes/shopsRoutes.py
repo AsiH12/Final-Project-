@@ -6,6 +6,8 @@ from db import get_db, close_db
 bp = Blueprint("shopsRoutes", __name__, url_prefix="/shops")
 
 # Get all shops route
+
+
 @bp.route("/", methods=["GET"], endpoint='shops_get_all')
 @cross_origin(origins="http://localhost:5173")
 def get_shops():
@@ -37,6 +39,8 @@ def get_shops():
     return jsonify(shops=shop_list), 200
 
 # Get shop ID by name
+
+
 @bp.route("/getidbyname/<string:shop_name>", methods=["GET"], endpoint='shops_get_id_by_name')
 @cross_origin(origins="http://localhost:5173")
 def get_shop_id_by_name(shop_name):
@@ -51,6 +55,8 @@ def get_shop_id_by_name(shop_name):
         return jsonify({"id": shop["id"]}), 200
 
 # Get shop by ID route
+
+
 @bp.route("/<int:shop_id>", methods=["GET"], endpoint='shops_get_by_id')
 @cross_origin(origins="http://localhost:5173")
 def get_shop_by_id(shop_id):
@@ -82,6 +88,8 @@ def get_shop_by_id(shop_id):
         }), 200
 
 # Get shops by manager
+
+
 @bp.route("/manager", methods=["GET"], endpoint='shops_get_by_manager')
 @jwt_required()
 @cross_origin(origins="http://localhost:5173")
@@ -115,6 +123,8 @@ def get_shops_by_manager():
     return jsonify(shops=shop_list), 200
 
 # Get stores by owner ID
+
+
 @bp.route("/owner", methods=["GET"], endpoint='shops_get_by_owner')
 @jwt_required()
 @cross_origin(origins="http://localhost:5173")
@@ -141,6 +151,8 @@ def get_stores_by_owner_id():
     return jsonify(stores=store_list), 200
 
 # Get my stores
+
+
 @bp.route("/my-stores", methods=["GET"], endpoint='shops_get_my_stores')
 @jwt_required()
 @cross_origin(origins="http://localhost:5173")
@@ -167,6 +179,8 @@ def get_my_stores():
     return jsonify(stores=store_list), 200
 
 # Create new shop route
+
+
 @bp.route("/new", methods=["POST"], endpoint='shops_create')
 @jwt_required()
 @cross_origin(origins="http://localhost:5173")
@@ -228,6 +242,8 @@ def create_new_shop():
         return jsonify({"error": "Shop name already exists"}), 409
 
 # Update shop by ID route
+
+
 @bp.route("/<int:shop_id>", methods=["PATCH"], endpoint='shops_update')
 @jwt_required()
 @cross_origin(origins="http://localhost:5173")
@@ -254,20 +270,59 @@ def update_shop_by_id(shop_id):
         close_db()
         return jsonify({"message": "Shop updated successfully"}), 200
 
-# Delete shop by ID route
+
+
+
 @bp.route("/<int:shop_id>", methods=["DELETE"], endpoint='shops_delete')
 @jwt_required()
 @cross_origin(origins="http://localhost:5173")
 def delete_shop_by_id(shop_id):
+    user_id = get_jwt_identity()
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT id FROM shops WHERE id = ?", (shop_id,))
+
+    cursor.execute("SELECT id, owner_id FROM shops WHERE id = ?", (shop_id,))
     existing_shop = cursor.fetchone()
     if existing_shop is None:
         close_db()
         return jsonify({"error": "Shop not found"}), 404
-    else:
-        cursor.execute("DELETE FROM shops WHERE id = ?", (shop_id,))
-        db.commit()
+
+    if existing_shop["owner_id"] != user_id:
         close_db()
-        return jsonify({"message": "Shop deleted successfully"}), 200
+        return jsonify({"error": "You are not authorized to delete this shop"}), 403
+
+    # Delete related rows from other tables
+    cursor.execute("DELETE FROM discounts_shops WHERE shop_id = ?", (shop_id,))
+    cursor.execute("DELETE FROM managers WHERE shop_id = ?", (shop_id,))
+    
+    # Get all products of the shop to delete related discount products and product categories
+    cursor.execute("SELECT id FROM products WHERE shop_id = ?", (shop_id,))
+    products = cursor.fetchall()
+    product_ids = [product["id"] for product in products]
+
+    if product_ids:
+        # Delete related rows from discounts_products
+        cursor.execute(
+            "DELETE FROM discounts_products WHERE product_id IN ({})".format(','.join('?' for _ in product_ids)),
+            product_ids
+        )
+        
+        # Delete related rows from products_categories
+        cursor.execute(
+            "DELETE FROM products_categories WHERE product_id IN ({})".format(','.join('?' for _ in product_ids)),
+            product_ids
+        )
+    
+    # Delete the products themselves
+    cursor.execute("DELETE FROM products WHERE shop_id = ?", (shop_id,))
+    
+    
+    # Delete the shop itself
+    cursor.execute("DELETE FROM shops_categories WHERE shop_id = ?", (shop_id,))
+    
+    cursor.execute("DELETE FROM shops WHERE id = ?", (shop_id,))
+    
+
+    db.commit()
+    close_db()
+    return jsonify({"message": "Shop and related data deleted successfully"}), 200

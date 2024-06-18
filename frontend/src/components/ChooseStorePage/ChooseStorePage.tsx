@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Card,
@@ -9,17 +9,17 @@ import {
   DialogContent,
   DialogTitle,
   Button,
+  IconButton,
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import Swal from "sweetalert2";
 import "./ChooseStorePage.css";
 import { useNavigate } from "react-router-dom";
+import { Shop } from "../../utils/types";
 
-interface ChooseStorePageProps {
-  onStoreSelect: (storeName: string) => void;
-}
-
-export function ChooseStorePage({ onStoreSelect }: ChooseStorePageProps) {
-  const [stores, setStores] = useState([]);
-  const [selectedStore, setSelectedStore] = useState(null);
+export function ChooseStorePage() {
+  const [stores, setStores] = useState<Shop[]>([]);
+  const [selectedStore, setSelectedStore] = useState<Shop | null>(null);
   const [open, setOpen] = useState(false);
   const token = localStorage.getItem("access_token");
 
@@ -44,14 +44,14 @@ export function ChooseStorePage({ onStoreSelect }: ChooseStorePageProps) {
         console.log("Fetched stores:", data.shops);
         setStores(data.shops);
       } catch (error) {
-        console.error("Error fetching stores:", error);
+        console.error("Error fetching stores:", (error as Error).message);
       }
     };
 
     fetchStores();
-  }, [user_id]);
+  }, [user_id, token]);
 
-  const handleStoreSelect = (store) => {
+  const handleStoreSelect = (store: Shop) => {
     setSelectedStore(store);
     setOpen(true);
   };
@@ -61,15 +61,39 @@ export function ChooseStorePage({ onStoreSelect }: ChooseStorePageProps) {
     setSelectedStore(null);
   };
 
-  const handleNavigation = (path) => {
-    navigate(`${path}/${selectedStore.name}`, {
-      state: {
-        storeId: selectedStore.id,
-        storeName: selectedStore.name,
-        role: selectedStore.role,
-        owner: selectedStore.owner_id,
-      },
-    });
+  const handleNavigation = (path: string) => {
+    if (selectedStore) {
+      navigate(`${path}/${selectedStore.name}`, {
+        state: {
+          storeId: selectedStore.id,
+          storeName: selectedStore.name,
+          role: selectedStore.role,
+          owner: selectedStore.owner_id,
+        },
+      });
+    }
+  };
+
+  const handleDelete = async (shop_id: number) => {
+    try {
+      const response = await fetch(`http://localhost:5000/shops/${shop_id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to delete shop");
+      }
+
+      setStores(stores.filter((store) => store.id !== shop_id));
+      Swal.fire("Deleted!", "The shop has been deleted.", "success");
+    } catch (error) {
+      Swal.fire("Error!", (error as Error).message, "error");
+    }
   };
 
   return (
@@ -94,7 +118,6 @@ export function ChooseStorePage({ onStoreSelect }: ChooseStorePageProps) {
             <Card
               key={`store-${index}`}
               className="store-card"
-              onClick={() => handleStoreSelect(store)}
               sx={{
                 minWidth: 300,
                 height: 200,
@@ -103,13 +126,36 @@ export function ChooseStorePage({ onStoreSelect }: ChooseStorePageProps) {
                 justifyContent: "center",
                 alignItems: "center",
                 borderRadius: "10px",
+                position: "relative",
                 cursor: "pointer",
                 "&:hover": {
                   backgroundColor: "#f0f0f0",
                 },
               }}
             >
-              <CardContent sx={{ textAlign: "center" }}>
+              <IconButton
+                sx={{
+                  position: "absolute",
+                  top: 8,
+                  right: 8,
+                  color: "red",
+                  width: 40,
+                  height: 40,
+                  "&:hover": {
+                    backgroundColor: "rgba(255, 0, 0, 0.2)",
+                  },
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(store.id!);
+                }}
+              >
+                <DeleteIcon sx={{ fontSize: 24 }} />
+              </IconButton>
+              <CardContent
+                sx={{ textAlign: "center" }}
+                onClick={() => handleStoreSelect(store)}
+              >
                 <Typography variant="h5" component="div">
                   {store.name}
                 </Typography>

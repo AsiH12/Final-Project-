@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import "./RegistrationForm.css";
 import {
   Box,
@@ -14,11 +14,7 @@ import { useNavigate } from "react-router-dom";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
-interface RegisterFormProps {
-  setUserToken: (userId: string | null) => void;
-}
-
-export const RegisterForm: React.FC<RegisterFormProps> = ({ setUserToken }) => {
+export const RegisterForm = () => {
   const {
     register,
     handleSubmit,
@@ -73,7 +69,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ setUserToken }) => {
         const data = await response.json();
         throw new Error(data.error || "Registration failed");
       }
-    } catch (error) {
+    } catch (error: any) {
       Swal.fire({
         position: "center",
         icon: "error",
@@ -185,7 +181,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ setUserToken }) => {
               {...register("confirmPassword", {
                 required: "Confirm password is required",
                 validate: (value) =>
-                  value === password || "Confirm password does not match password",
+                  value === password ||
+                  "Confirm password does not match password",
               })}
               InputProps={{
                 style: { backgroundColor: "white" },

@@ -16,18 +16,19 @@ import "./ChangePasswordForm.css";
 import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 
-interface ChangePasswordFormProps {
-  onSubmit: (data: PasswordFormData) => void;
-}
-
 interface PasswordFormData {
   oldPassword: string;
   newPassword: string;
   confirmPassword: string;
 }
 
-export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
-  const { control, handleSubmit, formState: { errors }, watch } = useForm<PasswordFormData>();
+export function ChangePasswordForm() {
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    watch,
+  } = useForm<PasswordFormData>();
   const [open, setOpen] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [userId, setUserId] = useState<number | null>(null);
@@ -67,7 +68,10 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           },
-          body: JSON.stringify({ old_password: formData.oldPassword, new_password: formData.newPassword }),
+          body: JSON.stringify({
+            old_password: formData.oldPassword,
+            new_password: formData.newPassword,
+          }),
         }
       );
 
@@ -125,7 +129,10 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
     }
   };
 
-  const isFormValid = formValues.oldPassword && formValues.newPassword && formValues.confirmPassword;
+  const isFormValid =
+    formValues.oldPassword &&
+    formValues.newPassword &&
+    formValues.confirmPassword;
 
   return (
     <div className="container">
@@ -164,7 +171,9 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
                   fullWidth
                   margin="normal"
                   error={!!errors.oldPassword}
-                  helperText={errors.oldPassword ? errors.oldPassword.message : null}
+                  helperText={
+                    errors.oldPassword ? errors.oldPassword.message : null
+                  }
                   {...field}
                 />
               )}
@@ -183,7 +192,9 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
                   fullWidth
                   margin="normal"
                   error={!!errors.newPassword}
-                  helperText={errors.newPassword ? errors.newPassword.message : null}
+                  helperText={
+                    errors.newPassword ? errors.newPassword.message : null
+                  }
                   {...field}
                 />
               )}
@@ -202,7 +213,11 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
                   fullWidth
                   margin="normal"
                   error={!!errors.confirmPassword}
-                  helperText={errors.confirmPassword ? errors.confirmPassword.message : null}
+                  helperText={
+                    errors.confirmPassword
+                      ? errors.confirmPassword.message
+                      : null
+                  }
                   {...field}
                 />
               )}
@@ -223,7 +238,11 @@ export function ChangePasswordForm({ onSubmit }: ChangePasswordFormProps) {
           <Button onClick={() => setOpen(false)} color="primary">
             Cancel
           </Button>
-          <Button onClick={handleSubmit(handlePasswordChange)} color="primary" disabled={!isFormValid}>
+          <Button
+            onClick={handleSubmit(handlePasswordChange)}
+            color="primary"
+            disabled={!isFormValid}
+          >
             Submit
           </Button>
         </DialogActions>

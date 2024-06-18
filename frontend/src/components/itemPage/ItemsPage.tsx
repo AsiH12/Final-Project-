@@ -15,6 +15,7 @@ import AddIcon from "@mui/icons-material/Add";
 import Swal from "sweetalert2";
 import "./ItemsPage.css";
 import { useParams, useLocation } from "react-router-dom";
+import { Category } from "../../utils/types";
 
 interface Item {
   id: number;
@@ -25,11 +26,6 @@ interface Item {
   amount: number;
   maximum_discount: number;
   categories: string[];
-}
-
-interface Category {
-  id: number;
-  name: string;
 }
 
 interface Shop {
@@ -74,6 +70,7 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
     const fetchCategories = async () => {
       const response = await fetch(`http://localhost:5000/categories`);
       const data = await response.json();
+      console.log(data);
       setAllCategories(data.categories);
     };
 
@@ -89,11 +86,12 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
       setUserShops(data.shops);
     };
 
-    fetchItems().catch((error) =>
-      console.error("Error fetching items:", error)
-    );
     fetchCategories().catch((error) =>
       console.error("Error fetching categories:", error)
+    );
+
+    fetchItems().catch((error) =>
+      console.error("Error fetching items:", error)
     );
 
     if (ownerView) {
@@ -185,7 +183,7 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
           maximum_discount: currentItem.maximum_discount,
           categories: allCategories
             .filter((category) =>
-              currentItem.categories.includes(category.name)
+              currentItem.categories.includes(category.category_name)
             )
             .map((category) => category.id),
         }),
@@ -240,7 +238,7 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
     if (currentItem) {
       setCurrentItem({
         ...currentItem,
-        categories: value.map((category) => category.name),
+        categories: value.map((category) => category.category_name),
       });
     }
   };
@@ -310,13 +308,13 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
   };
 
   const columns: GridColDef[] = [
-    { field: "name", headerName: "Name", width: 200 },
-    { field: "description", headerName: "Description", width: 200 },
-    { field: "shop_name", headerName: "Shop Name", width: 150 },
-    { field: "price", headerName: "Price", width: 100 },
-    { field: "amount", headerName: "Amount", width: 100 },
-    { field: "maximum_discount", headerName: "Maximum Discount", width: 150 },
-    { field: "categories", headerName: "Categories", width: 200 },
+    { field: "name", headerName: "Name", flex: 1 },
+    { field: "description", headerName: "Description", flex: 1 },
+    { field: "shop_name", headerName: "Shop Name", flex: 1 },
+    { field: "price", headerName: "Price", flex: 1 },
+    { field: "amount", headerName: "Amount", flex: 1 },
+    { field: "maximum_discount", headerName: "Maximum Discount", flex: 1 },
+    { field: "categories", headerName: "Categories", flex: 1 },
     {
       field: "actions",
       headerName: "Actions",
@@ -349,22 +347,15 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
         color="primary"
         startIcon={<AddIcon />}
         onClick={handleAddClick}
+        sx={{ marginBottom: "20px" }}
       >
         Create Product
       </Button>
       <Box
-        className="items-table"
         sx={{
-          backgroundColor: "white",
-          boxShadow: "10px 8px 4px 0px #00000040",
-          borderRadius: "44px",
-          width: "800px",
-          height: "600px",
-          padding: "40px",
           display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          marginTop: "20px",
+          height: "80%",
+          width: "100%",
         }}
       >
         <DataGrid
@@ -458,11 +449,11 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
           <Autocomplete
             multiple
             options={allCategories}
-            getOptionLabel={(option) => option.name}
+            getOptionLabel={(option) => option.category_name}
             value={
               currentItem
                 ? allCategories.filter((category) =>
-                    currentItem.categories.includes(category.name)
+                    currentItem.categories.includes(category.category_name)
                   )
                 : []
             }
@@ -471,7 +462,7 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
               value.map((option, index) => (
                 <Chip
                   key={option.id}
-                  label={option.name}
+                  label={option.category_name}
                   {...getTagProps({ index })}
                 />
               ))

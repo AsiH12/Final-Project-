@@ -22,6 +22,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import { useCartCount } from "../CartContext"; // Ensure you import useCartCount
+import { Address } from "../utils/types";
 
 // Define type for items in the cart
 interface CartItem {
@@ -30,10 +31,10 @@ interface CartItem {
   shop: string;
   price: number;
   amount: number;
-  max_amount?: number;
+  max_amount: number;
   discount: number;
   originalPrice: number;
-  discountedPrice?: number;
+  discountedPrice: number;
   shop_id?: number; // Add shop_id as optional
 }
 
@@ -44,7 +45,7 @@ const CartPage = () => {
   const [discounts, setDiscounts] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState("");
-  const [addresses, setAddresses] = useState([]);
+  const [addresses, setAddresses] = useState<Address[]>([]);
   const loggedUserId = localStorage.getItem("user_id");
   const token = localStorage.getItem("access_token");
 
@@ -77,7 +78,7 @@ const CartPage = () => {
         });
         const data = await response.json(); // Await the response.json() call
         setAddresses(data.addresses);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching addresses:", error);
       }
     };
@@ -93,7 +94,7 @@ const CartPage = () => {
     }
   }, [cart]);
 
-  const handleSelectAddress = (event) => {
+  const handleSelectAddress = (event: any) => {
     setSelectedAddress(event.target.value);
   };
 
@@ -152,9 +153,10 @@ const CartPage = () => {
         setCart(data.cartItems); // Update cart with new prices
       } else {
         const errorMessage = await response.json();
+        console.log(errorMessage);
         throw new Error(errorMessage.error);
       }
-    } catch (error) {
+    } catch (error: any) {
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -188,14 +190,14 @@ const CartPage = () => {
 
       if (!response.ok) {
         const errorMessage = await response.text();
-        throw new Error(`${errorMessage}`);
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
       setCart(data.cartItems); // Update cart
       setInputValue(""); // Clear input after applying discount
       setDiscounts([...discounts, inputValue]); // Add new discount code to list
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error applying discounts:", error);
       Swal.fire({
         icon: "error",
@@ -217,7 +219,7 @@ const CartPage = () => {
           throw new Error("This discount code is already in use.");
         }
         await applyDiscount();
-      } catch (error) {
+      } catch (error: any) {
         Swal.fire({
           icon: "error",
           title: "Error",
@@ -303,7 +305,7 @@ const CartPage = () => {
         }).then(() => {
           navigate("/purchasehistory");
         });
-      } catch (error) {
+      } catch (error: any) {
         Swal.fire({
           icon: "error",
           title: "Error",

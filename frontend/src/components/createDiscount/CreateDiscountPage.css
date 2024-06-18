@@ -1,0 +1,29 @@
+.container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  overflow:hidden ;
+}
+
+.grid-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.grid-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 40vw;
+  margin: 0 10px;
+}
+
+.grid-section h2 {
+  margin-bottom: 10px;
+}
+
+.grid-section .MuiButton-root {
+  margin-bottom: 10px;
+}

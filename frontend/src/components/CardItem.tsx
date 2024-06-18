@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Button,
   Card,
@@ -7,7 +7,8 @@ import {
   Typography,
 } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import { useCartCount } from '../CartContext';  // Ensure you import useCartCount
+import { useCartCount } from "../CartContext"; // Ensure you import useCartCount
+import { CartItem } from "../utils/types";
 
 export default function CardItem({
   id,
@@ -18,16 +19,16 @@ export default function CardItem({
   price,
   categories,
   amount,
-}) {
-  const isLoggedIn = localStorage.getItem("access_token") ? true : false;
+}: CartItem) {
+  const isLoggedIn = !!localStorage.getItem("access_token");
   const { cartCount, updateCount } = useCartCount(); // Use the context
 
   const [quantity, setQuantity] = useState(() => {
     // Get the current cart from local storage or initialize it to an empty array
-    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    let cart = JSON.parse(localStorage.getItem("cart") || "[]");
 
     // Find the index of the item in the cart
-    const index = cart.findIndex((item) => item.name === name);
+    const index = cart.findIndex((item: any) => item.name === name);
 
     // If the item is in the cart, set quantity to its amount, otherwise set to 0
     return index !== -1 ? cart[index].amount : 0;
@@ -42,10 +43,10 @@ export default function CardItem({
 
   const handleCartUpdate = () => {
     // Get the current cart from local storage or initialize it to an empty array
-    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    let cart = JSON.parse(localStorage.getItem("cart") || "[]");
 
     // Find the index of the item in the cart
-    const index = cart.findIndex((item) => item.name === name);
+    const index = cart.findIndex((item: any) => item.name === name);
 
     // If quantity is 0, remove the item from the cart
     if (quantity === 0) {
@@ -66,7 +67,7 @@ export default function CardItem({
           shop: shop,
           image: image,
           amount: quantity,
-          max_amount: amount, 
+          max_amount: amount,
           discountedPrice: price,
           originalPrice: price,
         });
@@ -141,7 +142,7 @@ export default function CardItem({
             marginTop: "10px",
           }}
         >
-          {categories.map((category, index) => (
+          {categories && categories.map((category, index) => (
             <li key={index} style={{ paddingRight: "5px" }}>
               {category}
               {index !== categories.length - 1 && (
@@ -170,7 +171,7 @@ export default function CardItem({
               max={amount}
               value={quantity > amount ? amount : quantity}
               onChange={(e) => {
-                const newQuantity = parseInt(e.target.value);
+                const newQuantity = parseInt(e.target.value, 10);
                 if (newQuantity > amount) {
                   setQuantity(amount);
                 } else {

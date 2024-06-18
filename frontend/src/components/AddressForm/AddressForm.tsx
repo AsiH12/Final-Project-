@@ -15,34 +15,21 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import Swal from "sweetalert2";
 import { useForm, Controller } from "react-hook-form";
 import "./AddressForm.css";
+import { Address } from "../../utils/types";
 
-interface AddressFormProps {
-  onSaveAddress: (data: AddressFormData) => void;
-}
-
-interface AddressFormData {
-  id: number;
-  address: string;
-  city: string;
-  country: string;
-  user_id: number;
-}
-
-export function AddressForm({ onSaveAddress }: AddressFormProps) {
+export function AddressForm() {
   const {
     control,
     handleSubmit,
     formState: { errors, isValid },
     watch,
-  } = useForm<AddressFormData>({
+  } = useForm<Address>({
     mode: "onChange", // Validate form on change
   });
   const [open, setOpen] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [addresses, setAddresses] = useState<AddressFormData[]>([]);
-  const [currentAddress, setCurrentAddress] = useState<AddressFormData | null>(
-    null
-  );
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [currentAddress, setCurrentAddress] = useState<Address | null>(null);
   const token = localStorage.getItem("access_token");
   if (!token) {
     throw new Error("Please log in to get addresses.");
@@ -71,7 +58,7 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
     );
   }, []);
 
-  const handleSaveAddress = async (data: AddressFormData) => {
+  const handleSaveAddress = async (data: Address) => {
     try {
       console.log(data);
       const response = await fetch(
@@ -89,7 +76,7 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
       );
 
       if (!response.ok) {
-        if(isEditing){
+        if (isEditing) {
           Swal.fire({
             icon: "error",
             title: "Error!",
@@ -111,7 +98,7 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
         throw new Error("Failed to save address");
       }
 
-      if(isEditing){
+      if (isEditing) {
         Swal.fire({
           icon: "success",
           title: "Edited!",
@@ -131,7 +118,6 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
         });
       }
 
-
       try {
         const response = await fetch("http://localhost:5000/addresses/user", {
           method: "GET",
@@ -148,17 +134,16 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
       }
 
       setOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error:", error.message);
     }
   };
 
-  const handleEditClick = (address: AddressFormData) => {
+  const handleEditClick = (address: Address) => {
     setCurrentAddress(address);
     setIsEditing(true);
     setOpen(true);
   };
-  
 
   const handleDeleteClick = async (id: number) => {
     const response = await fetch(`http://localhost:5000/addresses/${id}`, {
@@ -213,7 +198,7 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
         <GridActionsCellItem
           icon={<EditIcon />}
           label="Edit"
-          onClick={() => handleEditClick(params.row as AddressFormData)}
+          onClick={() => handleEditClick(params.row as Address)}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon />}
@@ -225,7 +210,8 @@ export function AddressForm({ onSaveAddress }: AddressFormProps) {
   ];
 
   const formValues = watch(); // Watch all form values
-  const isFormValid = formValues.address && formValues.city && formValues.country;
+  const isFormValid =
+    formValues.address && formValues.city && formValues.country;
 
   return (
     <div className="container">

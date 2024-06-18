@@ -1,21 +1,15 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import img1 from "../../images/img1.jpg";
-import img2 from "../../images/img2.jpg";
 import CardItem from "../../components/CardItem";
 import { Box } from "@mui/material";
 import "./CategoryPage.css";
+import { Product } from "../../utils/types";
 
-// Define the interface for the product object
-interface Product {
+type CategoryPageProps = {
   name: string;
-  description: string;
-  shop_name: string;
-  price: number;
-  categories: string[];
-  amonut: number;
-}
+};
 
-export default function CategoryPage({ name }) {
+export default function CategoryPage({ name }: CategoryPageProps) {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
@@ -48,14 +42,14 @@ export default function CategoryPage({ name }) {
         {products.map((product, index) => (
           <CardItem
             key={index}
-            id={product.id}
+            id={product.id!}
             image={img1} // Replace with actual image URL
             name={product.name}
-            description={product.description}
-            shop={product.shop_name}
-            price={product.price}
-            categories={product.categories}
-            amount={product.amount}
+            description={product.description || ""}
+            shop={product.shop_name || ""}
+            price={product.price || 0}
+            categories={product.categories || []}
+            amount={product.amount || 0}
           />
         ))}
       </Box>

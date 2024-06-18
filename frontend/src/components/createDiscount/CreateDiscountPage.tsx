@@ -68,6 +68,13 @@ export function CreateDiscountPage({ ownerView }) {
       } else {
         await fetchShopDiscounts();
         await fetchProductDiscounts();
+        const shop_id = await fetchShopIdByName();
+        const response = await fetch(
+          `http://localhost:5000/products/shop/${shop_id}`
+        );
+        const data = await response.json();
+        console.log(data.products);
+        setProducts(data.products);
       }
       await fetchHasShop();
     };
@@ -124,6 +131,7 @@ export function CreateDiscountPage({ ownerView }) {
         }
       );
       const data = await response.json();
+      console.log(data);
       if (!data.error) setShopDiscounts(data.discounts);
     } catch (error) {
       console.error("Error fetching shop discounts:", error);
@@ -209,8 +217,50 @@ export function CreateDiscountPage({ ownerView }) {
     setProducts(data.products);
   };
 
+  const fetchShopIdByName = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/shops/getidbyname/${shop_name}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Send JWT token if required
+          },
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        return data.id;
+      } else {
+        console.error("Error fetching shop ID by name");
+        return null;
+      }
+    } catch (error) {
+      console.error("There was a problem fetching the shop ID:", error);
+      return null;
+    }
+  };
+
   const handleCreateDiscountShop = async (data: any) => {
     try {
+      let shopId = data.selectedShop;
+
+      if (!ownerView) {
+        shopId = await fetchShopIdByName();
+        if (!shopId) {
+          Swal.fire({
+            icon: "error",
+            title: "Error!",
+            text: "Unable to find the shop ID by name.",
+            customClass: {
+              container: "swal-dialog-custom",
+            },
+          });
+          return;
+        }
+      }
+
+      console.log(data);
+
       const response = await fetch("http://localhost:5000/discounts/shops", {
         method: "POST",
         headers: {
@@ -218,7 +268,7 @@ export function CreateDiscountPage({ ownerView }) {
           Authorization: `Bearer ${token}`, // Send JWT token
         },
         body: JSON.stringify({
-          shop_id: data.selectedShop,
+          shop_id: shopId,
           discount_code: data.discountCode,
           discount: discount,
           expiration_date: data.expirationDate,
@@ -467,8 +517,10 @@ export function CreateDiscountPage({ ownerView }) {
   };
 
   const handleClickOpenProductDiscount = async () => {
-    if (!shops || shops.length < 1) {
-      // User doesn't own or manage any shops, show an error message
+    if (hasShop) {
+      setOpenProductDialog(true);
+      reset();
+    } else {
       Swal.fire({
         icon: "error",
         title: "Error!",
@@ -477,10 +529,7 @@ export function CreateDiscountPage({ ownerView }) {
           container: "swal-dialog-custom",
         },
       });
-      return;
     }
-    setOpenProductDialog(true);
-    reset();
   };
 
   const productDiscountColumns: GridColDef[] = [
@@ -556,39 +605,62 @@ export function CreateDiscountPage({ ownerView }) {
 
   return (
     <div className="container">
-      <h2 className="manage-store-header">
-        {ownerView ? "Discounts-Shops" : `Discounts-Shops - ${shop_name}`}
-      </h2>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={() => {
-          handleClickOpenShopDiscount();
-        }}
-      >
-        Create Shop Discount
-      </Button>
-      <Box
-        className="discounts-table"
-        sx={{
-          backgroundColor: "white",
-          borderRadius: "44px",
-          boxShadow: "10px 8px 4px 0px #00000040",
-          width: "800px",
-          height: "600px",
-          padding: "40px",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <DataGrid
-          rows={shopDiscounts}
-          columns={shopDiscountColumns}
-          pageSize={10}
-          rowsPerPageOptions={[5, 10, 25]}
-        />
-      </Box>
+      <div className="grid-section">
+        <h2 className="manage-store-header">
+          {ownerView ? "Discounts-Shops" : `Discounts-Shops - ${shop_name}`}
+        </h2>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleClickOpenShopDiscount}
+        >
+          Create Shop Discount
+        </Button>
+        <Box
+          sx={{
+            display: "flex",
+            height: "60vh",
+            width: "40vw",
+          }}
+        >
+          <DataGrid
+            rows={shopDiscounts}
+            columns={shopDiscountColumns}
+            pageSize={10}
+            rowsPerPageOptions={[5, 10, 25]}
+          />
+        </Box>
+      </div>
+
+      <div className="grid-section">
+        <h2 className="manage-store-header">
+          {ownerView
+            ? "Discounts-Products"
+            : `Discounts-Products - ${shop_name}`}
+        </h2>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleClickOpenProductDiscount}
+        >
+          Create Product Discount
+        </Button>
+        <Box
+          sx={{
+            display: "flex",
+            height: "60vh",
+            width: "40vw",
+          }}
+        >
+          <DataGrid
+            rows={productDiscounts}
+            columns={productDiscountColumns}
+            pageSize={10}
+            rowsPerPageOptions={[5, 10, 25]}
+          />
+        </Box>
+      </div>
+
       <Dialog open={openShopDialog} onClose={() => setOpenShopDialog(false)}>
         <DialogTitle>Create New Shop Discount</DialogTitle>
         <Divider />
@@ -762,40 +834,6 @@ export function CreateDiscountPage({ ownerView }) {
           </DialogActions>
         </form>
       </Dialog>
-
-      <h2 className="manage-store-header">
-        {ownerView ? "Discounts-Products" : `Discounts-Products - ${shop_name}`}
-      </h2>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={() => {
-          handleClickOpenProductDiscount();
-        }}
-      >
-        Create Product Discount
-      </Button>
-      <Box
-        className="discounts-table"
-        sx={{
-          backgroundColor: "white",
-          borderRadius: "44px",
-          boxShadow: "10px 8px 4px 0px #00000040",
-          width: "800px",
-          height: "600px",
-          padding: "40px",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <DataGrid
-          rows={productDiscounts}
-          columns={productDiscountColumns}
-          pageSize={10}
-          rowsPerPageOptions={[5, 10, 25]}
-        />
-      </Box>
       <Dialog
         open={openProductDialog}
         onClose={() => setOpenProductDialog(false)}
@@ -1075,16 +1113,21 @@ export function CreateDiscountPage({ ownerView }) {
               inputProps={{ min: 1, max: 100 }}
               variant="outlined"
               value={editDiscount?.discount || 1}
-              onChange={(e) =>
+              onChange={(e) => {
+                const value = Math.max(
+                  1,
+                  Math.min(100, Number(e.target.value))
+                );
                 setEditDiscount({
                   ...editDiscount,
-                  discount: Number(e.target.value),
-                })
-              }
+                  discount: value,
+                });
+              }}
               className="input-container"
               fullWidth
               margin="normal"
             />
+
             <TextField
               sx={{ width: "400px", background: "white" }}
               id="editExpirationDate"

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { StoreForm } from "../CreateStore";
 import Swal from "sweetalert2";
-import { Button, IconButton, Menu, MenuItem } from "@mui/material";
+import { Box, Button, IconButton, Menu, MenuItem } from "@mui/material";
 import { Person as PersonIcon, ShoppingCart } from "@mui/icons-material";
 import { useCartCount } from "../../CartContext";
 import "./RootLayOut.css";
@@ -46,7 +46,7 @@ export default function RootLayOut() {
     setAnchorEl(null); // Close the dropdown when creating a shop
   };
 
-  const handleMenuOpen = (event) => {
+  const handleMenuOpen = (event: any) => {
     setAnchorEl(event.currentTarget);
   };
 
@@ -229,8 +229,31 @@ export default function RootLayOut() {
           </ul>
         </nav>
       )}
-
-      <Outlet style={{ marginTop: "13vh" }} />
+      <Box
+        sx={{
+          height: "87vh",
+          maxHeight: "87vh",
+          width: "100vw",
+          maxWidth: "100vw",
+          display: "flex",
+          flexDirection: "column",
+          padding: "10px",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <Box
+          sx={{
+            width: "90%",
+            height: "inherit",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Outlet />
+        </Box>
+      </Box>
 
       {showStoreForm && (
         <StoreForm

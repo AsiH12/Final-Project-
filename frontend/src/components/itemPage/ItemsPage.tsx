@@ -376,7 +376,7 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
         <img
           src={`data:image/jpeg;base64,${params.value}`}
           alt="Product"
-          style={{ width: "100px", height: "100px" }}
+          style={{ aspectRatio: "2:1.5" }}
         />
       ),
     },

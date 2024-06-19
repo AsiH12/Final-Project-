@@ -35,7 +35,7 @@ export default function HomePage() {
           <CardItem
             key={index}
             id={product.id?.toString() || ""}
-            image={img1} // Replace with actual image URL
+            image={product.image} // Replace with actual image URL
             name={product.name || ""}
             description={product.description || ""}
             shop={product.shop_name || ""}

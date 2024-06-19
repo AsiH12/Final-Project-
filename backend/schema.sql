@@ -30,6 +30,14 @@ CREATE TABLE IF NOT EXISTS products (
     FOREIGN KEY (shop_id) REFERENCES shops(id)
 );
 
+CREATE TABLE IF NOT EXISTS product_images (
+    id INTEGER PRIMARY KEY NOT NULL,
+    product_id INTEGER NOT NULL,
+    image BLOB NOT NULL,
+    FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
+
 CREATE TABLE IF NOT EXISTS managers (
     id INTEGER PRIMARY KEY NOT NULL,
     manager_id INTEGER NOT NULL,

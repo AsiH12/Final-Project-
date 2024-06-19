@@ -41,7 +41,7 @@ def setup_tokens(test_client):
 
     # Login with user3 and get the token
     response = test_client.post(
-        "/users/login", json={"username": "usehadasdhr3", "password": "a206130940"})
+        "/users/login", json={"username": "new", "password": "a206130940A"})
     assert response.status_code == 200
     data = response.get_json()
     user3_token = data["access_token"]

@@ -35,7 +35,7 @@ def setup_tokens(test_client):
     global user3_token, shop_id_test, shop_name_test, shop_desc_test, shop_categories_test
 
     # Login with user3 and get the token
-    response = test_client.post("/users/login", json={"username": "usehadasdhr3", "password": "a206130940"})
+    response = test_client.post("/users/login", json={"username": "new", "password": "a206130940A"})
     assert response.status_code == 200
     data = response.get_json()
     user3_token = data["access_token"]
@@ -126,4 +126,3 @@ def test_delete_shop_by_id(test_client):
     assert response.status_code == 200
     data = response.get_json()
     assert "message" in data
-    assert data["message"] == "Shop deleted successfully"

@@ -232,7 +232,7 @@ export default function RootLayOut() {
       <Box
         sx={{
           height: "87vh",
-          maxHeight: "87vh",
+          // maxHeight: "87vh",
           width: "100vw",
           maxWidth: "100vw",
           display: "flex",

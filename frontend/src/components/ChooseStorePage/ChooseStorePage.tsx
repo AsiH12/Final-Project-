@@ -22,9 +22,7 @@ export function ChooseStorePage() {
   const [selectedStore, setSelectedStore] = useState<Shop | null>(null);
   const [open, setOpen] = useState(false);
   const token = localStorage.getItem("access_token");
-
   const user_id = localStorage.getItem("user_id");
-
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -97,20 +95,28 @@ export function ChooseStorePage() {
   };
 
   return (
-    <div className="container">
-      <h2 className="manage-store-header" style={{ color: "#39cccc" }}>
-        Manage Store
-      </h2>
-      <h2 className="choose-store-header" style={{ color: "#39cccc" }}>
-        Choose Store:
-      </h2>
+    <Box
+      className="manage-stores-container"
+      sx={{ marginTop: "13vh", padding: "20px", height: "100%" }}
+    >
+      <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "center", textAlign: "center"}}>
+        <h2 className="manage-store-header" style={{ color: "#39cccc" }}>
+          Manage Store
+        </h2>
+        <h2 className="choose-store-header" style={{ color: "#39cccc" }}>
+          Choose Store:
+        </h2>
+      </Box>
+
       <Box
         className="store-list"
         sx={{
           display: "flex",
+          flexDirection: "row",
           gap: "20px",
           justifyContent: "center",
           flexWrap: "wrap",
+          width: "100%",
         }}
       >
         {stores && stores.length > 0 ? (
@@ -120,7 +126,8 @@ export function ChooseStorePage() {
               className="store-card"
               sx={{
                 minWidth: 300,
-                height: 200,
+                width: "30vw",
+                minHeight: 200,
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "center",
@@ -175,25 +182,44 @@ export function ChooseStorePage() {
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Manage {selectedStore?.name}</DialogTitle>
         <DialogContent>
-          <Button onClick={() => handleNavigation("/items")} color="primary">
-            Manage Items
-          </Button>
-          <Button onClick={() => handleNavigation("/managers")} color="primary">
-            Manage Managers
-          </Button>
-          <Button onClick={() => handleNavigation("/discount")} color="primary">
-            Manage Discounts
-          </Button>
-          <Button onClick={() => handleNavigation("/orders")} color="primary">
-            Orders
-          </Button>
+          <Box sx={{ display: "flex", flexDirection: "column" }}>
+            <Button
+              onClick={() => handleNavigation("/items")}
+              color="primary"
+              sx={{ justifyContent: "flex-start", textAlign: "left" }}
+            >
+              Manage Items
+            </Button>
+            <Button
+              onClick={() => handleNavigation("/managers")}
+              color="primary"
+              sx={{ justifyContent: "flex-start", textAlign: "left" }}
+            >
+              Manage Managers
+            </Button>
+            <Button
+              onClick={() => handleNavigation("/discount")}
+              color="primary"
+              sx={{ justifyContent: "flex-start", textAlign: "left" }}
+            >
+              Manage Discounts
+            </Button>
+            <Button
+              onClick={() => handleNavigation("/orders")}
+              color="primary"
+              sx={{ justifyContent: "flex-start", textAlign: "left" }}
+            >
+              Orders
+            </Button>
+          </Box>
         </DialogContent>
+
         <DialogActions>
           <Button onClick={handleClose} color="primary">
             Close
           </Button>
         </DialogActions>
       </Dialog>
-    </div>
+    </Box>
   );
 }

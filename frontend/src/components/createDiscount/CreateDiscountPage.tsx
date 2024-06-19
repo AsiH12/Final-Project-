@@ -604,7 +604,7 @@ export function CreateDiscountPage({ ownerView }) {
   ];
 
   return (
-    <div className="container">
+    <div className="container-discoutns">
       <div className="grid-section">
         <h2 className="manage-store-header">
           {ownerView ? "Discounts-Shops" : `Discounts-Shops - ${shop_name}`}

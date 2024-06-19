@@ -77,7 +77,7 @@ nav ul li a:hover {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: calc(100vh - 13vh); /* Subtract the height of the navbar */
+  /* height: calc(100vh - 13vh); */
   margin-top: 13vh;
   width: 90vw;
   background-color: red;

@@ -215,15 +215,19 @@ export function AddressForm() {
 
   return (
     <div className="container">
-      <Button variant="contained" color="primary" onClick={() => setOpen(true)}>
+      <Button
+        variant="contained"
+        style={{ marginBottom: "15px" }}
+        color="primary"
+        onClick={() => setOpen(true)}
+      >
         Add/Remove Address
       </Button>
       <Box
         sx={{
-          height: 400,
+          display: "flex",
+          height: "80%",
           width: "100%",
-          marginTop: 2,
-          backgroundColor: "white",
         }}
       >
         <DataGrid

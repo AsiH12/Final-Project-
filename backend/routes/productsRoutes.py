@@ -1,23 +1,27 @@
 from flask import Blueprint, request, jsonify
-from flask_cors import CORS
-from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required, get_jwt_identity
-
-from db import close_db, get_db
-
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from db import get_db, close_db
+import base64
 
 bp = Blueprint("productsRoutes", __name__, url_prefix="/products")
 
+def convert_image_to_base64(image):
+    if image:
+        return base64.b64encode(image).decode('utf-8')
+    return None
 
 @bp.route("/", methods=["GET"], endpoint='products_get_all')
 def get_products():
     db = get_db()
     cursor = db.cursor()
     cursor.execute("""
-        SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, GROUP_CONCAT(c.category_name) AS categories
+        SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, 
+               GROUP_CONCAT(c.category_name) AS categories, pi.image
         FROM products p
         LEFT JOIN products_categories pc ON p.id = pc.product_id
         LEFT JOIN categories c ON pc.category_id = c.id
         LEFT JOIN shops s ON p.shop_id = s.id
+        LEFT JOIN product_images pi ON p.id = pi.product_id
         GROUP BY p.id
     """)
     products = cursor.fetchall()
@@ -32,7 +36,8 @@ def get_products():
             "price": product["price"],
             "amount": product["amount"],
             "maximum_discount": product["maximum_discount"],
-            "categories": product["categories"].split(",") if product["categories"] else []
+            "categories": product["categories"].split(",") if product["categories"] else [],
+            "image": convert_image_to_base64(product["image"])
         }
         for product in products
     ]
@@ -44,11 +49,13 @@ def get_product_by_id(product_id):
     db = get_db()
     cursor = db.cursor()
     cursor.execute("""
-        SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, GROUP_CONCAT(c.category_name) AS categories
+        SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, 
+               GROUP_CONCAT(c.category_name) AS categories, pi.image
         FROM products p
         LEFT JOIN products_categories pc ON p.id = pc.product_id
         LEFT JOIN categories c ON pc.category_id = c.id
         LEFT JOIN shops s ON p.shop_id = s.id
+        LEFT JOIN product_images pi ON p.id = pi.product_id
         WHERE p.id = ?
         GROUP BY p.id
     """, (product_id,))
@@ -66,7 +73,8 @@ def get_product_by_id(product_id):
             "price": product["price"],
             "amount": product["amount"],
             "maximum_discount": product["maximum_discount"],
-            "categories": product["categories"].split(",") if product["categories"] else []
+            "categories": product["categories"].split(",") if product["categories"] else [],
+            "image": convert_image_to_base64(product["image"])
         }), 200
 
 
@@ -75,11 +83,13 @@ def get_products_by_category(category_name):
     db = get_db()
     cursor = db.cursor()
     cursor.execute("""
-        SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, GROUP_CONCAT(c.category_name) AS categories
+        SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, 
+               GROUP_CONCAT(c.category_name) AS categories, pi.image
         FROM products p
         LEFT JOIN products_categories pc ON p.id = pc.product_id
         LEFT JOIN categories c ON pc.category_id = c.id
         LEFT JOIN shops s ON p.shop_id = s.id
+        LEFT JOIN product_images pi ON p.id = pi.product_id
         WHERE c.category_name = ?
         GROUP BY p.id
     """, (category_name,))
@@ -95,7 +105,8 @@ def get_products_by_category(category_name):
             "price": product["price"],
             "amount": product["amount"],
             "maximum_discount": product["maximum_discount"],
-            "categories": product["categories"].split(",") if product["categories"] else []
+            "categories": product["categories"].split(",") if product["categories"] else [],
+            "image": convert_image_to_base64(product["image"])
         }
         for product in products
     ]
@@ -107,11 +118,13 @@ def get_products_by_shop_id(shop_id):
     db = get_db()
     cursor = db.cursor()
     cursor.execute("""
-        SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, GROUP_CONCAT(c.category_name) AS categories
+        SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, 
+               GROUP_CONCAT(c.category_name) AS categories, pi.image
         FROM products p
         LEFT JOIN products_categories pc ON p.id = pc.product_id
         LEFT JOIN categories c ON pc.category_id = c.id
         LEFT JOIN shops s ON p.shop_id = s.id
+        LEFT JOIN product_images pi ON p.id = pi.product_id
         WHERE p.shop_id = ?
         GROUP BY p.id
     """, (shop_id,))
@@ -127,7 +140,8 @@ def get_products_by_shop_id(shop_id):
             "price": product["price"],
             "amount": product["amount"],
             "maximum_discount": product["maximum_discount"],
-            "categories": product["categories"].split(",") if product["categories"] else []
+            "categories": product["categories"].split(",") if product["categories"] else [],
+            "image": convert_image_to_base64(product["image"])
         }
         for product in products
     ]
@@ -140,11 +154,13 @@ def get_products_by_owner_id(owner_id):
     db = get_db()
     cursor = db.cursor()
     cursor.execute("""
-        SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, GROUP_CONCAT(c.category_name) AS categories
+        SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, 
+               GROUP_CONCAT(c.category_name) AS categories, pi.image
         FROM products p
         LEFT JOIN shops s ON p.shop_id = s.id
         LEFT JOIN products_categories pc ON p.id = pc.product_id
         LEFT JOIN categories c ON pc.category_id = c.id
+        LEFT JOIN product_images pi ON p.id = pi.product_id
         WHERE s.owner_id = ?
         GROUP BY p.id
     """, (owner_id,))
@@ -160,7 +176,8 @@ def get_products_by_owner_id(owner_id):
             "price": product["price"],
             "amount": product["amount"],
             "maximum_discount": product["maximum_discount"],
-            "categories": product["categories"].split(",") if product["categories"] else []
+            "categories": product["categories"].split(",") if product["categories"] else [],
+            "image": convert_image_to_base64(product["image"])
         }
         for product in products
     ]
@@ -174,12 +191,14 @@ def get_products_by_manager_or_owner():
     db = get_db()
     cursor = db.cursor()
     cursor.execute("""
-        SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, GROUP_CONCAT(c.category_name) AS categories
+        SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, 
+               GROUP_CONCAT(c.category_name) AS categories, pi.image
         FROM products p
         LEFT JOIN shops s ON p.shop_id = s.id
         LEFT JOIN products_categories pc ON p.id = pc.product_id
         LEFT JOIN categories c ON pc.category_id = c.id
         LEFT JOIN managers m ON s.id = m.shop_id
+        LEFT JOIN product_images pi ON p.id = pi.product_id
         WHERE s.owner_id = ? OR m.manager_id = ?
         GROUP BY p.id
     """, (user_id, user_id))
@@ -195,7 +214,8 @@ def get_products_by_manager_or_owner():
             "price": product["price"],
             "amount": product["amount"],
             "maximum_discount": product["maximum_discount"],
-            "categories": product["categories"].split(",") if product["categories"] else []
+            "categories": product["categories"].split(",") if product["categories"] else [],
+            "image": convert_image_to_base64(product["image"])
         }
         for product in products
     ]
@@ -253,13 +273,14 @@ def create_new_product():
 
     db.commit()
 
-    cursor = db.cursor()
     cursor.execute("""
-        SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, GROUP_CONCAT(c.category_name) AS categories
+        SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, 
+               GROUP_CONCAT(c.category_name) AS categories, pi.image
         FROM products p
         LEFT JOIN products_categories pc ON p.id = pc.product_id
         LEFT JOIN categories c ON pc.category_id = c.id
         LEFT JOIN shops s ON p.shop_id = s.id
+        LEFT JOIN product_images pi ON p.id = pi.product_id
         WHERE p.id = ?
         GROUP BY p.id
     """, (product_id,))
@@ -275,7 +296,8 @@ def create_new_product():
         "price": new_product["price"],
         "amount": new_product["amount"],
         "maximum_discount": new_product["maximum_discount"],
-        "categories": new_product["categories"].split(",") if new_product["categories"] else []
+        "categories": new_product["categories"].split(",") if new_product["categories"] else [],
+        "image": convert_image_to_base64(new_product["image"])
     }
 
     return jsonify(product), 201
@@ -333,6 +355,8 @@ def delete_product_by_id(product_id):
         cursor.execute("DELETE FROM products WHERE id = ?", (product_id,))
         cursor.execute(
             "DELETE FROM products_categories WHERE product_id = ?", (product_id,))
+        cursor.execute(
+            "DELETE FROM product_images WHERE product_id = ?", (product_id,))
         db.commit()
         close_db()
         return jsonify({"message": "Product deleted successfully"}), 200

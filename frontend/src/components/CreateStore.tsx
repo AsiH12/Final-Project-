@@ -233,7 +233,6 @@ export function StoreForm({ open, onClose }: StoreFormProps) {
             <Controller
               name="managers"
               control={control}
-              rules={{ required: "required" }}
               render={({ field }) => (
                 <Autocomplete
                   id="managers"

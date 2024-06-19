@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, ChangeEvent } from "react";
 import Box from "@mui/material/Box";
 import { DataGrid, GridColDef, GridActionsCellItem } from "@mui/x-data-grid";
 import Dialog from "@mui/material/Dialog";
@@ -26,6 +26,7 @@ interface Item {
   amount: number;
   maximum_discount: number;
   categories: string[];
+  image: string | null;
 }
 
 interface Shop {
@@ -42,6 +43,7 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
   const [isEditing, setIsEditing] = useState(false);
   const [currentItem, setCurrentItem] = useState<Item | null>(null);
   const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const { shop_name } = useParams<{ shop_name: string }>();
   const location = useLocation();
 
@@ -114,6 +116,7 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
     setOpen(false);
     setCurrentItem(null);
     setSelectedShop(null);
+    setImageFile(null);
     setIsEditing(false);
   };
 
@@ -168,28 +171,52 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
         : `http://localhost:5000/products`;
       const method = isEditing ? "PATCH" : "POST";
 
+      const productData = {
+        name: currentItem.name,
+        description: currentItem.description,
+        shop_id: shopId,
+        price: currentItem.price,
+        amount: currentItem.amount,
+        maximum_discount: currentItem.maximum_discount,
+        categories: allCategories
+          .filter((category) =>
+            currentItem.categories.includes(category.category_name)
+          )
+          .map((category) => category.id),
+      };
+
       const response = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`, // Send JWT token
         },
-        body: JSON.stringify({
-          name: currentItem.name,
-          description: currentItem.description,
-          shop_id: shopId,
-          price: currentItem.price,
-          amount: currentItem.amount,
-          maximum_discount: currentItem.maximum_discount,
-          categories: allCategories
-            .filter((category) =>
-              currentItem.categories.includes(category.category_name)
-            )
-            .map((category) => category.id),
-        }),
+        body: JSON.stringify(productData),
       });
 
       if (response.ok) {
+        const product = await response.json();
+        let imageUploadSuccess = true;
+
+        if (imageFile) {
+          const imageUrl = `http://localhost:5000/images/product`;
+          const imageFormData = new FormData();
+          imageFormData.append("file", imageFile);
+          imageFormData.append("product_id", product.id);
+
+          const imageResponse = await fetch(imageUrl, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`, // Send JWT token
+            },
+            body: imageFormData,
+          });
+
+          if (!imageResponse.ok) {
+            imageUploadSuccess = false;
+          }
+        }
+
         if (isEditing) {
           setItems((prevItems) =>
             prevItems.map((item) =>
@@ -197,23 +224,42 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
             )
           );
         } else {
-          const newItem = await response.json();
-          setItems((prevItems) => [...prevItems, newItem]);
+          setItems((prevItems) => [...prevItems, product]);
         }
+
+        if (imageFile && !imageUploadSuccess) {
+          Swal.fire({
+            icon: "warning",
+            title: "Created with Warnings!",
+            text: "Item has been created successfully, but the image upload failed.",
+            customClass: {
+              container: "swal-dialog-custom",
+            },
+          });
+        } else {
+          Swal.fire({
+            icon: "success",
+            title: isEditing ? "Edited!" : "Created!",
+            text:
+              "Item has been " +
+              (isEditing ? "edited" : "created") +
+              " successfully.",
+            customClass: {
+              container: "swal-dialog-custom",
+            },
+          });
+        }
+
+        handleClose();
+      } else {
         Swal.fire({
-          icon: "success",
-          title: isEditing ? "Edited!" : "Created!",
-          text:
-            "Item has been " +
-            (isEditing ? "edited" : "created") +
-            " successfully.",
+          icon: "error",
+          title: "Error!",
+          text: "Error saving item.",
           customClass: {
             container: "swal-dialog-custom",
           },
         });
-        handleClose();
-      } else {
-        console.error("Error saving item");
       }
     }
   };
@@ -250,6 +296,12 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
         ...currentItem,
         shop_name: value.name,
       });
+    }
+  };
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      setImageFile(event.target.files[0]);
     }
   };
 
@@ -301,6 +353,7 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
       amount: 0,
       maximum_discount: 0,
       categories: [],
+      image: null,
     });
     setSelectedShop(null);
     setIsEditing(false);
@@ -315,6 +368,18 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
     { field: "amount", headerName: "Amount", flex: 1 },
     { field: "maximum_discount", headerName: "Maximum Discount", flex: 1 },
     { field: "categories", headerName: "Categories", flex: 1 },
+    {
+      field: "image",
+      headerName: "Image",
+      flex: 1,
+      renderCell: (params) => (
+        <img
+          src={`data:image/jpeg;base64,${params.value}`}
+          alt="Product"
+          style={{ width: "100px", height: "100px" }}
+        />
+      ),
+    },
     {
       field: "actions",
       headerName: "Actions",
@@ -422,7 +487,6 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
             onChange={handleChange}
             inputProps={{ min: "0" }} // Prevents selection of negative numbers
           />
-
           <TextField
             margin="dense"
             name="amount"
@@ -434,7 +498,6 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
             onChange={handleChange}
             inputProps={{ min: "0" }} // Prevents selection of negative numbers
           />
-
           <TextField
             margin="dense"
             name="maximum_discount"
@@ -445,7 +508,6 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
             onChange={handleChange}
             inputProps={{ min: "0" }} // Prevents selection of negative numbers
           />
-
           <Autocomplete
             multiple
             options={allCategories}
@@ -476,6 +538,15 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
                 required
               />
             )}
+          />
+          <TextField
+            margin="dense"
+            name="image"
+            label="Upload Image"
+            type="file"
+            fullWidth
+            onChange={handleFileChange}
+            InputLabelProps={{ shrink: true }}
           />
         </DialogContent>
         <DialogActions>

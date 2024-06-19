@@ -32,11 +32,10 @@ CREATE TABLE IF NOT EXISTS products (
 
 CREATE TABLE IF NOT EXISTS product_images (
     id INTEGER PRIMARY KEY NOT NULL,
-    product_id INTEGER NOT NULL,
+    product_id INTEGER UNIQUE NOT NULL,
     image BLOB NOT NULL,
     FOREIGN KEY (product_id) REFERENCES products(id)
 );
-
 
 CREATE TABLE IF NOT EXISTS managers (
     id INTEGER PRIMARY KEY NOT NULL,
@@ -118,7 +117,6 @@ CREATE TABLE IF NOT EXISTS shops_categories (
 --     ('user3', '1234', 'user3@mysite.com', 30),
 --     ('user4', '1234', 'user4@mysite.com', 25),
 --     ('user5', '1234', 'user5@mysite.com', 40);
-
 -- -- Inserting into categories table
 INSERT
     OR IGNORE INTO categories (category_name)
@@ -138,7 +136,6 @@ VALUES
 --     ('Shop4', 'Home goods store', 2),
 --     ('Shop5', 'Outdoor equipment store', 1),
 --     ('Shop6', 'Beauty products store', 3);
-
 -- -- Inserting into managers table
 -- INSERT
 --     OR IGNORE INTO managers (manager_id, shop_id)
@@ -146,7 +143,6 @@ VALUES
 --     (1, 4),
 --     (2, 5),
 --     (3, 6);
-
 -- -- Inserting into products table
 -- INSERT
 --     OR IGNORE INTO products (
@@ -192,7 +188,6 @@ VALUES
 --     ),
 --     ('Product5', 'Outdoor tent', 5, 200, 30, NULL),
 --     ('Product6', 'Beauty face cream', 6, 25, 100, 5);
-
 -- -- Inserting into addresses table
 -- INSERT
 --     OR IGNORE INTO addresses (address, city, country, user_id)
@@ -202,7 +197,6 @@ VALUES
 --     ('Eliakim 55 b', 'Eliakim', 'Israel', 1),
 --     ('654 Cedar St', 'Seattle', 'USA', 2),
 --     ('987 Birch St', 'Miami', 'USA', 3);
-
 -- -- Inserting into products_categories table
 -- INSERT
 --     OR IGNORE INTO products_categories (product_id, category_id)
@@ -213,7 +207,6 @@ VALUES
 --     (1, 2),
 --     (4, 2),
 --     (2, 3);
-
 -- -- Inserting into shops_categories table
 -- INSERT
 --     OR IGNORE INTO shops_categories (shop_id, category_id)
@@ -224,7 +217,6 @@ VALUES
 --     (5, 3),
 --     (6, 3),
 --     (6, 1);
-
 -- -- Inserting into discounts_products table
 -- INSERT
 --     OR IGNORE INTO discounts_products (
@@ -241,7 +233,6 @@ VALUES
 --     (3, 'FALL10', 10, '2024-05-20', 100, true),
 --     (4, 'SPRING25', 25, '2024-08-01', 150, true),
 --     (5, 'WINTER12', 12, '2024-09-01', 200, false);
-
 -- -- Inserting into discounts_shops table
 -- INSERT
 --     OR IGNORE INTO discounts_shops (

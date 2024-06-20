@@ -5,10 +5,12 @@ import base64
 
 bp = Blueprint("productsRoutes", __name__, url_prefix="/products")
 
+
 def convert_image_to_base64(image):
     if image:
         return base64.b64encode(image).decode('utf-8')
     return None
+
 
 @bp.route("/", methods=["GET"], endpoint='products_get_all')
 def get_products():
@@ -337,8 +339,35 @@ def update_product_by_id(product_id):
             )
 
         db.commit()
+
+        cursor.execute("""
+            SELECT p.id, p.name, p.description, p.shop_id, s.name as shop_name, p.price, p.amount, p.maximum_discount, 
+                   GROUP_CONCAT(c.category_name) AS categories, pi.image
+            FROM products p
+            LEFT JOIN products_categories pc ON p.id = pc.product_id
+            LEFT JOIN categories c ON pc.category_id = c.id
+            LEFT JOIN shops s ON p.shop_id = s.id
+            LEFT JOIN product_images pi ON p.id = pi.product_id
+            WHERE p.id = ?
+            GROUP BY p.id
+        """, (product_id,))
+        updated_product = cursor.fetchone()
         close_db()
-        return jsonify({"message": "Product updated successfully"}), 200
+
+        product = {
+            "id": updated_product["id"],
+            "name": updated_product["name"],
+            "description": updated_product["description"],
+            "shop_id": updated_product["shop_id"],
+            "shop_name": updated_product["shop_name"],
+            "price": updated_product["price"],
+            "amount": updated_product["amount"],
+            "maximum_discount": updated_product["maximum_discount"],
+            "categories": updated_product["categories"].split(",") if updated_product["categories"] else [],
+            "image": convert_image_to_base64(updated_product["image"])
+        }
+
+        return jsonify(product), 200
 
 
 @bp.route("/<int:product_id>", methods=["DELETE"], endpoint='products_delete_by_id')

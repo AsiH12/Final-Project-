@@ -23,10 +23,23 @@ def upload_image():
         try:
             db = get_db()
             cursor = db.cursor()
+
+            # Check if the product already has an image
             cursor.execute("""
-                INSERT INTO product_images (product_id, image)
-                VALUES (?, ?)
-            """, (product_id, file_data))
+                SELECT id FROM product_images WHERE product_id = ?
+            """, (product_id,))
+            existing_image = cursor.fetchone()
+
+            if existing_image:
+                cursor.execute("""
+                    UPDATE product_images SET image = ? WHERE product_id = ?
+                """, (file_data, product_id))
+            else:
+                cursor.execute("""
+                    INSERT INTO product_images (product_id, image)
+                    VALUES (?, ?)
+                """, (product_id, file_data))
+
             db.commit()
             return jsonify({"message": "Image uploaded successfully"}), 200
         except Exception as e:

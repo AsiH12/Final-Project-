@@ -44,6 +44,7 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
   const [currentItem, setCurrentItem] = useState<Item | null>(null);
   const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const { shop_name } = useParams<{ shop_name: string }>();
   const location = useLocation();
 
@@ -108,6 +109,7 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
     setSelectedShop(
       userShops.find((shop) => shop.name === item.shop_name) || null
     );
+    setImagePreview(item.image ? `data:image/jpeg;base64,${item.image}` : null);
     setIsEditing(true);
     setOpen(true);
   };
@@ -117,6 +119,7 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
     setCurrentItem(null);
     setSelectedShop(null);
     setImageFile(null);
+    setImagePreview(null);
     setIsEditing(false);
   };
 
@@ -165,12 +168,12 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
         });
         return;
       }
-
+  
       const url = isEditing
         ? `http://localhost:5000/products/${currentItem.id}`
         : `http://localhost:5000/products`;
       const method = isEditing ? "PATCH" : "POST";
-
+  
       const productData = {
         name: currentItem.name,
         description: currentItem.description,
@@ -184,7 +187,7 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
           )
           .map((category) => category.id),
       };
-
+  
       const response = await fetch(url, {
         method,
         headers: {
@@ -193,17 +196,17 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
         },
         body: JSON.stringify(productData),
       });
-
+  
       if (response.ok) {
         const product = await response.json();
         let imageUploadSuccess = true;
-
+  
         if (imageFile) {
           const imageUrl = `http://localhost:5000/images/product`;
           const imageFormData = new FormData();
           imageFormData.append("file", imageFile);
           imageFormData.append("product_id", product.id);
-
+  
           const imageResponse = await fetch(imageUrl, {
             method: "POST",
             headers: {
@@ -211,22 +214,22 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
             },
             body: imageFormData,
           });
-
+  
           if (!imageResponse.ok) {
             imageUploadSuccess = false;
           }
         }
-
+  
         if (isEditing) {
           setItems((prevItems) =>
             prevItems.map((item) =>
-              item.id === currentItem.id ? currentItem : item
+              item.id === currentItem.id ? product : item
             )
           );
         } else {
           setItems((prevItems) => [...prevItems, product]);
         }
-
+  
         if (imageFile && !imageUploadSuccess) {
           Swal.fire({
             icon: "warning",
@@ -249,7 +252,7 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
             },
           });
         }
-
+  
         handleClose();
       } else {
         Swal.fire({
@@ -263,6 +266,7 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
       }
     }
   };
+  
 
   const handleDialogDelete = () => {
     if (currentItem) {
@@ -301,7 +305,13 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
-      setImageFile(event.target.files[0]);
+      const file = event.target.files[0];
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -376,7 +386,7 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
         <img
           src={`data:image/jpeg;base64,${params.value}`}
           alt="Product"
-          style={{ aspectRatio: "2:1.5" }}
+          style={{ width: "100%", height: "auto" }}
         />
       ),
     },
@@ -548,6 +558,13 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
             onChange={handleFileChange}
             InputLabelProps={{ shrink: true }}
           />
+          {imagePreview && (
+            <img
+              src={imagePreview}
+              alt="Image Preview"
+              style={{ width: "100%", height: "auto", marginTop: "10px" }}
+            />
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} color="primary">

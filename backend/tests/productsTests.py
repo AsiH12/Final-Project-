@@ -4,7 +4,7 @@ import os
 # Global variable for token
 user3_token = None
 
-shop_name_test = "testing_products_shop"
+shop_name_test = "testing_products_shop1"
 shop_desc_test = "testing shop..."
 shop_categories_test = [1, 2]
 shop_id_test = None

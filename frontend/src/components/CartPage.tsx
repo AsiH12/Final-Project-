@@ -17,12 +17,15 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
+  CardMedia,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import { useCartCount } from "../CartContext"; // Ensure you import useCartCount
 import { Address } from "../utils/types";
+import Box from "@mui/material/Box";
+import noimage from "../images/noimage.jpeg";
 
 // Define type for items in the cart
 interface CartItem {
@@ -36,6 +39,7 @@ interface CartItem {
   originalPrice: number;
   discountedPrice: number;
   shop_id?: number; // Add shop_id as optional
+  image?: any;
 }
 
 const CartPage = () => {
@@ -340,74 +344,98 @@ const CartPage = () => {
         <Typography variant="h3" gutterBottom>
           Shopping Cart
         </Typography>
-        <Grid container spacing={2}>
-          {cart.map((item) => (
-            <Grid item xs={12} key={item.product_id}>
-              <Card
-                sx={{
-                  width: "70vw",
-                  height: "200px",
-                  margin: "auto",
-                  boxShadow: "50px",
-                }}
-              >
-                <CardContent
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
+        <Box
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            height: "63vh",
+            overflowX: "hidden",
+            overflowY: "auto",
+          }}
+        >
+          <Grid container spacing={2.5}>
+            {cart.map((item) => (
+              <Grid item xs={12} key={item.product_id}>
+                <Card
+                  sx={{
+                    width: "70vw",
+                    marginBotoom: "20px",
+                    boxShadow: "50px",
                   }}
                 >
-                  <div>
-                    <Typography variant="body1">{item.name}</Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      Shop: {item.shop}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      Amount: {item.amount}
-                    </Typography>
+                  <CardContent
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
                     <div>
-                      <Typography variant="body1">
-                        <span style={{ color: "black" }}>
-                          Price per 1 item: $
-                          {item.originalPrice
-                            ? item.originalPrice.toFixed(2)
-                            : item.originalPrice}
-                        </span>
+                      <Typography variant="body1">{item.name}</Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        Shop: {item.shop}
                       </Typography>
-                      <CardActions>
-                        <Button
-                          variant="outlined"
-                          onClick={() =>
-                            updateAmount(item.product_id, item.amount - 1)
-                          }
-                          disabled={item.amount <= 1}
-                        >
-                          -
-                        </Button>
-                        <Button
-                          variant="outlined"
-                          onClick={() =>
-                            updateAmount(item.product_id, item.amount + 1)
-                          }
-                        >
-                          +
-                        </Button>
-                        <Button
-                          variant="contained"
-                          color="secondary"
-                          onClick={() => removeFromCart(item.product_id)}
-                        >
-                          Remove
-                        </Button>
-                      </CardActions>
+                      <Typography variant="body2" color="textSecondary">
+                        Amount: {item.amount}
+                      </Typography>
+                      <div>
+                        <Typography variant="body1">
+                          <span style={{ color: "black" }}>
+                            Price per 1 item: $
+                            {item.originalPrice
+                              ? item.originalPrice.toFixed(2)
+                              : item.originalPrice}
+                          </span>
+                        </Typography>
+                        <CardActions>
+                          <Button
+                            variant="outlined"
+                            onClick={() =>
+                              updateAmount(item.product_id, item.amount - 1)
+                            }
+                            disabled={item.amount <= 1}
+                          >
+                            -
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            onClick={() =>
+                              updateAmount(item.product_id, item.amount + 1)
+                            }
+                          >
+                            +
+                          </Button>
+                          <Button
+                            variant="contained"
+                            color="secondary"
+                            onClick={() => removeFromCart(item.product_id)}
+                          >
+                            Remove
+                          </Button>
+                        </CardActions>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+                    <CardMedia
+                      component="img"
+                      sx={{
+                        height: "auto",
+                        width: "20%",
+                        objectFit: "fill",
+                        marginLeft: "auto",
+                      }}
+                      image={
+                        item.image
+                          ? `data:image/jpeg;base64,${item.image}`
+                          : noimage
+                      }
+                      alt={item.name}
+                    />
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
       </div>
       <div>
         <Button
@@ -459,24 +487,47 @@ const CartPage = () => {
               <Typography variant="h5">Cart Items:</Typography>
               {cart.map((item) => (
                 <Card key={item.product_id} style={{ marginTop: "10px" }}>
-                  <CardContent>
-                    <Typography variant="body1">{item.name}</Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      Amount: {item.amount}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      <span style={{ color: "black" }}>
-                        Original Price: ${item.originalPrice * item.amount}
-                      </span>
-                    </Typography>
-                    {item.discountedPrice !== item.originalPrice && (
+                  <CardContent
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div>
+                      <Typography variant="body1">{item.name}</Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        Amount: {item.amount}
+                      </Typography>
                       <Typography variant="body2" color="textSecondary">
                         <span style={{ color: "black" }}>
-                          Discounted Price: $
-                          {item.discountedPrice * item.amount}
+                          Original Price: ${item.originalPrice * item.amount}
                         </span>
                       </Typography>
-                    )}
+                      {item.discountedPrice !== item.originalPrice && (
+                        <Typography variant="body2" color="textSecondary">
+                          <span style={{ color: "black" }}>
+                            Discounted Price: $
+                            {item.discountedPrice * item.amount}
+                          </span>
+                        </Typography>
+                      )}
+                    </div>
+                    <CardMedia
+                      component="img"
+                      sx={{
+                        height: "auto",
+                        width: "20%",
+                        objectFit: "fill",
+                        marginLeft: "auto",
+                      }}
+                      image={
+                        item.image
+                          ? `data:image/jpeg;base64,${item.image}`
+                          : noimage
+                      }
+                      alt={item.name}
+                    />
                   </CardContent>
                 </Card>
               ))}

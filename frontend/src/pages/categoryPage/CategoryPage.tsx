@@ -43,7 +43,7 @@ export default function CategoryPage({ name }: CategoryPageProps) {
           <CardItem
             key={index}
             id={product.id!}
-            image={img1} // Replace with actual image URL
+            image={product.image} // Replace with actual image URL
             name={product.name}
             description={product.description || ""}
             shop={product.shop_name || ""}

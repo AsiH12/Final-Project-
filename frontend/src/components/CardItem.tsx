@@ -9,6 +9,7 @@ import {
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { useCartCount } from "../CartContext"; // Ensure you import useCartCount
 import { CartItem } from "../utils/types";
+import noimage from "../images/noimage.jpeg";
 
 export default function CardItem({
   id,
@@ -79,13 +80,18 @@ export default function CardItem({
 
   return (
     <Card sx={{ width: 300, boxShadow: 3, padding: "10px" }}>
-      <CardMedia
-        component="img"
-        width="350"
-        height="250"
-        image={image}
-        alt={name}
-      />
+      {image ? (
+        <CardMedia
+          component="img"
+          width="350"
+          height="250"
+          image={`data:image/jpeg;base64,${image}` || noimage}
+          alt={name}
+        />
+      ) : (
+        <CardMedia component="img" width="350" height="250" image={noimage} />
+      )}
+
       <CardContent>
         <Typography
           gutterBottom
@@ -142,14 +148,15 @@ export default function CardItem({
             marginTop: "10px",
           }}
         >
-          {categories && categories.map((category, index) => (
-            <li key={index} style={{ paddingRight: "5px" }}>
-              {category}
-              {index !== categories.length - 1 && (
-                <span style={{ paddingLeft: "5px" }}>•</span>
-              )}
-            </li>
-          ))}
+          {categories &&
+            categories.map((category, index) => (
+              <li key={index} style={{ paddingRight: "5px" }}>
+                {category}
+                {index !== categories.length - 1 && (
+                  <span style={{ paddingLeft: "5px" }}>•</span>
+                )}
+              </li>
+            ))}
         </ul>
         {isLoggedIn && (
           <div

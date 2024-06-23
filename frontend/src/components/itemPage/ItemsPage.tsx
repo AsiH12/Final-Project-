@@ -16,6 +16,7 @@ import Swal from "sweetalert2";
 import "./ItemsPage.css";
 import { useParams, useLocation } from "react-router-dom";
 import { Category } from "../../utils/types";
+import noimage from "../../images/noimage.jpeg";
 
 interface Item {
   id: number;
@@ -154,6 +155,20 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
     }
   };
 
+  const fetchItems = async () => {
+    const url = ownerView
+      ? `http://localhost:5000/products/manager_owner`
+      : `http://localhost:5000/products/shop/${storeId}`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Send JWT token
+      },
+    });
+    const data = await response.json();
+    if (!data.error) setItems(data.products);
+  };
   const handleSave = async () => {
     if (currentItem) {
       const shopId = ownerView ? selectedShop?.id : storeId;
@@ -168,12 +183,12 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
         });
         return;
       }
-  
+
       const url = isEditing
         ? `http://localhost:5000/products/${currentItem.id}`
         : `http://localhost:5000/products`;
       const method = isEditing ? "PATCH" : "POST";
-  
+
       const productData = {
         name: currentItem.name,
         description: currentItem.description,
@@ -187,74 +202,113 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
           )
           .map((category) => category.id),
       };
-  
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Send JWT token
-        },
-        body: JSON.stringify(productData),
-      });
-  
-      if (response.ok) {
-        const product = await response.json();
-        let imageUploadSuccess = true;
-  
-        if (imageFile) {
-          const imageUrl = `http://localhost:5000/images/product`;
-          const imageFormData = new FormData();
-          imageFormData.append("file", imageFile);
-          imageFormData.append("product_id", product.id);
-  
-          const imageResponse = await fetch(imageUrl, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`, // Send JWT token
-            },
-            body: imageFormData,
-          });
-  
-          if (!imageResponse.ok) {
-            imageUploadSuccess = false;
+
+      try {
+        const response = await fetch(url, {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Send JWT token
+          },
+          body: JSON.stringify(productData),
+        });
+
+        if (response.ok) {
+          const product = await response.json();
+          let imageUploadSuccess = true;
+
+          // Handle image upload or delete
+          if (imageFile) {
+            const imageUrl = `http://localhost:5000/images/product`;
+            const imageFormData = new FormData();
+            imageFormData.append("file", imageFile);
+            imageFormData.append("product_id", product.id);
+
+            const imageResponse = await fetch(imageUrl, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`, // Send JWT token
+              },
+              body: imageFormData,
+            });
+
+            if (!imageResponse.ok) {
+              imageUploadSuccess = false;
+            }
+          } else if (currentItem.image && !imagePreview) {
+            const deleteUrl = `http://localhost:5000/images/product/${currentItem.id}`;
+            const deleteResponse = await fetch(deleteUrl, {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${token}`, // Send JWT token
+              },
+            });
+
+            if (!deleteResponse.ok) {
+              imageUploadSuccess = false;
+            }
           }
-        }
-  
-        if (isEditing) {
-          setItems((prevItems) =>
-            prevItems.map((item) =>
-              item.id === currentItem.id ? product : item
-            )
+
+          // Fetch the image by product ID after creation or update
+          const fetchImageResponse = await fetch(
+            `http://localhost:5000/images/product/${product.id}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`, // Send JWT token
+              },
+            }
           );
+
+          if (fetchImageResponse.ok) {
+            const imageData = await fetchImageResponse.json();
+            product.image =
+              imageData.images.length > 0
+                ? `data:image/jpeg;base64,${imageData.images[0]}`
+                : null;
+          } else {
+            product.image = null;
+          }
+
+          await fetchItems();
+
+          if ((imageFile || currentItem.image) && !imageUploadSuccess) {
+            Swal.fire({
+              icon: "warning",
+              title: "Created with Warnings!",
+              text: "Item has been created successfully, but the image upload failed.",
+              customClass: {
+                container: "swal-dialog-custom",
+              },
+            });
+          } else {
+            Swal.fire({
+              icon: "success",
+              title: isEditing ? "Edited!" : "Created!",
+              text:
+                "Item has been " +
+                (isEditing ? "edited" : "created") +
+                " successfully.",
+              customClass: {
+                container: "swal-dialog-custom",
+              },
+            });
+          }
+
+          handleClose();
         } else {
-          setItems((prevItems) => [...prevItems, product]);
-        }
-  
-        if (imageFile && !imageUploadSuccess) {
           Swal.fire({
-            icon: "warning",
-            title: "Created with Warnings!",
-            text: "Item has been created successfully, but the image upload failed.",
+            icon: "error",
+            title: "Error!",
+            text: "Error saving item.",
             customClass: {
               container: "swal-dialog-custom",
             },
           });
-        } else {
-          Swal.fire({
-            icon: "success",
-            title: isEditing ? "Edited!" : "Created!",
-            text:
-              "Item has been " +
-              (isEditing ? "edited" : "created") +
-              " successfully.",
-            customClass: {
-              container: "swal-dialog-custom",
-            },
-          });
         }
-  
-        handleClose();
-      } else {
+      } catch (error) {
+        console.error("Error:", error);
         Swal.fire({
           icon: "error",
           title: "Error!",
@@ -266,7 +320,16 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
       }
     }
   };
-  
+
+  // Helper function to convert image file to base64
+  const imageFileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
 
   const handleDialogDelete = () => {
     if (currentItem) {
@@ -313,6 +376,11 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
   };
 
   const handleAddClick = async () => {
@@ -382,13 +450,20 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
       field: "image",
       headerName: "Image",
       flex: 1,
-      renderCell: (params) => (
-        <img
-          src={`data:image/jpeg;base64,${params.value}`}
-          alt="Product"
-          style={{ width: "100%", height: "auto" }}
-        />
-      ),
+      renderCell: (params) =>
+        params.value == undefined ? (
+          <img
+            src={noimage}
+            alt="No Image"
+            style={{ width: "auto", height: "100%" }}
+          />
+        ) : (
+          <img
+            src={`data:image/jpeg;base64,${params.value}`}
+            alt="No Image"
+            style={{ width: "auto", height: "100%" }}
+          />
+        ),
     },
     {
       field: "actions",
@@ -436,6 +511,7 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
         <DataGrid
           rows={items}
           columns={columns}
+          rowHeight={100}
           pageSize={10}
           disableSelectionOnClick
           getRowId={(row) => row.id}
@@ -559,11 +635,16 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
             InputLabelProps={{ shrink: true }}
           />
           {imagePreview && (
-            <img
-              src={imagePreview}
-              alt="Image Preview"
-              style={{ width: "100%", height: "auto", marginTop: "10px" }}
-            />
+            <>
+              <img
+                src={imagePreview}
+                alt="Image Preview"
+                style={{ width: "100%", height: "auto", marginTop: "10px" }}
+              />
+              <Button onClick={handleRemoveImage} color="secondary">
+                Remove Image
+              </Button>
+            </>
           )}
         </DialogContent>
         <DialogActions>

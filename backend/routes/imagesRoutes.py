@@ -41,14 +41,25 @@ def upload_image():
                 """, (product_id, file_data))
 
             db.commit()
-            return jsonify({"message": "Image uploaded successfully"}), 200
+
+            # cursor.execute("""
+            #     SELECT image FROM product_images WHERE product_id = ?
+            # """, (product_id,))
+            # images = cursor.fetchall()
+            # if images:
+            #     image_data = [image['image'] for image in images]
+            #     return jsonify({"images": image_data}), 200
+            # else:
+            #     return jsonify({"error": "failed to upload this image"}), 404
+            return jsonify("image created successfully"), 200
+
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
     return jsonify({"error": "File type not allowed"}), 400
 
 
-@bp.route('/product/<int:product_id>', methods=['GET'])
+@ bp.route('/product/<int:product_id>', methods=['GET'])
 def get_product_images(product_id):
     try:
         db = get_db()
@@ -66,7 +77,7 @@ def get_product_images(product_id):
         return jsonify({"error": str(e)}), 500
 
 
-@bp.route('/product/<int:product_id>', methods=['PATCH'])
+@ bp.route('/product/<int:product_id>', methods=['PATCH'])
 def update_product_image(product_id):
     if 'file' not in request.files:
         return jsonify({"error": "No file part"}), 400
@@ -91,7 +102,7 @@ def update_product_image(product_id):
     return jsonify({"error": "File type not allowed"}), 400
 
 
-@bp.route('/product/<int:product_id>', methods=['DELETE'])
+@ bp.route('/product/<int:product_id>', methods=['DELETE'])
 def delete_product_image(product_id):
     try:
         db = get_db()

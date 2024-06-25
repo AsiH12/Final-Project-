@@ -8,8 +8,6 @@ bp = Blueprint("purchase_historyRoutes", __name__,
                url_prefix="/purchase-history")
 
 # Get all purchase history route
-
-
 @bp.route("/", methods=["GET"], endpoint='purchase_history_get_all')
 @jwt_required()
 def get_purchase_history():
@@ -23,15 +21,12 @@ def get_purchase_history():
     return jsonify(purchase_history=purchase_history_list), 200
 
 # Get purchase history by ID route
-
-
 @bp.route("/<int:purchase_id>", methods=["GET"], endpoint='purchase_history_get_by_id')
 @jwt_required()
 def get_purchase_history_by_id(purchase_id):
     db = get_db()
     cursor = db.cursor()
-    cursor.execute(
-        "SELECT * FROM purchase_history WHERE id = ?", (purchase_id,))
+    cursor.execute("SELECT * FROM purchase_history WHERE id = ?", (purchase_id,))
     purchase = cursor.fetchone()
     close_db()
     if purchase is None:
@@ -40,8 +35,6 @@ def get_purchase_history_by_id(purchase_id):
     return jsonify(purchase_dict), 200
 
 # Get all purchase history by user ID with user name
-
-
 @bp.route("/user", methods=["GET"], endpoint='purchase_history_get_by_user_id')
 @jwt_required()
 def get_purchase_history_by_user_id():
@@ -70,12 +63,13 @@ def get_purchase_history_by_user_id():
         if purchase_dict['product_image']:
             purchase_dict['product_image'] = base64.b64encode(
                 purchase_dict['product_image']).decode('utf-8')
+        else:
+            purchase_dict['product_image'] = None
         purchases_list.append(purchase_dict)
 
     return jsonify(purchases_list), 200
+
 # Get all purchase history by product ID with product name
-
-
 @bp.route("/product/<int:product_id>", methods=["GET"], endpoint='purchase_history_get_by_product_id')
 @jwt_required()
 def get_purchase_history_by_product_id(product_id):
@@ -84,22 +78,32 @@ def get_purchase_history_by_product_id(product_id):
     query = """
         SELECT ph.id, p.name AS product_name, s.name AS shop_name, u.username AS user_name, 
                ph.quantity, ph.product_price, ph.purchase_date, ph.city, ph.country, 
-               ph.shipping_address, ph.shipping_completed, ph.total_price
+               ph.shipping_address, ph.shipping_completed, ph.total_price,
+               pi.image AS product_image
         FROM purchase_history ph
         JOIN products p ON ph.product_id = p.id
         JOIN shops s ON ph.shop_id = s.id
         JOIN users u ON ph.user_id = u.id
+        LEFT JOIN product_images pi ON p.id = pi.product_id
         WHERE ph.product_id = ?
     """
     cursor.execute(query, (product_id,))
     product_purchases = cursor.fetchall()
     close_db()
-    purchases_list = [dict(purchase) for purchase in product_purchases]
+
+    purchases_list = []
+    for purchase in product_purchases:
+        purchase_dict = dict(purchase)
+        if purchase_dict['product_image']:
+            purchase_dict['product_image'] = base64.b64encode(
+                purchase_dict['product_image']).decode('utf-8')
+        else:
+            purchase_dict['product_image'] = None
+        purchases_list.append(purchase_dict)
+
     return jsonify(purchases_list), 200
 
 # Get all purchase history by shop ID with shop name
-
-
 @bp.route("/shop/<int:shop_id>", methods=["GET"], endpoint='purchase_history_get_by_shop_id')
 @jwt_required()
 def get_purchase_history_by_shop_id(shop_id):
@@ -108,22 +112,32 @@ def get_purchase_history_by_shop_id(shop_id):
     query = """
         SELECT ph.id, p.name AS product_name, s.name AS shop_name, u.username AS user_name, 
                ph.quantity, ph.product_price, ph.purchase_date, ph.city, ph.country, 
-               ph.shipping_address, ph.shipping_completed, ph.total_price
+               ph.shipping_address, ph.shipping_completed, ph.total_price,
+               pi.image AS product_image
         FROM purchase_history ph
         JOIN products p ON ph.product_id = p.id
         JOIN shops s ON ph.shop_id = s.id
         JOIN users u ON ph.user_id = u.id
+        LEFT JOIN product_images pi ON p.id = pi.product_id
         WHERE ph.shop_id = ?
     """
     cursor.execute(query, (shop_id,))
     shop_purchases = cursor.fetchall()
     close_db()
-    purchases_list = [dict(purchase) for purchase in shop_purchases]
+
+    purchases_list = []
+    for purchase in shop_purchases:
+        purchase_dict = dict(purchase)
+        if purchase_dict['product_image']:
+            purchase_dict['product_image'] = base64.b64encode(
+                purchase_dict['product_image']).decode('utf-8')
+        else:
+            purchase_dict['product_image'] = None
+        purchases_list.append(purchase_dict)
+
     return jsonify(purchases_list), 200
 
 # Get all user purchases where the user is an owner or manager
-
-
 @bp.route("/manager_owner", methods=["GET"], endpoint='purchase_history_get_by_manager_owner')
 @jwt_required()
 def get_user_purchases():
@@ -146,36 +160,28 @@ def get_user_purchases():
             return jsonify(purchases=[]), 200
 
         cursor.execute("""
-            SELECT p.*, prod.name as product_name, s.name as shop_name, u.username as user_name
+            SELECT p.*, prod.name as product_name, s.name as shop_name, u.username as user_name,
+                   pi.image AS product_image
             FROM purchase_history p
             LEFT JOIN products prod ON p.product_id = prod.id
             LEFT JOIN shops s ON p.shop_id = s.id
             LEFT JOIN users u ON p.user_id = u.id
+            LEFT JOIN product_images pi ON prod.id = pi.product_id
             WHERE p.shop_id IN ({})
         """.format(','.join('?' for _ in shop_ids)), shop_ids)
 
         purchases = cursor.fetchall()
         close_db()
-        purchase_list = [
-            {
-                "id": purchase["id"],
-                "product_id": purchase["product_id"],
-                "shop_id": purchase["shop_id"],
-                "user_id": purchase["user_id"],
-                "quantity": purchase["quantity"],
-                "product_price": purchase["product_price"],
-                "purchase_date": purchase["purchase_date"],
-                "city": purchase["city"],
-                "country": purchase["country"],
-                "shipping_address": purchase["shipping_address"],
-                "shipping_completed": purchase["shipping_completed"],
-                "total_price": purchase["total_price"],
-                "product_name": purchase["product_name"],
-                "shop_name": purchase["shop_name"],
-                "user_name": purchase["user_name"]
-            }
-            for purchase in purchases
-        ]
+
+        purchase_list = []
+        for purchase in purchases:
+            purchase_dict = dict(purchase)
+            if purchase_dict['product_image']:
+                purchase_dict['product_image'] = base64.b64encode(
+                    purchase_dict['product_image']).decode('utf-8')
+            else:
+                purchase_dict['product_image'] = None
+            purchase_list.append(purchase_dict)
 
         return jsonify(purchases=purchase_list), 200
     except Exception as e:
@@ -183,8 +189,6 @@ def get_user_purchases():
         return jsonify({"error": str(e)}), 500
 
 # Get all purchase history by shop name
-
-
 @bp.route("/shop_name/<string:shop_name>", methods=["GET"], endpoint='purchase_history_get_by_shop_name')
 @jwt_required()
 def get_purchase_history_by_shop_name(shop_name):
@@ -193,19 +197,30 @@ def get_purchase_history_by_shop_name(shop_name):
     query = """
         SELECT ph.id, p.name AS product_name, s.name AS shop_name, u.username AS user_name, 
                ph.quantity, ph.product_price, ph.purchase_date, ph.city, ph.country, 
-               ph.shipping_address, ph.shipping_completed, ph.total_price
+               ph.shipping_address, ph.shipping_completed, ph.total_price,
+               pi.image AS product_image
         FROM purchase_history ph
         JOIN products p ON ph.product_id = p.id
         JOIN shops s ON ph.shop_id = s.id
         JOIN users u ON ph.user_id = u.id
+        LEFT JOIN product_images pi ON p.id = pi.product_id
         WHERE s.name = ?
     """
     cursor.execute(query, (shop_name,))
     shop_purchases = cursor.fetchall()
     close_db()
-    purchases_list = [dict(purchase) for purchase in shop_purchases]
-    return jsonify(purchases_list), 200
 
+    purchases_list = []
+    for purchase in shop_purchases:
+        purchase_dict = dict(purchase)
+        if purchase_dict['product_image']:
+            purchase_dict['product_image'] = base64.b64encode(
+                purchase_dict['product_image']).decode('utf-8')
+        else:
+            purchase_dict['product_image'] = None
+        purchases_list.append(purchase_dict)
+
+    return jsonify(purchases_list), 200
 
 @bp.route("", methods=["POST"], endpoint='purchase_history_create')
 @jwt_required()
@@ -259,9 +274,8 @@ def create_purchase_history():
     db.commit()
     close_db()
     return jsonify({"message": "Purchase history created successfully"}), 201
+
 # Delete purchase history by ID route
-
-
 @bp.route("/<int:purchase_id>", methods=["DELETE"], endpoint='purchase_history_delete_by_id')
 @jwt_required()
 def delete_purchase_history_by_id(purchase_id):

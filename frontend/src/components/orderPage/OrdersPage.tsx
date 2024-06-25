@@ -5,6 +5,7 @@ import { useParams } from "react-router-dom";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Swal from "sweetalert2";
 import "./OrdersPage.css";
+import noimage from "../../images/noimage.jpeg"; // Ensure this path is correct
 
 interface Order {
   id: number;
@@ -19,6 +20,7 @@ interface Order {
   shipping_address: string;
   shipping_completed: boolean;
   total_price: number;
+  product_image: string | null; // Ensure this field is included
 }
 
 interface OrdersPageProps {
@@ -43,6 +45,7 @@ export function OrdersPage({ ownerView }: OrdersPageProps) {
         },
       });
       const data = await response.json();
+      console.log("Orders data: ", data); // Log the received data to verify image data
       if (!data.error) setOrders(data.purchases || []);
     };
 
@@ -98,6 +101,25 @@ export function OrdersPage({ ownerView }: OrdersPageProps) {
     { field: "shipping_address", headerName: "Shipping Address", flex: 1 },
     { field: "total_price", headerName: "Total Price", flex: 1 },
     {
+      field: "product_image",
+      headerName: "Image",
+      width: 150,
+      renderCell: (params) =>
+        params.value ? (
+          <img
+            src={`data:image/jpeg;base64,${params.value}`}
+            alt="Product"
+            style={{ width: "auto", height: "100%" }}
+          />
+        ) : (
+          <img
+            src={noimage}
+            alt="No Image"
+            style={{ width: "auto", height: "100%" }}
+          />
+        ),
+    },
+    {
       field: "actions",
       headerName: "Actions",
       type: "actions",
@@ -129,6 +151,7 @@ export function OrdersPage({ ownerView }: OrdersPageProps) {
         <DataGrid
           rows={orders}
           columns={columns}
+          rowHeight={100}
           pageSize={5}
           rowsPerPageOptions={[5, 10, 15]}
           disableSelectionOnClick

@@ -18,16 +18,19 @@ product_categories_test = [1, 2]
 
 product_data = None
 
+
 @pytest.fixture(scope="module")
 def test_client():
     import sys
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+    sys.path.append(os.path.abspath(
+        os.path.join(os.path.dirname(__file__), '..')))
     from main import app
 
     # Configure the Flask app for testing
     app.config["TESTING"] = True
     app.config["JWT_SECRET_KEY"] = "test_secret_key"
-    app.config["DATABASE"] = os.path.join(os.path.dirname(__file__), '../data.db')
+    app.config["DATABASE"] = os.path.join(
+        os.path.dirname(__file__), '../data.db')
 
     with app.test_client() as testing_client:
         with app.app_context():
@@ -37,13 +40,17 @@ def test_client():
 
         yield testing_client
 
+
 @pytest.fixture(scope="module", autouse=True)
 def setup_tokens(test_client):
     global user3_token, shop_id_test, shop_name_test, shop_desc_test, shop_categories_test, product_data
 
-    # Login with user3 and get the token
+    test_username = os.getenv("TEST_USERNAME")
+    test_password = os.getenv("TEST_PASSWORD")
+
+    # Login with TEST_USER and get the token
     response = test_client.post(
-        "/users/login", json={"username": "new", "password": "a206130940A"})
+        "/users/login", json={"username": test_username, "password": test_password})
     assert response.status_code == 200
     data = response.get_json()
     user3_token = data["access_token"]
@@ -80,11 +87,13 @@ def setup_tokens(test_client):
 
     product_data = response3.get_json()
 
+
 def test_get_all_products(test_client):
     response = test_client.get("/products/")
     assert response.status_code == 200
     products = response.get_json()["products"]
     assert len(products) > 0
+
 
 def test_get_product_by_id(test_client):
     headers = {"Authorization": f"Bearer {user3_token}"}
@@ -94,20 +103,25 @@ def test_get_product_by_id(test_client):
     product = response.get_json()
     assert product["id"] == product_id
 
+
 def test_get_products_by_shop_id(test_client):
     headers = {"Authorization": f"Bearer {user3_token}"}
-    response = test_client.get(f"/products/shop/{shop_id_test}", headers=headers)
+    response = test_client.get(
+        f"/products/shop/{shop_id_test}", headers=headers)
     assert response.status_code == 200
     products = response.get_json()["products"]
     assert len(products) == 1  # Ensure there is only one product in this shop
 
+
 def test_get_shop_id_by_product_id(test_client):
     headers = {"Authorization": f"Bearer {user3_token}"}
     product_id = product_data["id"]
-    response = test_client.get(f"/products/getShopId/{product_id}", headers=headers)
+    response = test_client.get(
+        f"/products/getShopId/{product_id}", headers=headers)
     assert response.status_code == 200
     shop_id = response.get_json()["shop_id"]
     assert shop_id == shop_id_test
+
 
 def test_update_product(test_client):
     headers = {"Authorization": f"Bearer {user3_token}"}
@@ -121,13 +135,16 @@ def test_update_product(test_client):
         "maximum_discount": 40,
         "categories": [1, 3]
     }
-    response = test_client.patch(f"/products/{product_id}", json=update_data, headers=headers)
+    response = test_client.patch(
+        f"/products/{product_id}", json=update_data, headers=headers)
     assert response.status_code == 200
-    updated_response = test_client.get(f"/products/{product_id}", headers=headers)
+    updated_response = test_client.get(
+        f"/products/{product_id}", headers=headers)
     assert updated_response.status_code == 200
     updated_product = updated_response.get_json()
     assert updated_product["name"] == update_data["name"]
     assert updated_product["description"] == update_data["description"]
+
 
 def test_delete_product_and_shop(test_client):
     headers = {"Authorization": f"Bearer {user3_token}"}

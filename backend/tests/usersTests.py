@@ -10,7 +10,6 @@ new_user_token = None
 new_user_id = None
 
 
-
 @pytest.fixture(scope="module")
 def test_client():
     import sys
@@ -39,9 +38,12 @@ def test_client():
 def setup_tokens(test_client):
     global user3_token, new_user_token, new_user_id
 
-    # Login with user3 and get the token
+    test_username = os.getenv("TEST_USERNAME")
+    test_password = os.getenv("TEST_PASSWORD")
+
+    # Login with TEST_USER and get the token
     response = test_client.post(
-        "/users/login", json={"username": "new", "password": "a206130940A"})
+        "/users/login", json={"username": test_username, "password": test_password})
     assert response.status_code == 200
     data = response.get_json()
     user3_token = data["access_token"]
@@ -145,7 +147,7 @@ def test_reset_password(test_client):
 def test_delete_user(test_client):
     global user3_token, new_user_id
     headers = {"Authorization": f"Bearer {user3_token}"}
-    
+
     # Delete the first user
     response = test_client.delete(f"/users/{new_user_id}", headers=headers)
     assert response.status_code == 200
@@ -161,16 +163,14 @@ def test_delete_user(test_client):
     cursor1 = db.cursor()
     cursor1.execute("SELECT * FROM users WHERE username = 'anotheruser180'")
     user_to_delete = cursor1.fetchone()
-    
+
     if user_to_delete:
         print("User to delete:", user_to_delete)
-        response1 = test_client.delete(f"/users/{user_to_delete[0]}", headers=headers)  # Assuming the user ID is the first column
+        # Assuming the user ID is the first column
+        response1 = test_client.delete(
+            f"/users/{user_to_delete[0]}", headers=headers)
         assert response1.status_code == 200
     else:
         print("No user found with the username 'anotheruser180'")
 
     db.close()
-
-
-
-    

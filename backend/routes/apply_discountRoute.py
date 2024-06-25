@@ -62,6 +62,7 @@ def apply_discounts(cart, used_discounts, new_discount_code):
         product_id = item.get("product_id")
         shop_id = get_shop_id_by_product_id(cursor, product_id)
         quantity = item.get("amount")
+
         cursor.execute(
             "SELECT price, maximum_discount FROM products WHERE id = ?",
             (product_id,),
@@ -80,13 +81,14 @@ def apply_discounts(cart, used_discounts, new_discount_code):
             product_discount = discount["product_discount"]
             shop_discount = discount["shop_discount"]
 
-            if product_discount and product_discount["product_id"] == product_id:
+            if product_discount and product_discount["product_id"] == int(product_id):
                 if quantity < product_discount["minimum_amount"]:
                     close_db()
                     raise ValueError(
                         f"Product discount '{discount['code']}' requires a minimum quantity of {product_discount['minimum_amount']}"
                     )
                 discount_value = product_discount["discount"]
+
                 discounted_price *= (1 - min(discount_value,
                                      maximum_discount) / 100)
 

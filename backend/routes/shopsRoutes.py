@@ -271,8 +271,6 @@ def update_shop_by_id(shop_id):
         return jsonify({"message": "Shop updated successfully"}), 200
 
 
-
-
 @bp.route("/<int:shop_id>", methods=["DELETE"], endpoint='shops_delete')
 @jwt_required()
 @cross_origin(origins="http://localhost:5173")
@@ -286,6 +284,8 @@ def delete_shop_by_id(shop_id):
     if existing_shop is None:
         close_db()
         return jsonify({"error": "Shop not found"}), 404
+    print(type(existing_shop["owner_id"]))
+    print(type(user_id))
 
     if existing_shop["owner_id"] != user_id:
         close_db()
@@ -294,7 +294,7 @@ def delete_shop_by_id(shop_id):
     # Delete related rows from other tables
     cursor.execute("DELETE FROM discounts_shops WHERE shop_id = ?", (shop_id,))
     cursor.execute("DELETE FROM managers WHERE shop_id = ?", (shop_id,))
-    
+
     # Get all products of the shop to delete related discount products and product categories
     cursor.execute("SELECT id FROM products WHERE shop_id = ?", (shop_id,))
     products = cursor.fetchall()
@@ -303,25 +303,26 @@ def delete_shop_by_id(shop_id):
     if product_ids:
         # Delete related rows from discounts_products
         cursor.execute(
-            "DELETE FROM discounts_products WHERE product_id IN ({})".format(','.join('?' for _ in product_ids)),
+            "DELETE FROM discounts_products WHERE product_id IN ({})".format(
+                ','.join('?' for _ in product_ids)),
             product_ids
         )
-        
+
         # Delete related rows from products_categories
         cursor.execute(
-            "DELETE FROM products_categories WHERE product_id IN ({})".format(','.join('?' for _ in product_ids)),
+            "DELETE FROM products_categories WHERE product_id IN ({})".format(
+                ','.join('?' for _ in product_ids)),
             product_ids
         )
-    
+
     # Delete the products themselves
     cursor.execute("DELETE FROM products WHERE shop_id = ?", (shop_id,))
-    
-    
+
     # Delete the shop itself
-    cursor.execute("DELETE FROM shops_categories WHERE shop_id = ?", (shop_id,))
-    
+    cursor.execute(
+        "DELETE FROM shops_categories WHERE shop_id = ?", (shop_id,))
+
     cursor.execute("DELETE FROM shops WHERE id = ?", (shop_id,))
-    
 
     db.commit()
     close_db()

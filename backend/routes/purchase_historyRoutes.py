@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
+import base64
 
 from db import get_db, close_db
 
@@ -50,19 +51,28 @@ def get_purchase_history_by_user_id():
     query = """
         SELECT ph.id, p.name AS product_name, s.name AS shop_name, u.username AS user_name, 
                ph.quantity, ph.product_price, ph.purchase_date, ph.city, ph.country, 
-               ph.shipping_address, ph.shipping_completed, ph.total_price
+               ph.shipping_address, ph.shipping_completed, ph.total_price,
+               pi.image AS product_image
         FROM purchase_history ph
         JOIN products p ON ph.product_id = p.id
         JOIN shops s ON ph.shop_id = s.id
         JOIN users u ON ph.user_id = u.id
+        LEFT JOIN product_images pi ON p.id = pi.product_id
         WHERE ph.user_id = ?
     """
     cursor.execute(query, (user_id,))
     user_purchases = cursor.fetchall()
     close_db()
-    purchases_list = [dict(purchase) for purchase in user_purchases]
-    return jsonify(purchases_list), 200
 
+    purchases_list = []
+    for purchase in user_purchases:
+        purchase_dict = dict(purchase)
+        if purchase_dict['product_image']:
+            purchase_dict['product_image'] = base64.b64encode(
+                purchase_dict['product_image']).decode('utf-8')
+        purchases_list.append(purchase_dict)
+
+    return jsonify(purchases_list), 200
 # Get all purchase history by product ID with product name
 
 

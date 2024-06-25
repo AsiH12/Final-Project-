@@ -12,6 +12,7 @@ import {
   GridFilterModel,
 } from "@mui/x-data-grid";
 import "./PurchaseHistoryPage.css";
+import noimage from "../../images/noimage.jpeg"; // Ensure this path is correct
 
 interface Purchase {
   id: number;
@@ -26,6 +27,7 @@ interface Purchase {
   shipping_address: string;
   shipping_completed: boolean;
   total_price: number;
+  product_image: string | null; // Add this line
 }
 
 function CustomToolbar() {
@@ -64,7 +66,7 @@ export function PurchaseHistoryPage() {
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`, // Send JWT token
-            },
+            }
           }
         );
         if (!response.ok) throw new Error("Network response was not ok");
@@ -77,7 +79,7 @@ export function PurchaseHistoryPage() {
     };
 
     fetchPurchaseHistory();
-  }, []);
+  }, [token]);
 
   const columns: GridColDef[] = [
     { field: "id", headerName: "ID", width: 90, editable: false },
@@ -118,6 +120,25 @@ export function PurchaseHistoryPage() {
       width: 130,
       editable: false,
     },
+    {
+      field: "product_image",
+      headerName: "Image",
+      width: 150,
+      renderCell: (params) =>
+        params.value ? (
+          <img
+            src={`data:image/jpeg;base64,${params.value}`}
+            alt="Product"
+            style={{ width: "auto", height: "100%" }}
+          />
+        ) : (
+          <img
+            src={noimage}
+            alt="No Image"
+            style={{ width: "auto", height: "100%" }}
+          />
+        ),
+    },
   ];
 
   return (
@@ -134,6 +155,7 @@ export function PurchaseHistoryPage() {
         <DataGrid
           rows={purchaseHistory}
           columns={columns}
+          rowHeight={100}
           slots={{
             toolbar: CustomToolbar,
           }}

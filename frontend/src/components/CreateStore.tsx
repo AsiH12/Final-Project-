@@ -117,20 +117,29 @@ export function StoreForm({ open, onClose }: StoreFormProps) {
         throw new Error("Invalid credentials");
       }
     } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Failed to create new shop",
-        showConfirmButton: false,
-        timer: 2000,
-        customClass: {
-          container: "swal-dialog-custom",
-        },
-      });
-
       if (error instanceof Error) {
         console.error("Error creating a shop: " + error.message);
+        Swal.fire({
+          icon: "error",
+          title: "Failed to create new shop",
+          showConfirmButton: false,
+          text: error.message,
+          customClass: {
+            container: "swal-dialog-custom",
+          },
+        });
       } else {
         console.error("An unknown error occurred");
+        Swal.fire({
+          icon: "error",
+          title: "Failed to create new shop",
+          text: "An unknown error occurred",
+          showConfirmButton: false,
+          timer: 2000,
+          customClass: {
+            container: "swal-dialog-custom",
+          },
+        });
       }
     }
   };

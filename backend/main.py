@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, decode_token
 from dotenv import load_dotenv
@@ -17,20 +17,27 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Load configuration from environment variables
-if not app.config.from_prefixed_env():
-    raise EnvironmentError(
-        "Failed to load configuration from environment variables")
+# Function to load environment variables based on FLASK_ENV
+def load_environment():
+    environment = os.getenv("FLASK_ENV", "development")
+    print(environment)
+    if environment == "development":
+        load_dotenv(".env.development", override=True)
+    elif environment == "production":
+        load_dotenv(".env.production", override=True)
+    else:
+        raise EnvironmentError("Unknown FLASK_ENV value")
+
+# Load environment variables based on FLASK_ENV
+load_environment()
 
 # Set up CORS
 FRONTEND_URL = os.getenv("FLASK_FRONTEND_URL")
 if FRONTEND_URL:
     print("Frontend URL: ", FRONTEND_URL)
-    cors = CORS(app, origins=FRONTEND_URL, methods=[
-                "GET", "POST", "PATCH", "DELETE"])
+    cors = CORS(app, origins=FRONTEND_URL, methods=["GET", "POST", "PATCH", "DELETE"])
 else:
-    raise EnvironmentError(
-        "FRONTEND_URL is not set in the environment variables")
+    raise EnvironmentError("FLASK_FRONTEND_URL is not set in the environment variables")
 
 # Set up JWT
 SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
@@ -38,8 +45,7 @@ if SECRET_KEY:
     print("JWT Secret Key: ", SECRET_KEY)
     app.config['JWT_SECRET_KEY'] = SECRET_KEY
 else:
-    raise EnvironmentError(
-        "FLASK_SECRET_KEY is not set in the environment variables")
+    raise EnvironmentError("FLASK_SECRET_KEY is not set in the environment variables")
 
 # Set token expiration time to one week
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=168)
@@ -62,13 +68,10 @@ app.register_blueprint(addressesRoutes.bp)
 app.register_blueprint(apply_discountRoute.bp)
 app.register_blueprint(imagesRoutes.bp)
 
-
-
-
-
 @app.route('/inspect_token', methods=['GET'])
 def inspect_token():
     token = request.headers.get('Authorization').split()[1]
     decoded_token = decode_token(token)
     expiration_time = datetime.fromtimestamp(decoded_token['exp'])
-    decoded_token['exp_readable'] = expiration
+    decoded_token['exp_readable'] = expiration_time
+    return decoded_token

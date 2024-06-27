@@ -18,6 +18,7 @@ import "./ManagersPage.css";
 import { useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Shop, User } from "../../utils/types";
+import apiURL from "../../constants/apiUrl";
 
 interface Manager {
   id: number;
@@ -46,8 +47,8 @@ export function ManagersPage({ ownerView }: { ownerView: boolean }) {
 
   const fetchManagers = async () => {
     const url = ownerView
-      ? `http://localhost:5000/managers/owner`
-      : `http://localhost:5000/managers/shop_name/${shop_name}`;
+      ? `${apiURL}/managers/owner`
+      : `${apiURL}/managers/shop_name/${shop_name}`;
     const response = await fetch(url, {
       method: "GET",
       headers: {
@@ -61,7 +62,7 @@ export function ManagersPage({ ownerView }: { ownerView: boolean }) {
   };
 
   const fetchUserShops = async () => {
-    const response = await fetch("http://localhost:5000/shops/manager", {
+    const response = await fetch(`${apiURL}/shops/manager`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -73,7 +74,7 @@ export function ManagersPage({ ownerView }: { ownerView: boolean }) {
   };
 
   const fetchUsers = async (shopName: string) => {
-    const url = `http://localhost:5000/users/shop_name/${shopName}`;
+    const url = `${apiURL}/users/shop_name/${shopName}`;
     const response = await fetch(url, {
       method: "GET",
       headers: {
@@ -113,7 +114,7 @@ export function ManagersPage({ ownerView }: { ownerView: boolean }) {
   }, [ownerView]);
 
   const handleDeleteClick = async (id: number) => {
-    const response = await fetch(`http://localhost:5000/managers/${id}`, {
+    const response = await fetch(`${apiURL}/managers/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -149,7 +150,7 @@ export function ManagersPage({ ownerView }: { ownerView: boolean }) {
     try {
       console.log(shop_name);
       const response = await fetch(
-        `http://localhost:5000/shops/getidbyname/${shop_name}`
+        `${apiURL}/shops/getidbyname/${shop_name}`
       );
       if (response.ok) {
         const data = await response.json();
@@ -187,7 +188,7 @@ export function ManagersPage({ ownerView }: { ownerView: boolean }) {
         }
       }
 
-      const response = await fetch(`http://localhost:5000/managers`, {
+      const response = await fetch(`${apiURL}/managers`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -237,7 +238,7 @@ export function ManagersPage({ ownerView }: { ownerView: boolean }) {
 
   const handleClickOpen = async () => {
     // Check if the user owns or manages any shops
-    const response = await fetch("http://localhost:5000/shops/manager", {
+    const response = await fetch(`${apiURL}/shops/manager`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

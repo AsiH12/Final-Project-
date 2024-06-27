@@ -12,6 +12,7 @@ import {
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import "./LoginForm.css";
+import apiURL from "../../constants/apiUrl";
 
 interface LoginFormProps {
   setUserToken: (userId: string | null) => void;
@@ -34,7 +35,7 @@ export function LoginForm({ setUserToken }: LoginFormProps) {
 
   const handleLogin = async (formData: User) => {
     try {
-      const response = await fetch(`http://localhost:5000/users/login`, {
+      const response = await fetch(`${apiURL}/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

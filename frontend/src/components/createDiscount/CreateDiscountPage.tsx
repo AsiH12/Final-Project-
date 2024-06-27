@@ -23,6 +23,7 @@ import Swal from "sweetalert2";
 import { useLocation, useParams } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import "./CreateDiscountPage.css";
+import apiURL from "../../constants/apiUrl";
 
 export function CreateDiscountPage({ ownerView }) {
   const location = useLocation();
@@ -70,7 +71,7 @@ export function CreateDiscountPage({ ownerView }) {
         await fetchProductDiscounts();
         const shop_id = await fetchShopIdByName();
         const response = await fetch(
-          `http://localhost:5000/products/shop/${shop_id}`
+          `${apiURL}/products/shop/${shop_id}`
         );
         const data = await response.json();
         console.log(data.products);
@@ -85,7 +86,7 @@ export function CreateDiscountPage({ ownerView }) {
   const fetchHasShop = async () => {
     try {
       // Check if the user owns or manages any shops
-      const response = await fetch("http://localhost:5000/shops/manager", {
+      const response = await fetch(`${apiURL}/shops/manager`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -121,7 +122,7 @@ export function CreateDiscountPage({ ownerView }) {
   const fetchShopDiscounts = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/discounts/shops/by_shop_name/${shop_name}`,
+        `${apiURL}/discounts/shops/by_shop_name/${shop_name}`,
         {
           method: "GET",
           headers: {
@@ -141,7 +142,7 @@ export function CreateDiscountPage({ ownerView }) {
   const fetchProductDiscounts = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/discounts/products/by_shop_name/${shop_name}`,
+        `${apiURL}/discounts/products/by_shop_name/${shop_name}`,
         {
           method: "GET",
           headers: {
@@ -160,7 +161,7 @@ export function CreateDiscountPage({ ownerView }) {
   const fetchOwnerShopDiscounts = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/discounts/shops/user`,
+        `${apiURL}/discounts/shops/user`,
         {
           method: "GET",
           headers: {
@@ -179,7 +180,7 @@ export function CreateDiscountPage({ ownerView }) {
   const fetchOwnerProductDiscounts = async () => {
     try {
       const response = await fetch(
-        "http://localhost:5000/discounts/products/user",
+        `${apiURL}/discounts/products/user`,
         {
           method: "GET",
           headers: {
@@ -196,7 +197,7 @@ export function CreateDiscountPage({ ownerView }) {
   };
 
   const fetchUserShops = async () => {
-    const response = await fetch("http://localhost:5000/shops/manager", {
+    const response = await fetch(`${apiURL}/shops/manager`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -210,7 +211,7 @@ export function CreateDiscountPage({ ownerView }) {
   const fetchProductsByShop = async (shopId: string) => {
     console.log(selectedShop);
     const response = await fetch(
-      `http://localhost:5000/products/shop/${shopId}`
+      `${apiURL}/products/shop/${shopId}`
     );
     const data = await response.json();
     console.log(data.products);
@@ -220,7 +221,7 @@ export function CreateDiscountPage({ ownerView }) {
   const fetchShopIdByName = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/shops/getidbyname/${shop_name}`,
+        `${apiURL}/shops/getidbyname/${shop_name}`,
         {
           headers: {
             Authorization: `Bearer ${token}`, // Send JWT token if required
@@ -261,7 +262,7 @@ export function CreateDiscountPage({ ownerView }) {
 
       console.log(data);
 
-      const response = await fetch("http://localhost:5000/discounts/shops", {
+      const response = await fetch(`${apiURL}/discounts/shops`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -318,7 +319,7 @@ export function CreateDiscountPage({ ownerView }) {
 
   const handleCreateDiscountProduct = async (data: any) => {
     try {
-      const response = await fetch("http://localhost:5000/discounts/products", {
+      const response = await fetch(`${apiURL}/discounts/products`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -379,7 +380,7 @@ export function CreateDiscountPage({ ownerView }) {
       console.log("Discount data:", editDiscount);
 
       const response = await fetch(
-        `http://localhost:5000/discounts/${discountType}/${editDiscount.id}`,
+        `${apiURL}/discounts/${discountType}/${editDiscount.id}`,
         {
           method: "PATCH",
           headers: {
@@ -446,7 +447,7 @@ export function CreateDiscountPage({ ownerView }) {
     const discountType = isProductDiscount ? "products" : "shops";
     try {
       const response = await fetch(
-        `http://localhost:5000/discounts/${discountType}/${id}`,
+        `${apiURL}/discounts/${discountType}/${id}`,
         {
           method: "DELETE",
           headers: {

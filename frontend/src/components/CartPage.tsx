@@ -26,6 +26,7 @@ import { useCartCount } from "../CartContext"; // Ensure you import useCartCount
 import { Address } from "../utils/types";
 import Box from "@mui/material/Box";
 import noimage from "../images/noimage.jpeg";
+import apiURL from "../constants/apiUrl";
 
 // Define type for items in the cart
 interface CartItem {
@@ -73,7 +74,7 @@ const CartPage = () => {
     const fetchAddresses = async () => {
       // Fetch addresses from the server
       try {
-        const response = await fetch(`http://localhost:5000/addresses/user`, {
+        const response = await fetch(`${apiURL}/addresses/user`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -140,7 +141,7 @@ const CartPage = () => {
         throw new Error("Please log in to apply discounts.");
       }
 
-      const response = await fetch("http://localhost:5000/apply-discounts", {
+      const response = await fetch(`${apiURL}/apply-discounts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -179,7 +180,7 @@ const CartPage = () => {
         throw new Error("Please log in to apply discounts.");
       }
 
-      const response = await fetch("http://localhost:5000/apply-discounts", {
+      const response = await fetch(`${apiURL}/apply-discounts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -250,7 +251,7 @@ const CartPage = () => {
         const updatedCart = await Promise.all(
           cart.map(async (item) => {
             const response = await fetch(
-              `http://localhost:5000/products/getShopId/${item.product_id}`
+              `${apiURL}/products/getShopId/${item.product_id}`
             );
             if (response.ok) {
               const data = await response.json();
@@ -278,7 +279,7 @@ const CartPage = () => {
               total_price: displayTotal,
             };
 
-            return fetch("http://localhost:5000/purchase-history", {
+            return fetch(`${apiURL}/purchase-history`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",

@@ -16,6 +16,7 @@ import Swal from "sweetalert2";
 import { useForm, Controller } from "react-hook-form";
 import "./AddressForm.css";
 import { Address } from "../../utils/types";
+import apiURL from "../../constants/apiUrl";
 
 export function AddressForm() {
   const {
@@ -41,7 +42,7 @@ export function AddressForm() {
         throw new Error("Please log in to get addresses.");
       }
 
-      const response = await fetch("http://localhost:5000/addresses/user", {
+      const response = await fetch(`${apiURL}/addresses/user`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -62,7 +63,7 @@ export function AddressForm() {
     try {
       console.log(data);
       const response = await fetch(
-        `http://localhost:5000/addresses${
+        `${apiURL}/addresses${
           isEditing ? `/${currentAddress?.id}` : ""
         }`,
         {
@@ -119,7 +120,7 @@ export function AddressForm() {
       }
 
       try {
-        const response = await fetch("http://localhost:5000/addresses/user", {
+        const response = await fetch(`${apiURL}/addresses/user`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -146,7 +147,7 @@ export function AddressForm() {
   };
 
   const handleDeleteClick = async (id: number) => {
-    const response = await fetch(`http://localhost:5000/addresses/${id}`, {
+    const response = await fetch(`${apiURL}/addresses/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

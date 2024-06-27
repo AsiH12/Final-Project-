@@ -15,6 +15,7 @@ import Swal from "sweetalert2";
 import "./ChangePasswordForm.css";
 import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
+import apiURL from "../../constants/apiUrl";
 
 interface PasswordFormData {
   oldPassword: string;
@@ -61,7 +62,7 @@ export function ChangePasswordForm() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/users/reset-password`,
+        `${apiURL}/users/reset-password`,
         {
           method: "PATCH",
           headers: {

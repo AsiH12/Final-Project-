@@ -6,6 +6,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import Swal from "sweetalert2";
 import "./OrdersPage.css";
 import noimage from "../../images/noimage.jpeg"; // Ensure this path is correct
+import apiURL from "../../constants/apiUrl";
 
 interface Order {
   id: number;
@@ -35,8 +36,8 @@ export function OrdersPage({ ownerView }: OrdersPageProps) {
   useEffect(() => {
     const fetchOrders = async () => {
       const url = ownerView
-        ? `http://localhost:5000/purchase-history/manager_owner`
-        : `http://localhost:5000/purchase-history/shop_name/${shop_name}`;
+        ? `${apiURL}/purchase-history/manager_owner`
+        : `${apiURL}/purchase-history/shop_name/${shop_name}`;
       const response = await fetch(url, {
         method: "GET",
         headers: {
@@ -56,7 +57,7 @@ export function OrdersPage({ ownerView }: OrdersPageProps) {
 
   const handleDeleteClick = async (id: number) => {
     const response = await fetch(
-      `http://localhost:5000/purchase-history/${id}`,
+      `${apiURL}/purchase-history/${id}`,
       {
         method: "DELETE",
         headers: {

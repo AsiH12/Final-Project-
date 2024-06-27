@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import CardItem from "../components/CardItem";
 import { Box } from "@mui/material";
-import img1 from "../images/img1.jpg";
 import { Product } from "../utils/types";
+import apiURL from "../constants/apiUrl";
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/products")
+    fetch(`${apiURL}/products`)
       .then((response) => response.json())
       .then((data) => setProducts(data.products))
       .catch((error) => console.error("Error fetching products:", error));

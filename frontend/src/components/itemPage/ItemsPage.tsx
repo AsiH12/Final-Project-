@@ -17,6 +17,7 @@ import "./ItemsPage.css";
 import { useParams, useLocation } from "react-router-dom";
 import { Category } from "../../utils/types";
 import noimage from "../../images/noimage.jpeg";
+import apiURL from "../../constants/apiUrl";
 
 interface Item {
   id: number;
@@ -58,8 +59,8 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
   useEffect(() => {
     const fetchItems = async () => {
       const url = ownerView
-        ? `http://localhost:5000/products/manager_owner`
-        : `http://localhost:5000/products/shop/${storeId}`;
+        ? `${apiURL}/products/manager_owner`
+        : `${apiURL}/products/shop/${storeId}`;
       const response = await fetch(url, {
         method: "GET",
         headers: {
@@ -72,14 +73,14 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
     };
 
     const fetchCategories = async () => {
-      const response = await fetch(`http://localhost:5000/categories`);
+      const response = await fetch(`${apiURL}/categories`);
       const data = await response.json();
       console.log(data);
       setAllCategories(data.categories);
     };
 
     const fetchUserShops = async () => {
-      const response = await fetch("http://localhost:5000/shops/manager", {
+      const response = await fetch(`${apiURL}/shops/manager`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -125,7 +126,7 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
   };
 
   const handleDeleteClick = async (id: number) => {
-    const response = await fetch(`http://localhost:5000/products/${id}`, {
+    const response = await fetch(`${apiURL}/products/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -157,8 +158,8 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
 
   const fetchItems = async () => {
     const url = ownerView
-      ? `http://localhost:5000/products/manager_owner`
-      : `http://localhost:5000/products/shop/${storeId}`;
+      ? `${apiURL}/products/manager_owner`
+      : `${apiURL}/products/shop/${storeId}`;
     const response = await fetch(url, {
       method: "GET",
       headers: {
@@ -185,8 +186,8 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
       }
 
       const url = isEditing
-        ? `http://localhost:5000/products/${currentItem.id}`
-        : `http://localhost:5000/products`;
+        ? `${apiURL}/products/${currentItem.id}`
+        : `${apiURL}/products`;
       const method = isEditing ? "PATCH" : "POST";
 
       const productData = {
@@ -219,7 +220,7 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
 
           // Handle image upload or delete
           if (imageFile) {
-            const imageUrl = `http://localhost:5000/images/product`;
+            const imageUrl = `${apiURL}/images/product`;
             const imageFormData = new FormData();
             imageFormData.append("file", imageFile);
             imageFormData.append("product_id", product.id);
@@ -236,7 +237,7 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
               imageUploadSuccess = false;
             }
           } else if (currentItem.image && !imagePreview) {
-            const deleteUrl = `http://localhost:5000/images/product/${currentItem.id}`;
+            const deleteUrl = `${apiURL}/images/product/${currentItem.id}`;
             const deleteResponse = await fetch(deleteUrl, {
               method: "DELETE",
               headers: {
@@ -251,7 +252,7 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
 
           // Fetch the image by product ID after creation or update
           const fetchImageResponse = await fetch(
-            `http://localhost:5000/images/product/${product.id}`,
+            `${apiURL}/images/product/${product.id}`,
             {
               method: "GET",
               headers: {
@@ -385,7 +386,7 @@ export function ItemsPage({ ownerView }: { ownerView: boolean }) {
 
   const handleAddClick = async () => {
     // Check if the user owns or manages any shops
-    const response = await fetch("http://localhost:5000/shops/manager", {
+    const response = await fetch(`${apiURL}/shops/manager`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

@@ -13,6 +13,7 @@ import { User } from "../../utils/types";
 import { useNavigate } from "react-router-dom";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import apiURL from "../../constants/apiUrl";
 
 export const RegisterForm = () => {
   const {
@@ -42,7 +43,7 @@ export const RegisterForm = () => {
       // Create a copy of formData and remove confirmPassword
       const { confirmPassword, ...dataToSend } = formData;
 
-      const response = await fetch(`http://localhost:5000/users/register`, {
+      const response = await fetch(`${apiURL}/users/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dataToSend),

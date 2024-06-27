@@ -15,6 +15,7 @@ import { useForm, Controller } from "react-hook-form";
 import Swal from "sweetalert2";
 import { Category, Shop } from "../utils/types";
 import { useNavigate } from "react-router-dom";
+import apiURL from "../constants/apiUrl";
 
 interface StoreFormProps {
   open: boolean;
@@ -40,7 +41,7 @@ export function StoreForm({ open, onClose }: StoreFormProps) {
   } = useForm<Shop>();
 
   useEffect(() => {
-    fetch("http://localhost:5000/categories")
+    fetch(`${apiURL}/categories`)
       .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -64,7 +65,7 @@ export function StoreForm({ open, onClose }: StoreFormProps) {
   useEffect(() => {
     const token = localStorage.getItem("access_token");
 
-    fetch("http://localhost:5000/users/notme", {
+    fetch(`${apiURL}/users/notme`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -91,7 +92,7 @@ export function StoreForm({ open, onClose }: StoreFormProps) {
   const handleCreateStore = async (formData: Shop) => {
     const token = localStorage.getItem("access_token");
     try {
-      const response = await fetch(`http://localhost:5000/shops/new`, {
+      const response = await fetch(`${apiURL}/shops/new`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

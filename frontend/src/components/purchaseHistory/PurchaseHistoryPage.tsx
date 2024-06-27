@@ -13,6 +13,8 @@ import {
 } from "@mui/x-data-grid";
 import "./PurchaseHistoryPage.css";
 import noimage from "../../images/noimage.jpeg"; // Ensure this path is correct
+import apiURL from "../../constants/apiUrl";
+
 
 interface Purchase {
   id: number;
@@ -60,13 +62,13 @@ export function PurchaseHistoryPage() {
     const fetchPurchaseHistory = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/purchase-history/user`,
+          `${apiURL}/purchase-history/user`,
           {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`, // Send JWT token
-            }
+            },
           }
         );
         if (!response.ok) throw new Error("Network response was not ok");

@@ -16,6 +16,7 @@ import Swal from "sweetalert2";
 import "./ChooseStorePage.css";
 import { useNavigate } from "react-router-dom";
 import { Shop } from "../../utils/types";
+import apiURL from "../../constants/apiUrl";
 
 export function ChooseStorePage() {
   const [stores, setStores] = useState<Shop[]>([]);
@@ -28,7 +29,7 @@ export function ChooseStorePage() {
   useEffect(() => {
     const fetchStores = async () => {
       try {
-        const response = await fetch("http://localhost:5000/shops/manager", {
+        const response = await fetch(`${apiURL}/shops/manager`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -74,7 +75,7 @@ export function ChooseStorePage() {
 
   const handleDelete = async (shop_id: number) => {
     try {
-      const response = await fetch(`http://localhost:5000/shops/${shop_id}`, {
+      const response = await fetch(`${apiURL}/shops/${shop_id}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

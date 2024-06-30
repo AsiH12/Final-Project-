@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      VITE_BACKEND_URL: http://localhost:5000  # Correct format for environment variables
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend/data.db:/app/data.db
+    environment:
+      FLASK_ENV: production
+      FLASK_APP: main.py
+      FLASK_DEBUG: '1'  # Quotes around values if they are strings
+      FLASK_SECRET_KEY: '192b9bdd22ab9ed4d12e236c78afcb9a393ec15f71bbf5dc987d54727823bcbf'  # Quotes around values if they are strings
+      FLASK_FRONTEND_URL: http://localhost:3000  # Correct format for URLs
+      TEST_USERNAME: new
+      TEST_PASSWORD: a206130940A  # Quotes around values if they are strings

@@ -1,26 +1,23 @@
-# Use a Node.js LTS (Long Term Support) version as a base image
-FROM node:16-alpine
+# Build Stage
+FROM node:22.3-alpine3.19 AS build
 
-# Set the working directory to /app/src inside the container
-WORKDIR /app/src
+WORKDIR /app
 
-# Copy package.json and package-lock.json to the working directory
-COPY package*.json ./
-
-# Install dependencies
+COPY package*.json /app
 RUN npm install
 
-# Copy the rest of the application code to the working directory
 COPY . .
 
-# Build the React application
+ARG VITE_BACKEND_URL=http://localhost:5000
+RUN sh -c "echo \"VITE_BACKEND_URL=${VITE_BACKEND_URL}\" > .env.production"
 RUN npm run build
 
-# Install serve to run the production build
-RUN npm install -g serve
+# Production Stage
+FROM nginx:alpine
 
-# Set the command to run the production build on port 3000
-CMD ["serve", "-s", "build", "-l", "3000"]
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port 3000 to the outside world
-EXPOSE 3000
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

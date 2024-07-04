@@ -2,14 +2,19 @@ import { useEffect, useState } from "react";
 import CardItem from "../components/CardItem";
 import { Box } from "@mui/material";
 import { Product } from "../utils/types";
-import apiURL from "../constants/apiUrl";
+import apiURL from "../constants/apiUrl"; // Ensure this import is correct
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     fetch(`${apiURL}/products`)
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
       .then((data) => setProducts(data.products))
       .catch((error) => console.error("Error fetching products:", error));
   }, []);

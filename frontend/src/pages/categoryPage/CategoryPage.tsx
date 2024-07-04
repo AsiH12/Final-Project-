@@ -4,6 +4,7 @@ import CardItem from "../../components/CardItem";
 import { Box } from "@mui/material";
 import "./CategoryPage.css";
 import { Product } from "../../utils/types";
+import apiURL from "../../constants/apiUrl";
 
 type CategoryPageProps = {
   name: string;

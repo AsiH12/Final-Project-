@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Set environment variables
 ENV FLASK_DEBUG=0
 ENV FLASK_ENV=production
-ENV FLASK_APP=main.py
+ENV FLASK_APP=app.py
 ENV GUNICORN_HOST=0.0.0.0
 ENV GUNICORN_PORT=8080
 ENV GUNICORN_WORKERS=4
@@ -25,5 +25,5 @@ COPY . /app
 # Make the specified port available to the world outside this container
 EXPOSE ${GUNICORN_PORT}
 
-# Run main.py using gunicorn when the container launches
-CMD ["gunicorn", "main:app"]
+# Run app.py using gunicorn when the container launches
+CMD ["gunicorn", "app:app"]

@@ -117,11 +117,11 @@ Ensure the following environment variables are set in your .env file located in 
 
 In Backend folder create the next environment files:
 
-development.env:
+.env.development:
 
 ```bash
 FLASK_ENV=development
-FLASK_APP=main.py
+FLASK_APP=app.py
 FLASK_DEBUG=1
 FLASK_SECRET_KEY=192b9bdd22ab9ed4d12e236c78afcb9a393ec15f71bbf5dc987d54727823bcbf
 FLASK_FRONTEND_URL=http://localhost:5173
@@ -129,11 +129,11 @@ TEST_USERNAME=Ofer
 TEST_PASSWORD=a206130940S8752SSSSaasasdxsa
 ```
 
-production.env:
+.env.production:
 
 ```bash
 FLASK_ENV=production
-FLASK_APP=main.py
+FLASK_APP=app.py
 FLASK_DEBUG=0
 FLASK_SECRET_KEY=192b9bdd22ab9ed4d12e236c78afcb9a393ec15f71bbf5dc987d54727823bcbf
 FLASK_FRONTEND_URL=http://localhost:5173

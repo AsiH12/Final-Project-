@@ -56,16 +56,13 @@ export function OrdersPage({ ownerView }: OrdersPageProps) {
   }, [shop_name, ownerView]);
 
   const handleDeleteClick = async (id: number) => {
-    const response = await fetch(
-      `${apiURL}/purchase-history/${id}`,
-      {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Send JWT token
-        },
-      }
-    );
+    const response = await fetch(`${apiURL}/purchase-history/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Send JWT token
+      },
+    });
     if (response.ok) {
       setOrders((prevOrders) => prevOrders.filter((order) => order.id !== id));
       Swal.fire({
@@ -156,6 +153,9 @@ export function OrdersPage({ ownerView }: OrdersPageProps) {
           pageSize={5}
           rowsPerPageOptions={[5, 10, 15]}
           disableSelectionOnClick
+          columnVisibilityModel={{
+            total_price: false,
+          }}
         />
       </Box>
     </div>

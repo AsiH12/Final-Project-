@@ -15,7 +15,6 @@ import "./PurchaseHistoryPage.css";
 import noimage from "../../images/noimage.jpeg"; // Ensure this path is correct
 import apiURL from "../../constants/apiUrl";
 
-
 interface Purchase {
   id: number;
   product_name: string;
@@ -61,16 +60,13 @@ export function PurchaseHistoryPage() {
   useEffect(() => {
     const fetchPurchaseHistory = async () => {
       try {
-        const response = await fetch(
-          `${apiURL}/purchase-history/user`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`, // Send JWT token
-            },
-          }
-        );
+        const response = await fetch(`${apiURL}/purchase-history/user`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Send JWT token
+          },
+        });
         if (!response.ok) throw new Error("Network response was not ok");
         const data = await response.json();
         setPurchaseHistory(data);
@@ -158,6 +154,9 @@ export function PurchaseHistoryPage() {
           rows={purchaseHistory}
           columns={columns}
           rowHeight={100}
+          columnVisibilityModel={{
+            total_price: false,
+          }}
           slots={{
             toolbar: CustomToolbar,
           }}

@@ -19,6 +19,20 @@ def get_shop_id_by_product_id(cursor, product_id):
             f"Failed to get the shop ID for product ID {product_id}")
 
 
+# Applies discounts to a shopping cart based on the provided discount codes.
+
+# Parameters:
+    # cart (list): A list of dictionaries representing the items in the cart. Each dictionary should have the following keys: 'product_id', 'name', 'image', 'amount'.
+    # used_discounts (list): A list of discount codes that have already been applied to the cart.
+    # new_discount_code (str): A new discount code to apply to the cart.
+
+# Returns:
+    # dict: A dictionary containing the discounted cart items, original total price, and discounted total price.
+
+# Raises:
+    # ValueError: If any discount code is not valid or has expired, or if the new discount code doesn't affect the cart.
+    # Exception: If any other error occurs during the process.
+
 def apply_discounts(cart, used_discounts, new_discount_code):
     db = get_db()
     cursor = db.cursor()

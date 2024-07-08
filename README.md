@@ -185,9 +185,7 @@ to run the tests run this command:
 
 cd backend
 
-cd test
-
-pytest {filename}.py
+pytest
 ```
 
 
